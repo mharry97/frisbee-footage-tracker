@@ -1,0 +1,44 @@
+{
+  "name": "frisbee-footage-tracker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@chakra-ui/charts": "^3.16.0",
+    "@chakra-ui/form-control": "^2.2.0",
+    "@chakra-ui/icons": "^2.2.4",
+    "@chakra-ui/modal": "^2.3.1",
+    "@chakra-ui/react": "^3.15.1",
+    "@chakra-ui/select": "^2.1.2",
+    "@chakra-ui/toast": "^7.0.2",
+    "@emotion/react": "^11.14.0",
+    "@supabase/supabase-js": "^2.49.4",
+    "chakra-react-select": "^6.1.0",
+    "clsx": "^2.1.1",
+    "next": "15.2.4",
+    "next-themes": "^0.4.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-icons": "^5.5.0",
+    "react-select": "^5.10.1",
+    "tailwind-merge": "^3.1.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "@chakra-ui/cli": "^3.15.1",
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.2.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
