@@ -22,7 +22,7 @@ export const SourceCard: React.FC<Source> = ({
          w="100%"
          position="relative"
     >
-      <NextLink href={`/sources/${id}`} passHref>
+      <NextLink href={url}>
         <Box h ="100%"
              w="100%"
         >

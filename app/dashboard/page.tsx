@@ -8,6 +8,7 @@ export default function DashboardPage() {
     { title: "clips", icon: "film", href: "/clips" },
     { title: "points", icon: "scoreboard", href: "/points" },
     { title: "stats", icon: "bar-chart", href: "/stats" },
+    { title: "playlists", icon: "playlist", href: "/playlists" },
   ];
 
   return (

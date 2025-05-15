@@ -80,12 +80,17 @@ export type Player = {
   is_admin: boolean
 }
 
+export type TeamPlayer = {
+  player_id: string
+  player_name: string
+  team_id: string
+  team_name: string
+}
+
 export type Possession = {
   point_id: string,
   offence_init: string,
-  offence_init_successful: boolean | null,
   defence_init: string,
-  defence_init_successful: boolean | null,
   offence_main: string,
   defence_main: string,
   throws: number,
@@ -102,4 +107,49 @@ export type Possession = {
   d_player: string | null,
   possession_number: number,
   is_score: boolean
+}
+
+export type Clip = {
+  clip_id: string;
+  title: string
+  description: string
+  event_id: string
+  is_public: boolean
+  timestamp: string
+  timestamp_url: string
+}
+
+export type Playlist = {
+  playlist_id: string
+  title: string
+  description: string
+  is_public: boolean
+  creator: string | null,
+}
+
+export type PlaylistClip = {
+  playlist_id: string
+  clip_id: string
+}
+
+export type PrivatePlaylistClip = {
+  playlist_id: string
+  clip_id: string
+  user_id: string
+}
+
+// Fetch all events from Supabase
+export async function fetchPlayerTeamMapping(): Promise<TeamPlayer[]> {
+  try {
+    const { data, error } = await supabase
+      .from("team_player_mapping")
+      .select("*");
+
+    if (error) throw error;
+
+    return data ?? []
+  } catch (error) {
+    console.error("Error fetching team/player mapping:", error);
+    return [];
+  }
 }

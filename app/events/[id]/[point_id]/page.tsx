@@ -22,7 +22,7 @@ import {
   fetchDInitPlays,
   type Play, fetchPossessionsForPoint,
 } from "@/app/events/[id]/[point_id]/supabase";
-import type { Event, Point, Player } from "@/lib/supabase";
+import type {Event, Point, Player, Clip} from "@/lib/supabase";
 import { useToast } from "@chakra-ui/toast";
 import { getFootageProvider, getTeamName } from "@/lib/utils";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -34,6 +34,9 @@ import { LuMinus, LuPlus } from "react-icons/lu";
 import {fetchPlayersForTeam} from "@/app/players/supabase";
 import { writePossession, upsertPlayer } from "@/app/events/[id]/[point_id]/supabase";
 import {getOrCreatePlayerId} from "@/app/events/[id]/[point_id]/components/get-or-create-player-id";
+import { AddClipModal } from "@/app/clips/components/add-clip-modal";
+import {fetchEventClips} from "@/app/clips/supabase";
+
 
 export default function PointPage({
                                     params,
@@ -54,8 +57,6 @@ export default function PointPage({
   const [oMainPlay, setOMainPlay] = useState("");
   const [dInitPlay, setDInitPlay] = useState("");
   const [oInitPlay, setOInitPlay] = useState("");
-  const [dInitSucc, setDInitSucc] = useState("");
-  const [oInitSucc, setOInitSucc] = useState("");
   const [numThrows, setNumThrows] = useState("");
   const [defencePlayers, setDefencePlayers] = useState<Player[]>([]);
   const [offencePlayers, setOffencePlayers] = useState<Player[]>([]);
@@ -72,6 +73,9 @@ export default function PointPage({
   const [possessionType, setPossessionType] = useState("");
   const [possessionCount, setPossessionCount] = useState(1);
 
+  const [isClipModalOpen, setIsClipModalOpen] = useState(false);
+
+
   const toast = useToast();
 
   useEffect(() => {
@@ -85,9 +89,10 @@ export default function PointPage({
         setLoading(false);
 
         // Find number of possessions for counter
-        const possessions = await fetchPossessionsForPoint(point_id);
-        if (possessions) {
-          setPossessionCount(possessions.length + 1);
+        const possessionCount = await fetchPossessionsForPoint(point_id);
+        if (possessionCount) {
+          setPossessionCount(possessionCount.length + 1);
+          console.log("Possessions",point_id);
         }
 
         // Get event details
@@ -114,8 +119,6 @@ export default function PointPage({
         setOffencePlayers(offencePlayers)
         const defencePlayers = await fetchPlayersForTeam(currentPoint.defence_team)
         setDefencePlayers(defencePlayers)
-
-
 
       } catch (error: any) {
         console.error("Error loading data:", error);
@@ -148,17 +151,41 @@ export default function PointPage({
         if (value === "false") return false;
         return null;
       };
+
+      // If new player name is added generate new id, then they should be added to the relevant state for future possessions
+
+      function maybeAddPlayer(
+        playerId: string | null,
+        name: string,
+        playerList: Player[],
+        setPlayerList: React.Dispatch<React.SetStateAction<Player[]>>
+      ) {
+        if (playerId && !playerList.some((p) => p.player_id === playerId)) {
+          const newPlayer = { player_id: playerId, player_name: name } as Player;
+          setPlayerList((prev) => [...prev, newPlayer]);
+        }
+      }
+
       const scorePlayerId = await getOrCreatePlayerId(scorePlayer, currentOffenceTeamId, possessionOPlayers);
+      maybeAddPlayer(scorePlayerId, scorePlayer, possessionOPlayers, possessionCount % 2 !== 0 ? setOffencePlayers : setDefencePlayers);
+
       const assistPlayerId = await getOrCreatePlayerId(assistPlayer, currentOffenceTeamId, possessionOPlayers);
-      const turnThrowerId = await getOrCreatePlayerId(turnoverThrower, currentOffenceTeamId, possessionOPlayers);
-      const turnReceiverId = await getOrCreatePlayerId(turnoverReceiver, currentOffenceTeamId, possessionOPlayers);
+      maybeAddPlayer(assistPlayerId, assistPlayer, possessionOPlayers, possessionCount % 2 !== 0 ? setOffencePlayers : setDefencePlayers);
+
+      const turnoverThrowerId = await getOrCreatePlayerId(turnoverThrower, currentOffenceTeamId, possessionOPlayers);
+      maybeAddPlayer(turnoverThrowerId, turnoverThrower, possessionOPlayers, possessionCount % 2 !== 0 ? setOffencePlayers : setDefencePlayers);
+
+      const turnoverReceiverId = await getOrCreatePlayerId(turnoverReceiver, currentOffenceTeamId, possessionOPlayers);
+      maybeAddPlayer(turnoverReceiverId, turnoverReceiver, possessionOPlayers, possessionCount % 2 !== 0 ? setOffencePlayers : setDefencePlayers);
+
       const dPlayerId = await getOrCreatePlayerId(dPlayer, currentDefenceTeamId, possessionDPlayers);
+      maybeAddPlayer(dPlayerId, dPlayer, possessionDPlayers, possessionCount % 2 !== 0 ? setDefencePlayers : setOffencePlayers);
+
+
       const possessionData = {
         point_id: point_id,
         offence_init: oInitPlay,
-        offence_init_successful: parseBooleanOrNull(oInitSucc),
         defence_init: dInitPlay,
-        defence_init_successful: parseBooleanOrNull(dInitSucc),
         offence_main: oMainPlay,
         defence_main: dMainPlay,
         throws: parseInt(numThrows),
@@ -170,8 +197,8 @@ export default function PointPage({
         assist_player: assistPlayerId,
         offence_team: currentOffenceTeamId,
         defence_team: currentDefenceTeamId,
-        turn_thrower: turnThrowerId,
-        turn_intended_receiver: turnReceiverId,
+        turn_thrower: turnoverThrowerId,
+        turn_intended_receiver: turnoverReceiverId,
         d_player: dPlayerId,
         possession_number: possessionCount,
         is_score: possessionType === "score"
@@ -217,8 +244,6 @@ export default function PointPage({
     setOMainPlay("");
     setDInitPlay("");
     setOInitPlay("");
-    setDInitSucc("");
-    setOInitSucc("");
     setNumThrows("0");
     setTurnoverThrower("");
     setTurnoverReceiver("");
@@ -243,7 +268,7 @@ export default function PointPage({
       resetForm();
     } else if (possessionType === "score") {
       handleAdd()
-      window.location.href = `/events/${id}`;
+      // window.location.href = `/events/${id}`;
     }
   };
 
@@ -263,8 +288,8 @@ export default function PointPage({
         ></iframe>
       ) : currentPoint && currentPoint.timestamp_url ? (
         <Link href={currentPoint.timestamp_url} _hover={{ textDecoration: "none" }}>
-          <Button colorScheme="green" mt={4}>
-            Watch
+          <Button colorPalette="green" mt={4}>
+            Watch on Veo
           </Button>
         </Link>
       ) : null}
@@ -282,22 +307,6 @@ export default function PointPage({
             options={dInitPlays.map((p) => ({ value: p.play, label: p.play }))}
             customOptionValue="+ Add Strategy"
           />
-          <Field.Root mb={4}>
-            <Field.Label>Successful?</Field.Label>
-            <NativeSelect.Root>
-              <NativeSelect.Field
-                placeholder="Select option"
-                value={dInitSucc}
-                onChange={(e) => setDInitSucc(e.currentTarget.value)}
-              >
-                <option value="true">Successful</option>
-                <option value="false">Unsuccessful</option>
-              </NativeSelect.Field>
-              <NativeSelect.Indicator />
-            </NativeSelect.Root>
-          </Field.Root>
-        </HStack>
-        <HStack gap={4}>
           <CustomDropdownInput
             label="Offence Initiation"
             placeholder="e.g. Slash"
@@ -305,20 +314,6 @@ export default function PointPage({
             onChange={(val) => setOInitPlay(val)}
             options={oInitPlays.map((p) => ({ value: p.play, label: p.play }))}
           />
-          <Field.Root mb={4}>
-            <Field.Label>Successful?</Field.Label>
-            <NativeSelect.Root>
-              <NativeSelect.Field
-                placeholder="Select option"
-                value={oInitSucc}
-                onChange={(e) => setOInitSucc(e.currentTarget.value)}
-              >
-                <option value="true">Successful</option>
-                <option value="false">Unsuccessful</option>
-              </NativeSelect.Field>
-              <NativeSelect.Indicator />
-            </NativeSelect.Root>
-          </Field.Root>
         </HStack>
         <HStack gap={4}>
           <CustomDropdownInput
@@ -526,7 +521,13 @@ export default function PointPage({
       >
         {possessionType === "turnover" ? "Add Possession" : "Add Point"}
       </Button>
-      <FloatingClipButton aria-label="Add Clip" />
+      <FloatingClipButton onClick={() => setIsClipModalOpen(true)} />
+      <AddClipModal
+        isOpen={isClipModalOpen}
+        onClose={() => setIsClipModalOpen(false)}
+        eventId={id}
+        baseUrl = {currentPoint.base_url}
+      />
     </Container>
   );
 }

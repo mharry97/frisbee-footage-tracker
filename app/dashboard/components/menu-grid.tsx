@@ -8,6 +8,7 @@ import { LuFilm } from "react-icons/lu";
 import { FaRegCalendarAlt } from "react-icons/fa";
 import { FiDatabase } from "react-icons/fi";
 import { BsBarChartLine } from "react-icons/bs";
+import { TbPlaylistAdd } from "react-icons/tb";
 
 type MenuItemProps = {
   title: string;
@@ -22,6 +23,7 @@ const iconMap: Record<string, React.ReactNode> = {
   calendar: <FaRegCalendarAlt size={40} />,
   database: <FiDatabase size={40} />,
   "bar-chart": <BsBarChartLine size={40} />,
+  playlist: <TbPlaylistAdd size={40} />,
 };
 
 export function MenuGrid({ items }: { items: MenuItemProps[] }) {

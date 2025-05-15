@@ -134,7 +134,8 @@ export default function EventPage({
         timestamp,
         offence_team: offenceTeam,
         defence_team: computedDefenceTeam,
-        timestamp_url
+        timestamp_url,
+        base_url: sourceUrl,
       };
 
       const insertedPoints = await writePoint(pointData);

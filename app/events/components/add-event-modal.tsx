@@ -1,12 +1,11 @@
 "use client"
-import React, { useState } from "react";
+import React, {useEffect, useState} from "react";
 import { CustomModal } from "@/components/modal";
 
-
-import { SupabaseSelect } from "@/components/ui/standard-dropdown";
-import { AddableSupabaseSelect } from "@/components/ui/drop-down-with-add";
-import { TextInput } from "@/components/ui/text-input";
 import { DateInput } from "@/components/ui/date-input";
+import {Field, Input, NativeSelect} from "@chakra-ui/react";
+import CustomDropdownInput from "@/app/events/[id]/[point_id]/components/custom-dropdown-with-add";
+import { fetchTeams, upsertTeam } from "@/app/teams/supabase"
 
 export type EventType = "Game" | "Training" | "Scrimmage";
 
@@ -33,9 +32,19 @@ export function AddEventModal({
   const [team1, setTeam1] = useState("");
   const [team2, setTeam2] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [teams, setTeams] = useState([]);
 
   const isGame = eventType === "Game";
   const isTrainingOrScrimmage = eventType === "Training" || eventType === "Scrimmage";
+
+  useEffect(() => {
+    loadTeams();
+  }, []);
+
+  const loadTeams = async () => {
+    const teams = await fetchTeams();
+    setTeams(teams);
+  };
 
   function resetFields() {
     setEventType("");
@@ -53,13 +62,23 @@ export function AddEventModal({
   async function handleAdd() {
     try {
       setIsSubmitting(true);
+      let team_1_final = team1
+      let team_2_final = team2
+      if (!teams.some(t => t.team_id === team1)) {
+        const team_1_ret = await upsertTeam(team1);
+        team_1_final = team_1_ret.team_id
+      }
+      if (!teams.some(t => t.team_id === team2)) {
+        const team_2_ret = await upsertTeam(team2);
+        team_2_final = team_2_ret.team_id
+      }
       if (!eventType) return;
       await onAddEvent(
         title,
         eventDate,
         eventType as EventType,
-        team1,
-        team2
+        team_1_final,
+        team_2_final
       );
       onClose();
       resetFields();
@@ -70,6 +89,8 @@ export function AddEventModal({
     }
   }
 
+  const eventTypes = ["Game", "Training", "Scrimmage"];
+
   const canAdd =
     eventType &&
     (!(eventType === "Game") || (eventType === "Game" && title)) &&
@@ -79,24 +100,34 @@ export function AddEventModal({
     <CustomModal isOpen={isOpen} onClose={handleCancel} title="Add New Event">
 
       {/* Event type, remainder of form depends on this */}
-      <SupabaseSelect
-        label="Event Type"
-        tableName="events"
-        displayColumn="type"
-        value={eventType}
-        onChange={setEventType}
-        isRequired
-      />
+      <Field.Root mb={4}>
+        <Field.Label>Event Type</Field.Label>
+        <NativeSelect.Root>
+          <NativeSelect.Field
+            placeholder="Select Event Type"
+            value={eventType}
+            onChange={(e) => setEventType(e.currentTarget.value)}
+          >
+            {eventTypes.map((s) => (
+              <option key={s} value={s}>
+                {s}
+              </option>
+            ))}
+          </NativeSelect.Field>
+          <NativeSelect.Indicator />
+        </NativeSelect.Root>
+      </Field.Root>
 
       {/* Title for when type is game */}
       {isGame && (
-        <TextInput
-          label="Title"
-          value={title}
-          onChange={setTitle}
-          placeholder="e.g. Nationals 2024"
-          isRequired
-        />
+        <Field.Root mb={4}>
+          <Field.Label>Title</Field.Label>
+          <Input
+            placeholder="e.g. Nationals 2024"
+            value={title}
+            onChange={(e) => setTitle(e.currentTarget.value)}
+          />
+        </Field.Root>
       )}
 
       {/* Date input */}
@@ -112,19 +143,19 @@ export function AddEventModal({
       {/* Team fields for game */}
       {isGame && (
         <>
-          <AddableSupabaseSelect
+          <CustomDropdownInput
             label="Team 1"
-            tableName="teams"
-            displayColumn="team_name"
+            placeholder="Team 1"
             value={team1}
-            onChange={setTeam1}
+            onChange={(val) => setTeam1(val)}
+            options={teams.map((t) => ({ value: t.team_id, label: t.team_name }))} // This probably isn't smart but i don't need ids here
           />
-          <AddableSupabaseSelect
+          <CustomDropdownInput
             label="Team 2"
-            tableName="teams"
-            displayColumn="team_name"
+            placeholder="Team 2"
             value={team2}
-            onChange={setTeam2}
+            onChange={(val) => setTeam2(val)}
+            options={teams.map((t) => ({ value: t.team_id, label: t.team_name }))}  // This probably isn't smart but i don't need ids here
           />
         </>
       )}

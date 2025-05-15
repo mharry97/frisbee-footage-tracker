@@ -50,11 +50,17 @@ export async function fetchTeamMapping(): Promise<BaseTeamInfo[]> {
 }
 
 // Add new team to table
-export async function insertTeam(teamName: string): Promise<Team> {
+export async function upsertTeam(teamName: string): Promise<Team> {
   const { data, error } = await supabase
-    .from("teams")
-    .insert([{ team_name: teamName }])
-    .single();
-  if (error) throw error;
-  return data;
+    .from('teams')
+    .upsert(
+      { team_name: teamName },
+      { onConflict: 'team_name' }
+    )
+    .select('team_id, team_name')
+    .single()
+
+  if (error) throw error
+  if (!data) throw new Error('Upsert did not return a row')
+  return data
 }

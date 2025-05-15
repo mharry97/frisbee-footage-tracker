@@ -2,12 +2,9 @@
 import NextLink from "next/link";
 import {
   Container,
-  Stack,
-  HStack,
-  Text,
-  Box,
-  Separator,
-  Table, LinkOverlay, LinkBox
+  Table,
+  LinkOverlay,
+  LinkBox
 } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
 import Header from "@/components/header";

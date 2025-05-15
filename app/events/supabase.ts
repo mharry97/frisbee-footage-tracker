@@ -12,7 +12,7 @@ export async function fetchEvents(): Promise<Event[]> {
 
     if (error) throw error;
 
-    return data ?? null
+    return data ?? []
   } catch (error) {
     console.error("Error fetching events:", error);
     return [];
@@ -38,59 +38,46 @@ export async function fetchEvent(event_id: string): Promise<Event | null> {
 
 // Insert event
 export async function insertEvent(
-  userTitle: string,
-  userDate: string,
-  userType: "Game" | "Training" | "Scrimmage",
-  userTeam1: string,
-  userTeam2: string
-) {
-  let eventName = userTitle;
-  const type = userType;
-  let team1: string | null = null;
-  let team2: string | null = null;
+  title:     string,
+  date:      string,
+  type:      'Game' | 'Training' | 'Scrimmage',
+  team1Id?:  string,
+  team2Id?:  string
+): Promise<Event> {
+  // Event name is either the game title, or just the type string
+  const event_name = type === 'Game' ? title : type
 
-  // If "Training":
-  // event_name = "Training", team_1 = null, team_2 = null
-  if (userType === "Training") {
-    eventName = "Training";
-    team1 = "None";
-    team2 = "None";
+  let team_1_id: string | null = null
+  let team_2_id: string | null = null
+
+  if (type === 'Game') {
+    team_1_id = team1Id ?? null
+    team_2_id = team2Id ?? null
+
+  } else if (type === 'Scrimmage') {
+    // For scrimmages, look up the home team
+    const homeId = await getHomeTeam()
+    team_1_id = homeId
+    team_2_id = homeId
   }
-    // If "Scrimmage":
-  // event_name = "Scrimmage", fetch the home team for both team_1 and team_2
-  else if (userType === "Scrimmage") {
-    eventName = "Scrimmage";
-    const homeName = await getHomeTeam();
-    // If no home team is found, use "None" or throw an error
-    team1 = homeName ?? "None";
-    team2 = homeName ?? "None";
-  }
-    // If "Game":
-  // event_name = userTitle, team_1 = userTeam1, team_2 = userTeam2
-  else if (userType === "Game") {
-    team1 = userTeam1 || null;
-    team2 = userTeam2 || null;
-  }
+  // If training leave teams as null
 
   const { data, error } = await supabase
-    .from("events")
-    .insert([
-      {
-        event_name: eventName,
-        event_date: userDate,
-        type,
-        team_1: team1,
-        team_2: team2,
-      },
-    ])
-    .single();
+    .from('events')
+    .insert({
+      event_name,
+      event_date: date,
+      type,
+      team_1_id,
+      team_2_id,
+    })
+    .single()
 
   if (error) {
-    console.error("Error inserting event:", error);
-    throw new Error("Failed to insert event");
+    console.error('Error inserting event:', error)
+    throw error
   }
-
-  return data;
+  return data
 }
 
 

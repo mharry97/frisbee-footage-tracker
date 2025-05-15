@@ -15,9 +15,9 @@ export default function NewPointPage({ params }: { params: Promise<{ id: string 
   useEffect(() => {
     if (!id) return;
     async function loadSource() {
-      const sources = await fetchEvent(id);
-      if (sources.length > 0) {
-        setEventData(sources[0]);
+      const eventData = await fetchEvent(id);
+      if (eventData) {
+        setEventData(eventData);
       }
     }
     loadSource();

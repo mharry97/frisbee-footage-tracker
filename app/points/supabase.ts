@@ -29,3 +29,19 @@ export async function fetchEventPoints(event_id: string): Promise<Point[]> {
     return [];
   }
 }
+
+// Fetch all points
+export async function fetchAllPoints(): Promise<Point[]> {
+  try {
+    const { data, error } = await supabase
+      .from("points")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data ?? []
+  } catch (error) {
+    console.error("Error fetching points:", error);
+    return [];
+  }
+}

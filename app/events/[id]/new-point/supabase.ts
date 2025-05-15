@@ -67,7 +67,6 @@ export async function fetchSources(): Promise<Source[]> {
 
 // Fetch teams for an event
 export async function fetchTeamsForEvent(eventId: string): Promise<Team[]> {
-  console.log("event id:", eventId)
   try {
     // First, get the event to find team_1 and team_2
     const { data: event, error: eventError } = await supabase

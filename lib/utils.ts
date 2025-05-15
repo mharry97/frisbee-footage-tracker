@@ -34,7 +34,7 @@ export function getFootageProvider(
       return "google_drive";
     } else if (
       hostname.includes("veo.co") ||
-      hostname.includes("veo.dev") // or any other relevant domain
+      hostname.includes("veo.dev")
     ) {
       return "veo";
     }
@@ -45,7 +45,6 @@ export function getFootageProvider(
 
   return "other";
 }
-
 
 export function convertTimestampToSeconds(timestamp: string): number {
   const parts = timestamp.split(":").map(Number);
@@ -65,7 +64,6 @@ export function convertTimestampToSeconds(timestamp: string): number {
   return 0; // Default fallback for invalid input
 }
 
-
 // Extracts the YouTube video ID from a URL using a regex.
 function getYoutubeVideoId(url: string): string | null {
   const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -75,16 +73,24 @@ function getYoutubeVideoId(url: string): string | null {
     : null;
 }
 
-
 // Converts a YouTube URL (desktop or mobile) to its embed URL with the time parameter appended.
 export function convertYoutubeUrlToEmbed(url: string, seconds: number): string {
   const videoId = getYoutubeVideoId(url);
   if (videoId) {
     // Produces an embed URL with the time parameter, e.g.:
-    // https://www.youtube.com/embed/zbYf5_S7oJo?t=422
     return `https://www.youtube.com/embed/${videoId}?start=${seconds}`;
   }
   // If we cannot extract the video ID, return the original URL.
+  return url;
+}
+
+export function baseUrlToTimestampUrl(url: string, timestamp:string): string {
+  if (getFootageProvider(url) === "youtube") {
+    const timeParam = convertTimestampToSeconds(timestamp);
+    return convertYoutubeUrlToEmbed(url, timeParam)
+  } else if (getFootageProvider(url) === "veo") {
+    return url + "#t" + timestamp
+  }
   return url;
 }
 
@@ -100,3 +106,5 @@ export function getTeamName(teams: Team[], teamId: string): string {
   const team = teams.find((team) => team.team_id === teamId);
   return team ? team.team_name : "";
 }
+
+baseUrlToTimestampUrl("https://www.youtube.com/watch?v=p_OTaf-U5IE", "16:32")
