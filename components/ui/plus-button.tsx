@@ -2,7 +2,7 @@
 
 import React from "react";
 import { IconButton, IconButtonProps } from "@chakra-ui/react";
-import { AddIcon } from "@chakra-ui/icons";
+import { IoMdAdd } from "react-icons/io";
 
 
 const FloatingActionButton: React.FC<IconButtonProps> = (props) => {
@@ -18,7 +18,7 @@ const FloatingActionButton: React.FC<IconButtonProps> = (props) => {
       boxShadow="lg"
       {...props}
     >
-      <AddIcon />
+      <IoMdAdd />
     </IconButton>
   );
 };
