@@ -6,7 +6,6 @@ import {
   HStack,
   Flex,
   Button,
-  NumberInput,
   IconButton,
   HStack as ChakraHStack,
 } from "@chakra-ui/react";

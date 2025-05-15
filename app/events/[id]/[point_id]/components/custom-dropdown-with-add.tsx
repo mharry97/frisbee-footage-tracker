@@ -19,8 +19,6 @@ export interface CustomDropdownInputProps {
   onChange: (value: string) => void;
   /** The special value that triggers switching to input mode. Defaults to "custom". */
   customOptionValue?: string;
-  // Any additional props can be passed here and spread into Field.Root if needed.
-  [x: string]: any;
 }
 
 const CustomDropdownInput: React.FC<CustomDropdownInputProps> = ({
