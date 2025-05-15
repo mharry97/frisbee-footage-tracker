@@ -19,7 +19,7 @@ export async function upsertClip(input: NewClip): Promise<Clip> {
 // Fetch most recent info for all events from Supabase for a given event_id
 export async function fetchEventClips(event_id: string): Promise<Clip[]> {
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("clips")
       .select('*')
       .eq("is_public", true)
