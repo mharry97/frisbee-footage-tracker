@@ -9,9 +9,9 @@ import {
   Flex,
   SimpleGrid,
 } from "@chakra-ui/react";
-import { Field } from "@chakra-ui/react"; // adjust import if needed
+import { Field } from "@chakra-ui/react";
 import { fetchSources } from "@/app/sources/supabase";
-import type { Source, Event, Player } from "@/lib/supabase";
+import type { Source, Player } from "@/lib/supabase";
 import { useToast } from "@chakra-ui/toast";
 import Header from "@/components/header";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -53,7 +53,6 @@ export default function EventPage({
   const [timestamp, setTimestamp] = useState("");
   const [homePlayers, setHomePlayers] = useState<Player[]>([]);
   const [offenceTeam, setOffenceTeam] = useState("");
-  const [eventData, setEventData] = useState<Event | null>(null);
   const [teamData, setTeamData] = useState<BaseTeamInfo[]>([]);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>(Array(7).fill(""));
 
@@ -61,7 +60,7 @@ export default function EventPage({
   const router = useRouter();
 
   useEffect(() => {
-    async function fetchData() {
+    const fetchData = async () => {
       try {
         setLoading(true);
         // Get all the required data
@@ -69,7 +68,6 @@ export default function EventPage({
         setSources(sourcesData);
 
         const eventData = await fetchEvent(id);
-        setEventData(eventData);
         if (eventData) {
           // Fetch team info for both teams and combine them
           const team1Data = await fetchBaseTeamInfo(eventData.team_1_id);
@@ -96,7 +94,7 @@ export default function EventPage({
         setLoading(false);
       }
     }
-    fetchData();
+    void fetchData();
   }, [id, toast]);
 
   // Check if any of the teams is the home team (required for showing the player fields)

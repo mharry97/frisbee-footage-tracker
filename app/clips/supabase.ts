@@ -1,6 +1,4 @@
 import { supabase, Clip } from "@/lib/supabase";
-import {convertTimestampToSeconds} from "@/lib/utils";
-import {ascending} from "d3-array";
 
 // Inserts or updates a clip in the Supabase `clips` table.
 export type NewClip = Omit<Clip, "clip_id">;
@@ -21,14 +19,12 @@ export async function upsertClip(input: NewClip): Promise<Clip> {
 // Fetch most recent info for all events from Supabase for a given event_id
 export async function fetchEventClips(event_id: string): Promise<Clip[]> {
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("clips")
       .select('*')
       .eq("is_public", true)
       .eq("event_id", event_id)
       .order("title");
-
-    if (error) throw error;
 
     return (data || []);
   } catch (error) {

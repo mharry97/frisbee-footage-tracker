@@ -22,7 +22,7 @@ import {
   fetchDInitPlays,
   type Play, fetchPossessionsForPoint,
 } from "@/app/events/[id]/[point_id]/supabase";
-import type {Event, Point, Player, Clip} from "@/lib/supabase";
+import type {Event, Point, Player} from "@/lib/supabase";
 import { useToast } from "@chakra-ui/toast";
 import { getFootageProvider, getTeamName } from "@/lib/utils";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -32,10 +32,9 @@ import { BaseTeamInfo, fetchTeamMapping } from "@/app/teams/supabase";
 import CustomDropdownInput from "@/app/events/[id]/[point_id]/components/custom-dropdown-with-add";
 import { LuMinus, LuPlus } from "react-icons/lu";
 import {fetchPlayersForTeam} from "@/app/players/supabase";
-import { writePossession, upsertPlayer } from "@/app/events/[id]/[point_id]/supabase";
+import { writePossession} from "@/app/events/[id]/[point_id]/supabase";
 import {getOrCreatePlayerId} from "@/app/events/[id]/[point_id]/components/get-or-create-player-id";
 import { AddClipModal } from "@/app/clips/components/add-clip-modal";
-import {fetchEventClips} from "@/app/clips/supabase";
 
 
 export default function PointPage({
@@ -145,15 +144,7 @@ export default function PointPage({
   // WRITE TO SUPABASE
   const handleAdd = async () => {
     try {
-      const toNullIfEmpty = (val: string) => val.trim() === "" ? null : val;
-      const parseBooleanOrNull = (value: string): boolean | null => {
-        if (value === "true") return true;
-        if (value === "false") return false;
-        return null;
-      };
-
       // If new player name is added generate new id, then they should be added to the relevant state for future possessions
-
       function maybeAddPlayer(
         playerId: string | null,
         name: string,
@@ -234,7 +225,7 @@ export default function PointPage({
   const currentOffenceTeamId = possessionCount % 2 !== 0 ? currentPoint.offence_team : currentPoint.defence_team;
   const currentDefenceTeamId = possessionCount % 2 !== 0 ? currentPoint.defence_team : currentPoint.offence_team;
   const currentOffenceTeam = possessionCount % 2 !== 0 ? offence_team_name : defence_team_name;
-  const currentDefenceTeam = possessionCount % 2 !== 0 ? defence_team_name : offence_team_name;
+  // const currentDefenceTeam = possessionCount % 2 !== 0 ? defence_team_name : offence_team_name;
   // Dynamic d/o player list
   const possessionOPlayers = possessionCount % 2 !== 0 ? offencePlayers : defencePlayers;
   const possessionDPlayers = possessionCount % 2 !== 0 ? defencePlayers : offencePlayers;
