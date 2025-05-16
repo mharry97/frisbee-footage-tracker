@@ -5,12 +5,10 @@ import {getHomeTeam} from "@/app/teams/supabase";
 // Fetch all events from Supabase
 export async function fetchEvents(): Promise<Event[]> {
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("events")
       .select("*")
       .order("event_date", { ascending: false });
-
-    if (error) throw error;
 
     return data ?? []
   } catch (error) {
@@ -22,14 +20,13 @@ export async function fetchEvents(): Promise<Event[]> {
 // Fetch specific event
 export async function fetchEvent(event_id: string): Promise<Event | null> {
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("events")
       .select("*")
       .eq("event_id", event_id)
       .single();
 
-    if (error) throw error;
-    return data ?? null;
+    return data ?? [];
   } catch (error) {
     console.error("Error fetching event:", error);
     return null;

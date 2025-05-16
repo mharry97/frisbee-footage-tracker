@@ -11,11 +11,11 @@ import Header from "@/components/header";
 import { AddPlaylistModal } from "@/app/playlists/components/add-playlist-modal";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import FloatingActionButton from "@/components/ui/plus-button";
-import {fetchPlaylists} from "@/app/playlists/supabase";
+import {fetchPlaylists, PlaylistWithCreator} from "@/app/playlists/supabase";
 
 export default function PlaylistsPage() {
   const [loading, setLoading] = useState(true);
-  const [playlists, setPlaylists] = useState([]);
+  const [playlists, setPlaylists] = useState<PlaylistWithCreator[]>([]);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
 
 
@@ -27,7 +27,7 @@ export default function PlaylistsPage() {
   };
 
   useEffect(() => {
-    loadPlaylists();
+    void loadPlaylists();
   }, []);
 
   return (

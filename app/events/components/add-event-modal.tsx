@@ -6,6 +6,7 @@ import { DateInput } from "@/components/ui/date-input";
 import {Field, Input, NativeSelect} from "@chakra-ui/react";
 import CustomDropdownInput from "@/app/events/[id]/[point_id]/components/custom-dropdown-with-add";
 import { fetchTeams, upsertTeam } from "@/app/teams/supabase"
+import {Team} from "@/lib/supabase";
 
 export type EventType = "Game" | "Training" | "Scrimmage";
 
@@ -32,7 +33,7 @@ export function AddEventModal({
   const [team1, setTeam1] = useState("");
   const [team2, setTeam2] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [teams, setTeams] = useState([]);
+  const [teams, setTeams] = useState<Team[]>([]);
 
   const isGame = eventType === "Game";
   const isTrainingOrScrimmage = eventType === "Training" || eventType === "Scrimmage";

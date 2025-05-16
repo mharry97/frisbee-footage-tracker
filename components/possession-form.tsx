@@ -1,56 +1,25 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Box, Grid, GridItem, Text } from "@chakra-ui/react"
 import { AddableSupabaseSelect } from "@/components/ui/drop-down-with-add"
-import { fetchEvent } from "@/app/events/supabase"
-import type { Event } from "@/lib/supabase"
-import { getHomeTeam } from "@/app/teams/supabase"
 import { BooleanSelect } from "@/components/ui/boolean-dropdown"
 import { ThrowsCounter } from "@/components/ui/throw-counter"
 
 type PossessionInfoProps = {
-  mode: "Add" | "Edit"
-  eventId: string
   possessionNumber?: number
   offenceTeam?: string
 }
 
-const PossessionForm: React.FC<PossessionInfoProps> = ({ mode, eventId, possessionNumber, offenceTeam }) => {
+const PossessionForm: React.FC<PossessionInfoProps> = ({ possessionNumber, offenceTeam }) => {
   const [defenceInit, setDefenceInit] = useState("")
-  const [offenceInit, setOffenceInit] = useState("") // Added separate state for offence initiation
-  const [timestamp, setTimestamp] = useState("")
-  const [eventData, setEventData] = useState<Event | null>(null)
-  const [homeTeam, setHomeTeam] = useState("")
-  const [defenceInitSuccesful, setDefenceInitSuccesful] = useState("")
-  const [offenceInitSuccesful, setOffenceInitSuccesful] = useState("")
+  const [offenceInit, setOffenceInit] = useState("")
+  const [defenceInitSuccessful, setDefenceInitSuccessful] = useState("")
+  const [offenceInitSuccessful, setOffenceInitSuccessful] = useState("")
   const [offenceMain, setOffenceMain] = useState("")
   const [defenceMain, setDefenceMain] = useState("")
   const [throws, setThrows] = useState(0)
-
-  // Fetch event details once eventId is available.
-  useEffect(() => {
-    if (!eventId) return
-    async function loadEvent() {
-      const events = await fetchEvent(eventId)
-      if (events.length > 0) {
-        setEventData(events[0])
-      }
-    }
-    loadEvent()
-  }, [eventId])
-
-  // Fetch home team once on mount.
-  useEffect(() => {
-    async function loadHomeTeam() {
-      const teamName = await getHomeTeam()
-      if (teamName) {
-        setHomeTeam(teamName)
-      }
-    }
-    loadHomeTeam()
-  }, [])
 
   return (
     <Box p={6} rounded="md" bg="#1a1a1a" color="white" w="100%" position="relative">
@@ -78,8 +47,8 @@ const PossessionForm: React.FC<PossessionInfoProps> = ({ mode, eventId, possessi
         <GridItem>
           <BooleanSelect
             label="Defence Init. Success"
-            value={defenceInitSuccesful}
-            onChange={setDefenceInitSuccesful}
+            value={defenceInitSuccessful}
+            onChange={setDefenceInitSuccessful}
           />
         </GridItem>
         <GridItem>
@@ -87,15 +56,15 @@ const PossessionForm: React.FC<PossessionInfoProps> = ({ mode, eventId, possessi
             label="Offence Initiation"
             tableName="possessions"
             displayColumn="offence_init"
-            value={offenceInit} // Changed from defenceInit to offenceInit
-            onChange={setOffenceInit} // Changed from setDefenceInit to setOffenceInit
+            value={offenceInit}
+            onChange={setOffenceInit}
           />
         </GridItem>
         <GridItem>
           <BooleanSelect
             label="Offence Init. Success"
-            value={offenceInitSuccesful}
-            onChange={setOffenceInitSuccesful}
+            value={offenceInitSuccessful}
+            onChange={setOffenceInitSuccessful}
           />
         </GridItem>
         <GridItem colSpan={2}>

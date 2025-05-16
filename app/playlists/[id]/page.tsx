@@ -25,7 +25,7 @@ export default function PointPage({
   const { id } = React.use(params);
   const [loading, setLoading] = useState(true);
   const [clips, setClips] = useState<Clip[]>([]);
-  const [playlistData, setPlaylistData] = useState<Playlist>();
+  const [playlistData, setPlaylistData] = useState<Playlist | null>(null);
   const [isClipModalOpen, setIsClipModalOpen] = useState(false);
 
   // Fetch data needed for page

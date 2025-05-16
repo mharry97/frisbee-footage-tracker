@@ -130,7 +130,7 @@ export default function PointPage({
         setLoading(false);
       }
     }
-    fetchData();
+    void fetchData();
   }, [id, point_id, toast]);
 
   if (loading) {
@@ -254,11 +254,11 @@ export default function PointPage({
     if (!possessionType) return; // safeguard
 
     if (possessionType === "turnover") {
-      handleAdd()
+      void handleAdd()
       setPossessionCount((prev) => prev + 1);
       resetForm();
     } else if (possessionType === "score") {
-      handleAdd()
+      void handleAdd()
       // window.location.href = `/events/${id}`;
     }
   };
