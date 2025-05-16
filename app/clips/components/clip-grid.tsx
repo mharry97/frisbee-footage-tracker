@@ -19,7 +19,7 @@ function ClipCard({ clip }: ClipCardProps) {
 
   const sourceHost = getFootageProvider(clip.timestamp_url)
   return (
-    <Card.Root width="320px">
+    <Card.Root width="4xl">
       <Card.Body gap="2">
         <Card.Title mt="2">{clip.title}</Card.Title>
         <Card.Description>{clip.description}</Card.Description>
@@ -29,7 +29,7 @@ function ClipCard({ clip }: ClipCardProps) {
         {sourceHost != "youtube" && sourceHost != "google_drive" ? (
             <WatchButton url={clip.timestamp_url} />
         ) : (
-          <Dialog.Root size="md">
+          <Dialog.Root size="full">
             <Dialog.Trigger asChild>
               <Button variant="solid" size="md" colorPalette="green">
                 view
@@ -44,7 +44,7 @@ function ClipCard({ clip }: ClipCardProps) {
                     <Dialog.Title>{clip.title}</Dialog.Title>
                   </Dialog.Header>
                   <Dialog.Body>
-                    <AspectRatio ratio={16 / 9} w="full">
+                    <AspectRatio ratio={16 / 9} w="full" maxW="4xl" mx="auto">
                       <iframe
                         src={clip.timestamp_url}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
