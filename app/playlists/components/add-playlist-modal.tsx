@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   Button,
@@ -8,9 +8,9 @@ import {
   CloseButton,
   Textarea
 } from "@chakra-ui/react";
-import {addPlaylist, fetchPlaylists, addClipPlaylists} from "@/app/playlists/supabase";
+import {addPlaylist} from "@/app/playlists/supabase";
 import { useToast } from "@chakra-ui/toast";
-import type { Playlist } from "@/lib/supabase";
+
 
 interface AddClipModalProps {
   isOpen: boolean;
@@ -21,18 +21,7 @@ export function AddPlaylistModal({ isOpen, onClose }: AddClipModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const toast = useToast();
-
-
-  useEffect(() => {
-    async function loadPlaylists() {
-      const playlists = await fetchPlaylists();
-      setPlaylists(playlists);
-    }
-
-    loadPlaylists();
-  }, []);
 
   function handleCancel() {
     onClose();
