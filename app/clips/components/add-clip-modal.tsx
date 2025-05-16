@@ -38,7 +38,7 @@ export function AddClipModal({ isOpen, onClose, eventId, baseUrl }: AddClipModal
       const playlists = await fetchPlaylists();
       setPlaylists(playlists);
     }
-    loadPlaylists();
+    void loadPlaylists();
   }, []);
 
   useEffect(() => {
