@@ -113,7 +113,7 @@ export type Clip = {
   clip_id: string;
   title: string
   description: string
-  event_id: string
+  event_id: string | null
   is_public: boolean
   timestamp: string
   timestamp_url: string

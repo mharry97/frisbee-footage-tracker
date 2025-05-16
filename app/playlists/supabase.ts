@@ -78,7 +78,7 @@ export async function addPlaylist(playlist: NewPlaylist): Promise<NewPlaylist[]>
 
 // Write playlist slips to playlist_clips
 export async function upsertPlaylistClip(
-  items: PlaylistClip | PlaylistClip[],   // ← union type
+  items: PlaylistClip | PlaylistClip[],
 ): Promise<void> {
   const payload = Array.isArray(items) ? items : [items];
 
