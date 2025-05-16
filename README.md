@@ -82,7 +82,7 @@ the required info.
 
 ## Backend
 The app uses supabase for its backend, an image of the schema can be found below.
-![Supabase Schema](https://github.com/mharry97/frisbee-footage-tracker/blob/main/Schema.png?raw=true)
+![Supabase Schema](https://github.com/mharry97/frisbee-footage-tracker/blob/main/public/Schema.png?raw=true)
 
 
 ## To do:
