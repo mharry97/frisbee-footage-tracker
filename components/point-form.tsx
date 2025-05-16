@@ -28,11 +28,9 @@ const PointForm: React.FC<BaseInfoProps> = ({ mode, eventId, onOffenceTeamChange
     if (!eventId) return
     async function loadEvent() {
       const events = await fetchEvent(eventId)
-      if (events.length > 0) {
-        setEventData(events[0])
-      }
+      setEventData(events)
     }
-    loadEvent()
+    void loadEvent()
   }, [eventId])
 
   // Fetch home team once on mount.
@@ -43,7 +41,7 @@ const PointForm: React.FC<BaseInfoProps> = ({ mode, eventId, onOffenceTeamChange
         setHomeTeam(teamName)
       }
     }
-    loadHomeTeam()
+    void loadHomeTeam()
   }, [])
 
   // Handle offense team change and notify parent component

@@ -113,7 +113,7 @@ export type Clip = {
   clip_id: string;
   title: string
   description: string
-  event_id: string
+  event_id: string | null
   is_public: boolean
   timestamp: string
   timestamp_url: string
@@ -153,3 +153,38 @@ export async function fetchPlayerTeamMapping(): Promise<TeamPlayer[]> {
     return [];
   }
 }
+
+export type PointDetailed = {
+  possession_id: string;
+  point_id: string;
+  offence_init: string | null;
+  defence_init: string | null;
+  offence_main: string | null;
+  defence_main: string | null;
+  throws: number | null;
+  turn_throw_zone: string | null;
+  turn_receive_zone: string | null;
+  turnover_reason: string | null;
+  score_method: string | null;
+  offence_team: string | null;
+  offence_team_name: string | null;
+  defence_team: string | null;
+  defence_team_name: string | null;
+  possession_number: number | null;
+  is_score: boolean;
+  timestamp_url: string | null;
+  point_offence_team: string | null;
+  point_offence_team_name: string | null;
+  point_defence_team: string | null;
+  point_defence_team_name: string | null;
+  score_player: string | null;
+  score_player_name: string | null;
+  assist_player: string | null;
+  assist_player_name: string | null;
+  turn_thrower: string | null;
+  turn_thrower_name: string | null;
+  turn_intended_receiver: string | null;
+  turn_intended_receiver_name: string | null;
+  d_player: string | null;
+  d_player_name: string | null;
+};

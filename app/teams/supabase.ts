@@ -46,7 +46,7 @@ export async function fetchTeamMapping(): Promise<BaseTeamInfo[]> {
     .select("team_id, team_name, is_home_team")
 
   if (error) throw error;
-  return data ?? null;
+  return data ?? [];
 }
 
 // Add new team to table
@@ -58,7 +58,7 @@ export async function upsertTeam(teamName: string): Promise<Team> {
       { onConflict: 'team_name' }
     )
     .select('team_id, team_name')
-    .single()
+    .select("*").single()
 
   if (error) throw error
   if (!data) throw new Error('Upsert did not return a row')

@@ -5,7 +5,6 @@ import {
   Container,
   Text,
   Button,
-  Link,
   HStack,
   Image,
   Field,
@@ -35,6 +34,7 @@ import {fetchPlayersForTeam} from "@/app/players/supabase";
 import { writePossession} from "@/app/events/[id]/[point_id]/supabase";
 import {getOrCreatePlayerId} from "@/app/events/[id]/[point_id]/components/get-or-create-player-id";
 import { AddClipModal } from "@/app/clips/components/add-clip-modal";
+import {WatchButton} from "@/components/watch-button";
 
 
 export default function PointPage({
@@ -130,7 +130,7 @@ export default function PointPage({
         setLoading(false);
       }
     }
-    fetchData();
+    void fetchData();
   }, [id, point_id, toast]);
 
   if (loading) {
@@ -254,11 +254,11 @@ export default function PointPage({
     if (!possessionType) return; // safeguard
 
     if (possessionType === "turnover") {
-      handleAdd()
+      void handleAdd()
       setPossessionCount((prev) => prev + 1);
       resetForm();
     } else if (possessionType === "score") {
-      handleAdd()
+      void handleAdd()
       // window.location.href = `/events/${id}`;
     }
   };
@@ -278,11 +278,7 @@ export default function PointPage({
           style={{ marginTop: "16px" }}
         ></iframe>
       ) : currentPoint && currentPoint.timestamp_url ? (
-        <Link href={currentPoint.timestamp_url} _hover={{ textDecoration: "none" }}>
-          <Button colorPalette="green" mt={4}>
-            Watch on Veo
-          </Button>
-        </Link>
+        <WatchButton url={currentPoint.timestamp_url} />
       ) : null}
 
       <>

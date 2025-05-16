@@ -1,10 +1,16 @@
-import React from "react";
-import Header from "@/components/header"
+"use client";
+import {
+  Container,
+} from "@chakra-ui/react";
+import Header from "@/components/header";
+
+export default function PointView(){
 
 
-export default function ClipsPage() {
   return (
-    <Header title = "clips" buttonText = "dashboard" redirectUrl = "/dashboard" ></Header>
+    <Container maxW="4xl" py={8}>
+      <Header title="Coming Soon" buttonText="dashboard" redirectUrl={`/dashboard`} />
+    </Container>
   );
 }
 

@@ -10,6 +10,9 @@ import type {Clip, Playlist} from "@/lib/supabase";
 import { fetchPlaylistClips } from "@/app/clips/supabase";
 import {ClipGrid} from "@/app/clips/components/clip-grid";
 import {fetchPlaylist} from "@/app/playlists/supabase";
+import LoadingSpinner from "@/components/ui/loading-spinner";
+import {AddSourceClipModal} from "@/app/clips/components/add-clip-from-source";
+import FloatingClipButton from "@/components/ui/add-clip-button";
 
 
 
@@ -22,7 +25,8 @@ export default function PointPage({
   const { id } = React.use(params);
   const [loading, setLoading] = useState(true);
   const [clips, setClips] = useState<Clip[]>([]);
-  const [playlistData, setPlaylistData] = useState<Playlist>();
+  const [playlistData, setPlaylistData] = useState<Playlist | null>(null);
+  const [isClipModalOpen, setIsClipModalOpen] = useState(false);
 
   // Fetch data needed for page
   useEffect(() => {
@@ -47,10 +51,22 @@ export default function PointPage({
 
   return (
     <Container maxW="4xl">
-      <Header title={playlistData?.title || ""} buttonText="dashboard" redirectUrl="/dashboard"/>
-      <Text textStyle="xl" mb={4} mt ={4}>{playlistData?.description}</Text>
-      <Separator />
-      <ClipGrid clips={clips}></ClipGrid>
+      {loading ? (
+        <LoadingSpinner text="loading..." />
+      ) : (
+        <>
+          <Header title={playlistData?.title || ""} buttonText="playlists" redirectUrl="/playlists"/>
+          <Text textStyle="xl" mb={4} mt ={4}>{playlistData?.description}</Text>
+          <Separator />
+          <ClipGrid clips={clips}></ClipGrid>
+          <FloatingClipButton onClick={() => setIsClipModalOpen(true)} />
+          <AddSourceClipModal
+            isOpen={isClipModalOpen}
+            onClose={() => setIsClipModalOpen(false)}
+            playlistId={id}
+          />
+        </>
+      )}
     </Container>
   );
 }

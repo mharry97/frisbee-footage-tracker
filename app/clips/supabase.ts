@@ -34,7 +34,6 @@ export async function fetchEventClips(event_id: string): Promise<Clip[]> {
 }
 
 // Fetches all playlist clips
-
 export async function fetchPlaylistClips(
   playlistId: string,
   limit?: number,
@@ -53,6 +52,6 @@ export async function fetchPlaylistClips(
   const { data, error } = await q;
   if (error) throw error;
 
-  return (data ?? []).map((row) => row.clips as Clip);
+  return (data ?? []).flatMap((row) => row.clips as Clip[]);
 }
 

@@ -89,7 +89,7 @@ export function baseUrlToTimestampUrl(url: string, timestamp:string): string {
     const timeParam = convertTimestampToSeconds(timestamp);
     return convertYoutubeUrlToEmbed(url, timeParam)
   } else if (getFootageProvider(url) === "veo") {
-    return url + "#t" + timestamp
+    return url + "#t=" + timestamp
   }
   return url;
 }

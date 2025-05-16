@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import {PointDetailed, supabase} from "@/lib/supabase";
 import type { Point } from "@/lib/supabase";
 
 // Fetch basic info for all points from Supabase for a given event_id
@@ -44,4 +44,14 @@ export async function fetchAllPoints(): Promise<Point[]> {
     console.error("Error fetching points:", error);
     return [];
   }
+}
+
+export async function fetchDetailPoint(point_id: string): Promise<PointDetailed[]> {
+  const { data, error } = await supabase
+    .from("all_points_view")
+    .select("*")
+    .eq("point_id", point_id);
+
+  if (error) throw error;
+  return data ?? [];
 }

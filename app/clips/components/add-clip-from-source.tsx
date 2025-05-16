@@ -1,63 +1,56 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {
   Dialog,
   Button,
   Portal,
   Field,
   Input,
-  Select,
   CloseButton,
   Textarea,
-  createListCollection
+  NativeSelect
 } from "@chakra-ui/react";
-import {fetchPlaylists, upsertPlaylistClip} from "@/app/playlists/supabase";
 import { useToast } from "@chakra-ui/toast";
-import type { PlaylistWithCreator } from "@/app/playlists/supabase";
+import type {Source} from "@/lib/supabase";
+import {fetchSources} from "@/app/sources/supabase";
 import {upsertClip} from "@/app/clips/supabase";
-import { baseUrlToTimestampUrl } from "@/lib/utils";
+import {baseUrlToTimestampUrl} from "@/lib/utils";
+import {upsertPlaylistClip} from "@/app/playlists/supabase";
 
-interface AddClipModalProps {
+interface AddSourceClipModalProps {
   isOpen: boolean;
   onClose: () => void;
-  eventId: string;
-  baseUrl: string;
+  playlistId: string;
 }
 
-export function AddClipModal({ isOpen, onClose, eventId, baseUrl }: AddClipModalProps) {
+export function AddSourceClipModal({ isOpen, onClose, playlistId }: AddSourceClipModalProps) {
   const [title, setTitle] = useState("");
+  const [source, setSource] = useState("");
+  const [sources, setSources] = useState<Source[]>([]);
   const [timestamp, setTimestamp] = useState("");
   const [description, setDescription] = useState("");
-  const [playlists, setPlaylists] = useState<PlaylistWithCreator[]>([]);
-  const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const toast = useToast();
 
-
   useEffect(() => {
-    async function loadPlaylists() {
-      const playlists = await fetchPlaylists();
-      setPlaylists(playlists);
+    const fetchData = async () => {
+      try {
+        // Get all the required data
+        const sourcesData = await fetchSources();
+        setSources(sourcesData);
+
+      } catch (error: any) {
+        console.error("Error loading data:", error);
+        toast({
+          title: "Error loading data",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
     }
-    void loadPlaylists();
-  }, []);
+    void fetchData();
+  }, [toast]);
 
-  useEffect(() => {
-    (async () => {
-      const playlists = await fetchPlaylists();
-      setPlaylists(playlists);
-    })();
-  }, []);
-
-  const collection = useMemo(
-    () =>
-      createListCollection({
-        items: playlists.map((p) => ({
-          value: p.playlist_id,
-          label: p.title,
-        })),
-      }),
-    [playlists],
-  );
 
   function handleCancel() {
     onClose();
@@ -66,30 +59,29 @@ export function AddClipModal({ isOpen, onClose, eventId, baseUrl }: AddClipModal
 
   function resetForm() {
     setTitle("");
+    setSource("");
     setTimestamp("");
     setDescription("");
-    setSelectedPlaylists([]);
   }
 
   async function handleAdd() {
     try {
       setIsSubmitting(true);
 
-      const newClip = await upsertClip({
+      const newSourceClip = await upsertClip({
         title,
-        event_id: eventId,
+        event_id: null,
         timestamp,
         description,
         is_public: true,
-        timestamp_url: baseUrlToTimestampUrl(baseUrl, timestamp)
+        timestamp_url: baseUrlToTimestampUrl(source, timestamp)
       });
 
-      await upsertPlaylistClip(
-        selectedPlaylists.map((pid) => ({
-          playlist_id: pid,
-          clip_id: newClip.clip_id,
-        })),
-      );
+      await upsertPlaylistClip({
+        playlist_id: playlistId,
+        clip_id: newSourceClip.clip_id,
+      });
+
 
       toast({
         title: "Clip saved successfully",
@@ -134,6 +126,24 @@ export function AddClipModal({ isOpen, onClose, eventId, baseUrl }: AddClipModal
               </Field.Root>
 
               <Field.Root mb={4}>
+                <Field.Label>Source</Field.Label>
+                <NativeSelect.Root>
+                  <NativeSelect.Field
+                    placeholder="Select Source"
+                    value={source}
+                    onChange={(e) => setSource(e.currentTarget.value)}
+                  >
+                    {sources.map((s) => (
+                      <option key={s.id} value={s.url}>
+                        {s.title}
+                      </option>
+                    ))}
+                  </NativeSelect.Field>
+                  <NativeSelect.Indicator />
+                </NativeSelect.Root>
+              </Field.Root>
+
+              <Field.Root mb={4}>
                 <Field.Label>Timestamp</Field.Label>
                 <Input
                   placeholder="e.g. 6:32"
@@ -152,38 +162,6 @@ export function AddClipModal({ isOpen, onClose, eventId, baseUrl }: AddClipModal
                   variant="outline"
                 />
               </Field.Root>
-              <Select.Root multiple
-                           collection={collection}
-                           size="sm"
-                           width="320px"
-                           value={selectedPlaylists}
-                           onValueChange={(d) => setSelectedPlaylists(d.value as string[])}>
-                <Select.HiddenSelect />
-                <Select.Label>Playlist</Select.Label>
-                <Select.Control>
-                  <Select.Trigger>
-                    <Select.ValueText placeholder="Select playlists/s" />
-                  </Select.Trigger>
-                  <Select.IndicatorGroup>
-                    <Select.Indicator />
-                  </Select.IndicatorGroup>
-                </Select.Control>
-                <Portal>
-                  <Select.Positioner>
-                    <Select.Content
-                      zIndex="popover">
-                      {collection.items.map((playlist) => (
-                        <Select.Item item={playlist} key={playlist.value}>
-                          {playlist.label}
-                          <Select.ItemIndicator />
-                        </Select.Item>
-                      ))}
-                    </Select.Content>
-                  </Select.Positioner>
-                </Portal>
-              </Select.Root>
-
-
             </Dialog.Body>
 
             <Dialog.Footer display="flex" justifyContent="space-between">
