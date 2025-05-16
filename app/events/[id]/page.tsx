@@ -180,7 +180,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
               <Table.Row key={point.point_id}>
                 <Table.Cell>
                   <LinkBox as="div">
-                    <LinkOverlay as={NextLink} href={`/events/${id}/${point.point_id}`}>
+                    <LinkOverlay as={NextLink} href={`/events/${id}/${point.point_id}/view`}>
                       {teamIdToName[point.offence_team] ?? point.offence_team}
                     </LinkOverlay>
                   </LinkBox>
