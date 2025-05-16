@@ -171,7 +171,7 @@ export function AddSourceClipModal({ isOpen, onClose, playlistId }: AddSourceCli
               <Button
                 colorPalette="green"
                 onClick={handleAdd}
-                isLoading={isSubmitting}
+                loading={isSubmitting}
                 disabled={!title || !timestamp}
               >
                 Add
