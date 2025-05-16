@@ -19,11 +19,10 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomTabs from "@/components/tabbed-page";
 import { fetchEvent } from "@/app/events/supabase";
 import { fetchEventPoints } from "@/app/points/supabase";
-import type {Clip, Event, Player, Point, Possession, TeamPlayer} from "@/lib/supabase";
+import type {Clip, Event, Point, Possession, TeamPlayer} from "@/lib/supabase";
 import FloatingActionButton from "@/components/ui/plus-button";
 import {BaseTeamInfo, fetchTeamMapping} from "@/app/teams/supabase";
 import {fetchEventPossessions} from "@/app/possessions/supabase";
-import {fetchPlayersForTeam} from "@/app/players/supabase";
 import {convertTimestampToSeconds} from "@/lib/utils";
 import {fetchPlayerTeamMapping} from "@/lib/supabase";
 import {GenericTableItem, MyDynamicTable, myPieChart, myStackedBarChart} from "@/app/stats/charts";
@@ -41,8 +40,6 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
   const [teamMapping, setTeamMapping] = useState<BaseTeamInfo[]>([]);
   const [playerTeamMapping, setPlayerTeamMapping] = useState<TeamPlayer[]>([]);
   const [clipData, setClipData] = useState<Clip[]>([]);
-  const [teamOnePlayers, setTeamOnePlayers] = useState<Player[]>([]);
-  const [teamTwoPlayers, setTeamTwoPlayers] = useState<Player[]>([]);
 
 
   // Fetch data needed for page
@@ -76,15 +73,6 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
       // Fetch player/team mapping table
       const playerTeamMapping = await fetchPlayerTeamMapping();
       setPlayerTeamMapping(playerTeamMapping);
-
-      // Fetch player info for stats
-      const [teamOnePlayers, teamTwoPlayers] = await Promise.all([
-        fetchPlayersForTeam(eventData.team_1_id ?? ""),
-        fetchPlayersForTeam(eventData.team_2_id ?? ""),
-      ])
-
-      setTeamOnePlayers(teamOnePlayers);
-      setTeamTwoPlayers(teamTwoPlayers);
 
       setLoading(false);
     }
