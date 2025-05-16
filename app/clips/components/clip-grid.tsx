@@ -76,7 +76,7 @@ export function ClipGrid({ clips }: ClipGridProps) {
 
   return (
     <Container maxW="4xl">
-      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8} mt={4}>
+      <SimpleGrid columns={{ base: 1, md: 2 }} columnGap="5" rowGap="5" mt={4}>
         {clips.map((clip) => (
           <Center key={clip.clip_id}>
             <ClipCard clip={clip} />

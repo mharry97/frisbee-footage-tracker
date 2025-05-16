@@ -101,7 +101,7 @@ export default function PointView({
 
         {/* Stats */}
         <Box py={4}>
-          <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
+          <SimpleGrid columns={{ base: 1, md: 3 }} columnGap="4" rowGap="4">
             <Stat.Root>
               <Stat.Label color="white">Possessions</Stat.Label>
               <Stat.ValueText color="yellow.400" fontWeight="bold">
@@ -127,7 +127,7 @@ export default function PointView({
 
         {/* Tactics */}
         <Box py={4}>
-          <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+          <SimpleGrid columns={{ base: 1, md: 2 }} columnGap="4" rowGap="4">
             <Box>
               <Heading size="sm" color="white" mb={1}>
                 Offensive Tactics
