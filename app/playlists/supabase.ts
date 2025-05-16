@@ -7,7 +7,7 @@ import type { Playlist, PlaylistClip } from "@/lib/supabase"
 // Then when populating, take the most recent log for each, destructure it and use
 
 // Fetch all public playlists from Supabase
-type PlaylistWithCreator = Omit<Playlist, 'creator'> & {
+export type PlaylistWithCreator = Omit<Playlist, 'creator'> & {
   creator: { player_name: string };
 };
 export async function fetchPlaylists(): Promise<PlaylistWithCreator[]> {

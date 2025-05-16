@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react";
 import {fetchPlaylists, upsertPlaylistClip} from "@/app/playlists/supabase";
 import { useToast } from "@chakra-ui/toast";
-import type { Playlist } from "@/lib/supabase";
+import type { PlaylistWithCreator } from "@/app/playlists/supabase";
 import {upsertClip} from "@/app/clips/supabase";
 import { baseUrlToTimestampUrl } from "@/lib/utils";
 
@@ -27,7 +27,7 @@ export function AddClipModal({ isOpen, onClose, eventId, baseUrl }: AddClipModal
   const [title, setTitle] = useState("");
   const [timestamp, setTimestamp] = useState("");
   const [description, setDescription] = useState("");
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [playlists, setPlaylists] = useState<PlaylistWithCreator[]>([]);
   const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const toast = useToast();
