@@ -80,8 +80,14 @@ playlist or add a new one.
 the button in the bottom right to add a new clip, where you will be prompted for 
 the required info.
 
+## Backend
+The app uses supabase for its backend, an image of the schema can be found below.
+![Supabase Schema](https://github.com/mharry97/frisbee-footage-tracker/blob/main/Schema.png?raw=true)
+
+
 ## To do:
 - Login logic
+- RLS
 - Filters on clips and points page
 - Training activity cards
 - Make view point page better
@@ -97,6 +103,8 @@ the required info.
 - Add stats page
 - Change overview page to blanket no data instead of one for individual vids
 - Private playlists/clips
+
+
 
 
 
