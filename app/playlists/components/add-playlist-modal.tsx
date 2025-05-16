@@ -109,7 +109,7 @@ export function AddPlaylistModal({ isOpen, onClose }: AddClipModalProps) {
               <Button
                 colorScheme="green"
                 onClick={handleAdd}
-                isLoading={isSubmitting}
+                loading={isSubmitting}
                 disabled={!title || !description}
               >
                 Add

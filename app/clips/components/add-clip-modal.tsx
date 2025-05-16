@@ -193,7 +193,7 @@ export function AddClipModal({ isOpen, onClose, eventId, baseUrl }: AddClipModal
               <Button
                 colorPalette="green"
                 onClick={handleAdd}
-                isLoading={isSubmitting}
+                loading={isSubmitting}
                 disabled={!title || !timestamp}
               >
                 Add
