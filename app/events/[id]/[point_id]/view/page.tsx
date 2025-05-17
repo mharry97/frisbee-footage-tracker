@@ -2,27 +2,28 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Box,
   Container,
-  Heading,
   Text,
-  SimpleGrid,
-  Stat,
+  Button,
+  HStack, IconButton,
 } from "@chakra-ui/react";
 import Header from "@/components/header";
 import { fetchDetailPoint } from "@/app/points/supabase";
 import type { PointDetailed } from "@/lib/supabase";
-import {WatchButton} from "@/components/watch-button";
-import {getFootageProvider} from "@/lib/utils";
+import OnPageVideoLink from "@/components/on-page-video-link";
+import PointOverview from "@/app/events/[id]/[point_id]/view/components/point-overview";
+import PossessionSection from "@/app/events/[id]/[point_id]/view/components/possession-section";
+import { FaLongArrowAltLeft, FaLongArrowAltRight } from "react-icons/fa";
 
 export default function PointView({
                                     params,
                                   }: {
-  params: Promise<{ id: string, point_id: string }>;
+  params: Promise<{ id: string; point_id: string }>;
 }) {
   const { id, point_id } = React.use(params);
   const [point, setPoint] = useState<PointDetailed[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     if (!point_id) return;
@@ -37,12 +38,10 @@ export default function PointView({
     void load();
   }, [point_id]);
 
-  const highlight = { color: "gray.400", fontWeight: "bold" };
-
   if (loading || point.length === 0) {
     return (
       <Container maxW="4xl" py={8}>
-        <Header title={`Point Info}`} buttonText="event" redirectUrl="/playlists" />
+        <Header title="Point Info" buttonText="Back" redirectUrl={`/events/${id}`} />
         <Text mt={8} color="white">
           {loading ? "Loading..." : "No data found for this point."}
         </Text>
@@ -51,121 +50,98 @@ export default function PointView({
   }
 
   const last = point[point.length - 1];
+  const possession = point[currentIndex];
   const possessionCount = point.length;
-  const totalThrows = point.reduce((sum, p) => sum + (p.throws ?? 0), 0);
-  const avgThrows = (totalThrows / possessionCount).toFixed(1);
-
+  const scorer = last.score_player_name || "Unknown";
+  const possessionOutcome = possession.is_score ? "Score" : "Turnover";
+  const lastOutcome = last.is_score ? "Score" : "Turnover";
   const outcome =
-    last.is_score && last.offence_team === last.point_offence_team ? "Hold" : "Break";
+    last.is_score && last.offence_team === last.point_offence_team
+      ? "Hold"
+      : "Break";
 
-  const offenceInit = point[0].offence_init || "N/A";
-  const offenceMain = point[0].offence_main || "N/A";
-  const defenceInit = point[0].defence_init || "N/A";
-  const defenceMain = point[0].defence_main || "N/A";
+  const overview = {
+    offence_team: possession.offence_team_name || "Unknown",
+    throws: possession.throws || 0,
+    outcome: lastOutcome,
+  };
 
-  const scorePlayer = last.score_player_name || "Unknown";
-  const assistPlayer = last.assist_player_name || null;
+  const plays = {
+    o_init: possession.offence_init || "None",
+    o_main: possession.offence_main || "None",
+    d_init: possession.defence_init || "None",
+    d_main: possession.defence_main || "None",
+  };
 
-  const sourceHost = getFootageProvider(point[0].timestamp_url!)
-  console.log(point[0].timestamp_url)
-  console.log(sourceHost)
+  const turnover = {
+    throw_zone: possession.turn_throw_zone || "Unknown",
+    receive_zone: possession.turn_receive_zone || "Unknown",
+    thrower: possession.turn_thrower_name || "Unknown",
+    receiver: possession.turn_intended_receiver_name || "Unknown",
+    turnover_reason: possession.turnover_reason || "Unknown",
+    d_player: possession.d_player_name || "None",
+    scorer: possession.score_player_name || "Unknown",
+    assister: possession.assist_player_name || "Unknown",
+    method: possession.score_method || "Unknown",
+    outcome: possession.is_score ? "Score" : "Turnover",
+  };
+
+  const handlePrev = () => {
+    setCurrentIndex((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => Math.min(prev + 1, point.length - 1));
+  };
 
   return (
     <Container maxW="4xl" py={8}>
-      <Header title="Point info" buttonText="event" redirectUrl={`/events/${id}`} />
-      {sourceHost != "youtube" && sourceHost != "google_drive" ? (
-        <WatchButton url={point[0].timestamp_url!} />
-      ) :  (
-        <iframe
-          src={point[0].timestamp_url!}
-          width="100%"
-          height="315"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          style={{ marginTop: "16px" }}
-        ></iframe>
+      <Header title={point[0].event_name} buttonText="Back" redirectUrl={`/events/${id}`} />
+      <Text mt={4} fontSize="lg" color="gray.400">
+        {`Offence: ${point[0].point_offence_team_name}`}
+      </Text>
+
+      <PointOverview
+        last_possession_type={lastOutcome}
+        possessions={possessionCount}
+        outcome={outcome}
+        scorer={scorer}
+      />
+
+      <OnPageVideoLink url={point[0].timestamp_url!} />
+
+      {/* Navigation controls */}
+      <HStack justify="space-between" mt={5}>
+        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handlePrev} isDisabled={currentIndex === 0}>
+          <FaLongArrowAltLeft />
+        </IconButton>
+        <Text textAlign="center">
+          Possession {currentIndex + 1} of {point.length}
+        </Text>
+        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handleNext} isDisabled={currentIndex === 0}>
+          <FaLongArrowAltRight />
+        </IconButton>
+      </HStack>
+      <PossessionSection
+        overview={overview}
+        plays={plays}
+        turnover={turnover}
+      />
+      {possessionOutcome == "Turnover" && lastOutcome == "Turnover" ? (
+        <HStack justify="space-between">
+          <Button>Edit Possession</Button>
+          <Button>Add Next Possession</Button>
+        </HStack>
+      ) : possessionOutcome == "Turnover" && lastOutcome != "Turnover" ? (
+        <HStack justify="space-between">
+          <Button>Edit Possession</Button>
+        </HStack>
+      ) : (
+        <HStack justify="space-between">
+          <Button>Edit Possession</Button>
+          <Button colorPalette="red">Delete Possession</Button>
+        </HStack>
       )}
-      <Box mt={8} divideY="2px" divideColor="gray.600">
-        {/* Outcome */}
-        <Box py={4}>
-          <Heading size="md" color="white" mb={2}>
-            Outcome:
-          </Heading>
-          <Text fontSize="lg">
-            <Text as="span" {...highlight}>
-              {outcome}
-            </Text>{" "}
-            — by {last.point_offence_team_name || "Unknown Team"}
-          </Text>
-        </Box>
-
-        {/* Stats */}
-        <Box py={4}>
-          <SimpleGrid columns={{ base: 1, md: 3 }} columnGap="4" rowGap="4">
-            <Stat.Root>
-              <Stat.Label color="white">Possessions</Stat.Label>
-              <Stat.ValueText color="yellow.400" fontWeight="bold">
-                {possessionCount}
-              </Stat.ValueText>
-            </Stat.Root>
-
-            <Stat.Root>
-              <Stat.Label color="white">Turns</Stat.Label>
-              <Stat.ValueText color="yellow.400" fontWeight="bold">
-                {Math.max(possessionCount - 1, 0)}
-              </Stat.ValueText>
-            </Stat.Root>
-
-            <Stat.Root>
-              <Stat.Label color="white">Avg Throws per Possession</Stat.Label>
-              <Stat.ValueText color="yellow.400" fontWeight="bold">
-                {avgThrows}
-              </Stat.ValueText>
-            </Stat.Root>
-          </SimpleGrid>
-        </Box>
-
-        {/* Tactics */}
-        <Box py={4}>
-          <SimpleGrid columns={{ base: 1, md: 2 }} columnGap="4" rowGap="4">
-            <Box>
-              <Heading size="sm" color="white" mb={1}>
-                Offensive Tactics
-              </Heading>
-              <Text {...highlight}>Init: {offenceInit}</Text>
-              <Text {...highlight}>Main: {offenceMain}</Text>
-            </Box>
-            <Box>
-              <Heading size="sm" color="white" mb={1}>
-                Defensive Tactics
-              </Heading>
-              <Text {...highlight}>Init: {defenceInit}</Text>
-              <Text {...highlight}>Main: {defenceMain}</Text>
-            </Box>
-          </SimpleGrid>
-        </Box>
-
-        {/* Scoring Play */}
-        <Box py={4}>
-          <Heading size="sm" color="white" mb={1}>
-            Scoring Play
-          </Heading>
-          <Text fontSize="lg">
-            Scored by{" "}
-            <Text as="span" {...highlight}>
-              {scorePlayer}
-            </Text>
-            {assistPlayer && (
-              <>
-                {" "}from{" "}
-                <Text as="span" {...highlight}>
-                  {assistPlayer}
-                </Text>
-              </>
-            )}
-          </Text>
-        </Box>
-      </Box>
     </Container>
   );
 }

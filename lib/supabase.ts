@@ -157,6 +157,8 @@ export async function fetchPlayerTeamMapping(): Promise<TeamPlayer[]> {
 export type PointDetailed = {
   possession_id: string;
   point_id: string;
+  event_id: string;
+  event_name: string;
   offence_init: string | null;
   defence_init: string | null;
   offence_main: string | null;

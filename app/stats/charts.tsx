@@ -47,7 +47,6 @@ export const myPieChart = (title: string, data: PieDataItem[]) => {
           innerRadius={60}
           stroke="none"
           labelLine={false}
-          paddingAngle={8}
         >
           <LabelList position="inside" fill="white" stroke="none" />
           {data.map((_, index) => (
