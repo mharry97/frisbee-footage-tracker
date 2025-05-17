@@ -5,7 +5,11 @@ import {
   Container,
   Text,
   Button,
-  HStack, IconButton,
+  HStack,
+  IconButton,
+  useDisclosure,
+  Portal,
+  Dialog, CloseButton
 } from "@chakra-ui/react";
 import Header from "@/components/header";
 import { fetchDetailPoint } from "@/app/points/supabase";
@@ -14,6 +18,7 @@ import OnPageVideoLink from "@/components/on-page-video-link";
 import PointOverview from "@/app/events/[id]/[point_id]/view/components/point-overview";
 import PossessionSection from "@/app/events/[id]/[point_id]/view/components/possession-section";
 import { FaLongArrowAltLeft, FaLongArrowAltRight } from "react-icons/fa";
+import {deletePossession} from "@/app/possessions/supabase";
 
 export default function PointView({
                                     params,
@@ -38,19 +43,31 @@ export default function PointView({
     void load();
   }, [point_id]);
 
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   if (loading || point.length === 0) {
     return (
       <Container maxW="4xl" py={8}>
         <Header title="Point Info" buttonText="Back" redirectUrl={`/events/${id}`} />
         <Text mt={8} color="white">
-          {loading ? "Loading..." : "No data found for this point."}
+          {loading ? "Loading point data" : "No data found for this point yet."}
         </Text>
+        {!loading && (
+          <Button
+            colorPalette="green"
+            mt={6}
+            onClick={() => window.location.href = `/events/${id}/${point_id}`}
+          >
+            Add Possession
+          </Button>
+        )}
       </Container>
     );
   }
 
   const last = point[point.length - 1];
   const possession = point[currentIndex];
+  const currentPossession = currentIndex+1;
   const possessionCount = point.length;
   const scorer = last.score_player_name || "Unknown";
   const possessionOutcome = possession.is_score ? "Score" : "Turnover";
@@ -94,6 +111,51 @@ export default function PointView({
     setCurrentIndex((prev) => Math.min(prev + 1, point.length - 1));
   };
 
+  const handleDelete = async () => {
+    try {
+      if (possession.possession_number == null) {
+        console.warn("Possession number is missing");
+        return;
+      }
+      await deletePossession(possession.point_id, possession.possession_number);
+      setPoint((prev) =>
+        prev.filter((p) => !(p.point_id === possession.point_id && p.possession_number === possession.possession_number))
+      );
+      setCurrentIndex((prev) => Math.max(prev - 1, 0)); // go back if on last possession
+      onClose();
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const DeleteConfirm = (
+    <Portal>
+      <Dialog.Backdrop />
+      <Dialog.Positioner>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>Confirm Deletion</Dialog.Title>
+          </Dialog.Header>
+
+          <Dialog.Body>
+            Are you sure you want to delete this possession? This cannot be undone.
+          </Dialog.Body>
+
+          <Dialog.Footer display="flex" justifyContent="space-between">
+            <Button onClick={onClose}>Cancel</Button>
+            <Button colorPalette="red" onClick={handleDelete}>
+              Confirm Delete
+            </Button>
+          </Dialog.Footer>
+
+          <Dialog.CloseTrigger asChild>
+            <CloseButton position="absolute" top="2" right="2" onClick={onClose} />
+          </Dialog.CloseTrigger>
+        </Dialog.Content>
+      </Dialog.Positioner>
+    </Portal>
+  )
+
   return (
     <Container maxW="4xl" py={8}>
       <Header title={point[0].event_name} buttonText="Back" redirectUrl={`/events/${id}`} />
@@ -127,19 +189,34 @@ export default function PointView({
         plays={plays}
         turnover={turnover}
       />
-      {possessionOutcome == "Turnover" && lastOutcome == "Turnover" ? (
+      {possessionOutcome == "Turnover" && currentPossession == possessionCount ? (
         <HStack justify="space-between">
           <Button>Edit Possession</Button>
           <Button>Add Next Possession</Button>
+          <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <Dialog.Trigger asChild>
+              <Button colorScheme="red" onClick={onOpen}>
+                Delete Possession
+              </Button>
+            </Dialog.Trigger>
+            {DeleteConfirm}
+          </Dialog.Root>
         </HStack>
-      ) : possessionOutcome == "Turnover" && lastOutcome != "Turnover" ? (
+      ) : possessionOutcome != "Turnover" && currentPossession == possessionCount ? (
         <HStack justify="space-between">
           <Button>Edit Possession</Button>
+          <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <Dialog.Trigger asChild>
+              <Button colorPalette="red" onClick={onOpen}>
+                Delete Possession
+              </Button>
+            </Dialog.Trigger>
+            {DeleteConfirm}
+          </Dialog.Root>
         </HStack>
       ) : (
         <HStack justify="space-between">
           <Button>Edit Possession</Button>
-          <Button colorPalette="red">Delete Possession</Button>
         </HStack>
       )}
     </Container>
