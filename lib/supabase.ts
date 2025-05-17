@@ -141,11 +141,9 @@ export type PrivatePlaylistClip = {
 // Fetch all events from Supabase
 export async function fetchPlayerTeamMapping(): Promise<TeamPlayer[]> {
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("team_player_mapping")
       .select("*");
-
-    if (error) throw error;
 
     return data ?? []
   } catch (error) {
