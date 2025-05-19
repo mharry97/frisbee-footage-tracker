@@ -13,12 +13,14 @@ import {
 } from "@chakra-ui/react";
 import Header from "@/components/header";
 import { fetchDetailPoint } from "@/app/points/supabase";
-import type { PointDetailed } from "@/lib/supabase";
+import type {Player, PointDetailed} from "@/lib/supabase";
 import OnPageVideoLink from "@/components/on-page-video-link";
 import PointOverview from "@/app/events/[id]/[point_id]/view/components/point-overview";
 import PossessionSection from "@/app/events/[id]/[point_id]/view/components/possession-section";
 import { FaLongArrowAltLeft, FaLongArrowAltRight } from "react-icons/fa";
-import {deletePossession} from "@/app/possessions/supabase";
+import {deletePossession, updatePossession} from "@/app/possessions/supabase";
+import EditPossessionDialog from "@/app/events/[id]/[point_id]/view/components/edit-possession";
+import {fetchPlayersForTeam} from "@/app/players/supabase";
 
 export default function PointView({
                                     params,
@@ -26,9 +28,24 @@ export default function PointView({
   params: Promise<{ id: string; point_id: string }>;
 }) {
   const { id, point_id } = React.use(params);
+
   const [point, setPoint] = useState<PointDetailed[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [offencePlayers, setOffencePlayers] = useState<Player[]>([]);
+  const [defencePlayers, setDefencePlayers] = useState<Player[]>([]);
+
+  const {
+    isOpen: isEditOpen,
+    onOpen: openEdit,
+    onClose: closeEdit
+  } = useDisclosure();
+
+  const {
+    isOpen: isDeleteOpen,
+    onOpen: openDelete,
+    onClose: closeDelete,
+  } = useDisclosure();
 
   useEffect(() => {
     if (!point_id) return;
@@ -43,7 +60,21 @@ export default function PointView({
     void load();
   }, [point_id]);
 
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  useEffect(() => {
+    async function loadPlayers() {
+      if (!point || point.length === 0 || currentIndex >= point.length) return;
+
+      const possession = point[currentIndex];
+      if (!possession) return;
+
+      const offence = await fetchPlayersForTeam(possession.offence_team || "");
+      const defence = await fetchPlayersForTeam(possession.defence_team || "");
+      setOffencePlayers(offence);
+      setDefencePlayers(defence);
+    }
+
+    void loadPlayers();
+  }, [point, currentIndex]);
 
   if (loading || point.length === 0) {
     return (
@@ -76,6 +107,48 @@ export default function PointView({
     last.is_score && last.offence_team === last.point_offence_team
       ? "Hold"
       : "Break";
+
+  const refreshData = async () => {
+    setLoading(true);
+    const data = await fetchDetailPoint(point_id);
+    setPoint(data);
+    setLoading(false);
+  };
+
+  const handleUpdate = async (updated: Partial<PointDetailed>) => {
+    try {
+      const { point_id, possession_number } = possession;
+      if (!point_id || possession_number == null) return;
+
+      await updatePossession(point_id, possession_number, updated);
+      await refreshData();
+      closeEdit();
+    } catch (err) {
+      console.error("Failed to update possession", err);
+    }
+  };
+
+  // Test function for checking output
+
+  // const handleUpdate = (updated: Partial<PointDetailed>) => {
+  //   const possessionNumber = point[currentIndex]?.possession_number;
+  //   const pointId = point[currentIndex]?.point_id;
+  //
+  //   if (!possessionNumber || !pointId) {
+  //     console.warn("Missing possession number or point ID");
+  //     return;
+  //   }
+  //
+  //   const payload = {
+  //     point_id: pointId,
+  //     possession_number: possessionNumber,
+  //     ...updated,
+  //   };
+  //
+  //   console.log("Supabase update payload:", payload);
+  //
+  //   closeEdit();
+  // };
 
   const overview = {
     offence_team: possession.offence_team_name || "Unknown",
@@ -122,7 +195,7 @@ export default function PointView({
         prev.filter((p) => !(p.point_id === possession.point_id && p.possession_number === possession.possession_number))
       );
       setCurrentIndex((prev) => Math.max(prev - 1, 0)); // go back if on last possession
-      onClose();
+      closeDelete();
     } catch (error) {
       console.log(error);
     }
@@ -142,14 +215,14 @@ export default function PointView({
           </Dialog.Body>
 
           <Dialog.Footer display="flex" justifyContent="space-between">
-            <Button onClick={onClose}>Cancel</Button>
+            <Button onClick={closeDelete}>Cancel</Button>
             <Button colorPalette="red" onClick={handleDelete}>
               Confirm Delete
             </Button>
           </Dialog.Footer>
 
           <Dialog.CloseTrigger asChild>
-            <CloseButton position="absolute" top="2" right="2" onClick={onClose} />
+            <CloseButton position="absolute" top="2" right="2" onClick={closeDelete} />
           </Dialog.CloseTrigger>
         </Dialog.Content>
       </Dialog.Positioner>
@@ -180,7 +253,7 @@ export default function PointView({
         <Text textAlign="center">
           Possession {currentIndex + 1} of {point.length}
         </Text>
-        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handleNext} isDisabled={currentIndex === 0}>
+        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handleNext} isDisabled={currentIndex === point.length - 1}>
           <FaLongArrowAltRight />
         </IconButton>
       </HStack>
@@ -191,11 +264,23 @@ export default function PointView({
       />
       {possessionOutcome == "Turnover" && currentPossession == possessionCount ? (
         <HStack justify="space-between">
-          <Button>Edit Possession</Button>
-          <Button>Add Next Possession</Button>
-          <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+          <Dialog.Root open={isEditOpen} onOpenChange={(open) => !open && closeEdit()}>
             <Dialog.Trigger asChild>
-              <Button colorScheme="red" onClick={onOpen}>
+              <Button onClick={openEdit}>Edit Possession</Button>
+            </Dialog.Trigger>
+            <EditPossessionDialog
+              possession={possession}
+              onClose={closeEdit}
+              onUpdate={handleUpdate}
+              outcome={possessionOutcome}
+              offence_player_list={offencePlayers}
+              defence_player_list={defencePlayers}
+            />
+          </Dialog.Root>
+          <Button>Add Next Possession</Button>
+          <Dialog.Root open={isDeleteOpen} onOpenChange={(open) => !open && closeDelete()}>
+            <Dialog.Trigger asChild>
+              <Button colorScheme="red" onClick={openDelete}>
                 Delete Possession
               </Button>
             </Dialog.Trigger>
@@ -204,10 +289,22 @@ export default function PointView({
         </HStack>
       ) : possessionOutcome != "Turnover" && currentPossession == possessionCount ? (
         <HStack justify="space-between">
-          <Button>Edit Possession</Button>
-          <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+          <Dialog.Root open={isEditOpen} onOpenChange={(open) => !open && closeEdit()}>
             <Dialog.Trigger asChild>
-              <Button colorPalette="red" onClick={onOpen}>
+              <Button onClick={openEdit}>Edit Possession</Button>
+            </Dialog.Trigger>
+            <EditPossessionDialog
+              possession={possession}
+              onClose={closeEdit}
+              onUpdate={handleUpdate}
+              outcome={possessionOutcome}
+              offence_player_list={offencePlayers}
+              defence_player_list={defencePlayers}
+            />
+          </Dialog.Root>
+          <Dialog.Root open={isDeleteOpen} onOpenChange={(open) => !open && closeDelete()}>
+            <Dialog.Trigger asChild>
+              <Button colorPalette="red" onClick={openDelete}>
                 Delete Possession
               </Button>
             </Dialog.Trigger>
@@ -216,7 +313,19 @@ export default function PointView({
         </HStack>
       ) : (
         <HStack justify="space-between">
-          <Button>Edit Possession</Button>
+          <Dialog.Root open={isEditOpen} onOpenChange={(open) => !open && closeEdit()}>
+            <Dialog.Trigger asChild>
+              <Button onClick={openEdit}>Edit Possession</Button>
+            </Dialog.Trigger>
+            <EditPossessionDialog
+              possession={possession}
+              onClose={closeEdit}
+              onUpdate={handleUpdate}
+              outcome={possessionOutcome}
+              offence_player_list={offencePlayers}
+              defence_player_list={defencePlayers}
+            />
+          </Dialog.Root>
         </HStack>
       )}
     </Container>

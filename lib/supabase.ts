@@ -162,8 +162,8 @@ export type PointDetailed = {
   offence_main: string | null;
   defence_main: string | null;
   throws: number | null;
-  turn_throw_zone: string | null;
-  turn_receive_zone: string | null;
+  turn_throw_zone: number | null;
+  turn_receive_zone: number | null;
   turnover_reason: string | null;
   score_method: string | null;
   offence_team: string | null;

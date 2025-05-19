@@ -9,7 +9,6 @@ import {
   Image,
   Field,
   NativeSelect,
-  IconButton,
   Box,
 } from "@chakra-ui/react";
 import Header from "@/components/header";
@@ -29,12 +28,12 @@ import FloatingClipButton from "@/components/ui/add-clip-button";
 import { fetchEvent } from "@/app/events/supabase";
 import { BaseTeamInfo, fetchTeamMapping } from "@/app/teams/supabase";
 import CustomDropdownInput from "@/app/events/[id]/[point_id]/components/custom-dropdown-with-add";
-import { LuMinus, LuPlus } from "react-icons/lu";
 import {fetchPlayersForTeam} from "@/app/players/supabase";
 import { writePossession} from "@/app/events/[id]/[point_id]/supabase";
 import {getOrCreatePlayerId} from "@/app/events/[id]/[point_id]/components/get-or-create-player-id";
 import { AddClipModal } from "@/app/clips/components/add-clip-modal";
 import OnPageVideoLink from "@/components/on-page-video-link";
+import ThrowCounter from "@/components/throws-input";
 
 
 export default function PointPage({
@@ -300,40 +299,7 @@ export default function PointPage({
             options={oMainPlays.map((p) => ({ value: p.play, label: p.play }))}
           />
         </HStack>
-        <Field.Root mb={4}>
-          <Field.Label>Throws</Field.Label>
-          <HStack gap={4}>
-            <IconButton
-              variant="outline"
-              size="sm"
-              aria-label="Decrease throws"
-              onClick={() =>
-                setNumThrows((prev) => {
-                  const next = Math.max(0, parseInt(prev || "0", 10) - 1);
-                  return next.toString();
-                })
-              }
-            >
-              <LuMinus />
-            </IconButton>
-            <Text fontSize="lg" minW="3ch" textAlign="center">
-              {numThrows}
-            </Text>
-            <IconButton
-              variant="outline"
-              size="sm"
-              aria-label="Increase throws"
-              onClick={() =>
-                setNumThrows((prev) => {
-                  const next = parseInt(prev || "0", 10) + 1;
-                  return next.toString();
-                })
-              }
-            >
-              <LuPlus />
-            </IconButton>
-          </HStack>
-        </Field.Root>
+        <ThrowCounter value={numThrows} onChange={setNumThrows} />
       </>
 
       <Field.Root mb={4}>
