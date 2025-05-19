@@ -9,7 +9,6 @@ import {
   Image,
   Field,
   NativeSelect,
-  IconButton,
   Box,
 } from "@chakra-ui/react";
 import Header from "@/components/header";
@@ -23,18 +22,18 @@ import {
 } from "@/app/events/[id]/[point_id]/supabase";
 import type {Event, Point, Player} from "@/lib/supabase";
 import { useToast } from "@chakra-ui/toast";
-import { getFootageProvider, getTeamName } from "@/lib/utils";
+import { getTeamName } from "@/lib/utils";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import FloatingClipButton from "@/components/ui/add-clip-button";
 import { fetchEvent } from "@/app/events/supabase";
 import { BaseTeamInfo, fetchTeamMapping } from "@/app/teams/supabase";
 import CustomDropdownInput from "@/app/events/[id]/[point_id]/components/custom-dropdown-with-add";
-import { LuMinus, LuPlus } from "react-icons/lu";
 import {fetchPlayersForTeam} from "@/app/players/supabase";
 import { writePossession} from "@/app/events/[id]/[point_id]/supabase";
 import {getOrCreatePlayerId} from "@/app/events/[id]/[point_id]/components/get-or-create-player-id";
 import { AddClipModal } from "@/app/clips/components/add-clip-modal";
-import {WatchButton} from "@/components/watch-button";
+import OnPageVideoLink from "@/components/on-page-video-link";
+import ThrowCounter from "@/components/throws-input";
 
 
 export default function PointPage({
@@ -211,11 +210,6 @@ export default function PointPage({
 
   // Determine footage provider based on pointData.timestamp_url.
   const currentPoint = pointData[0];
-  const provider =
-    currentPoint && currentPoint.timestamp_url
-      ? getFootageProvider(currentPoint.timestamp_url)
-      : null;
-
   const eventName = eventData ? eventData.event_name : "Event";
 
 
@@ -267,20 +261,7 @@ export default function PointPage({
     <Container maxW="4xl">
       <Header title={eventName} buttonText="Back" redirectUrl={`/events/${id}`} />
       <Text mt={4} fontSize="lg" color="gray.400">{`${offence_team_name} on O starting ${currentPoint.timestamp}`}</Text>
-      {/* Render an embedded video if provider is youtube or google_drive; else show a Watch button */}
-      {currentPoint && currentPoint.timestamp_url && (provider === "google_drive" || provider === "youtube") ? (
-        <iframe
-          src={currentPoint.timestamp_url}
-          width="100%"
-          height="315"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          style={{ marginTop: "16px" }}
-        ></iframe>
-      ) : currentPoint && currentPoint.timestamp_url ? (
-        <WatchButton url={currentPoint.timestamp_url} />
-      ) : null}
-
+      <OnPageVideoLink url={currentPoint.timestamp_url}/>
       <>
         {/* Display dynamic Possession count and current offence team */}
         <Text textStyle="3xl" mb={4} mt={4}>{`Possession #${possessionCount}`}</Text>
@@ -318,40 +299,7 @@ export default function PointPage({
             options={oMainPlays.map((p) => ({ value: p.play, label: p.play }))}
           />
         </HStack>
-        <Field.Root mb={4}>
-          <Field.Label>Throws</Field.Label>
-          <HStack gap={4}>
-            <IconButton
-              variant="outline"
-              size="sm"
-              aria-label="Decrease throws"
-              onClick={() =>
-                setNumThrows((prev) => {
-                  const next = Math.max(0, parseInt(prev || "0", 10) - 1);
-                  return next.toString();
-                })
-              }
-            >
-              <LuMinus />
-            </IconButton>
-            <Text fontSize="lg" minW="3ch" textAlign="center">
-              {numThrows}
-            </Text>
-            <IconButton
-              variant="outline"
-              size="sm"
-              aria-label="Increase throws"
-              onClick={() =>
-                setNumThrows((prev) => {
-                  const next = parseInt(prev || "0", 10) + 1;
-                  return next.toString();
-                })
-              }
-            >
-              <LuPlus />
-            </IconButton>
-          </HStack>
-        </Field.Root>
+        <ThrowCounter value={numThrows} onChange={setNumThrows} />
       </>
 
       <Field.Root mb={4}>

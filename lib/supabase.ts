@@ -141,11 +141,9 @@ export type PrivatePlaylistClip = {
 // Fetch all events from Supabase
 export async function fetchPlayerTeamMapping(): Promise<TeamPlayer[]> {
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("team_player_mapping")
       .select("*");
-
-    if (error) throw error;
 
     return data ?? []
   } catch (error) {
@@ -157,13 +155,15 @@ export async function fetchPlayerTeamMapping(): Promise<TeamPlayer[]> {
 export type PointDetailed = {
   possession_id: string;
   point_id: string;
+  event_id: string;
+  event_name: string;
   offence_init: string | null;
   defence_init: string | null;
   offence_main: string | null;
   defence_main: string | null;
   throws: number | null;
-  turn_throw_zone: string | null;
-  turn_receive_zone: string | null;
+  turn_throw_zone: number | null;
+  turn_receive_zone: number | null;
   turnover_reason: string | null;
   score_method: string | null;
   offence_team: string | null;

@@ -1,4 +1,5 @@
 import {Possession, supabase} from "@/lib/supabase";
+import { PointDetailed } from "@/lib/supabase";
 
 // Fetch basic info for all possessions from Supabase for a given event_id
 export async function fetchEventPossessions(event_id: string): Promise<Possession[]> {
@@ -14,5 +15,28 @@ export async function fetchEventPossessions(event_id: string): Promise<Possessio
   } catch (error) {
     console.error("Error fetching possession info:", error);
     return [];
+  }
+}
+
+export async function deletePossession(point_id: string, possession_number: number): Promise<void> {
+  const { error } = await supabase
+    .from("possessions")
+    .delete()
+    .match({ point_id, possession_number });
+
+  if (error) {
+    console.error("Failed to delete possession:", error);
+    throw error;
+  }
+}
+
+export async function updatePossession(point_id: string, possession_number: number, data: Partial<PointDetailed>) {
+  const { error } = await supabase
+    .from("possessions")
+    .update(data)
+    .match({ point_id, possession_number });
+
+  if (error) {
+    throw new Error(`Failed to update possession: ${error.message}`);
   }
 }
