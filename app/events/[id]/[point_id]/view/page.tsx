@@ -35,17 +35,8 @@ export default function PointView({
   const [offencePlayers, setOffencePlayers] = useState<Player[]>([]);
   const [defencePlayers, setDefencePlayers] = useState<Player[]>([]);
 
-  const {
-    isOpen: isEditOpen,
-    onOpen: openEdit,
-    onClose: closeEdit
-  } = useDisclosure();
-
-  const {
-    isOpen: isDeleteOpen,
-    onOpen: openDelete,
-    onClose: closeDelete,
-  } = useDisclosure();
+  const editDisclosure = useDisclosure();
+  const deleteDisclosure = useDisclosure();
 
   useEffect(() => {
     if (!point_id) return;
@@ -122,7 +113,7 @@ export default function PointView({
 
       await updatePossession(point_id, possession_number, updated);
       await refreshData();
-      closeEdit();
+      editDisclosure.onClose();
     } catch (err) {
       console.error("Failed to update possession", err);
     }
@@ -147,7 +138,7 @@ export default function PointView({
   //
   //   console.log("Supabase update payload:", payload);
   //
-  //   closeEdit();
+  //   editDisclosure.onClose();
   // };
 
   const overview = {
@@ -164,8 +155,8 @@ export default function PointView({
   };
 
   const turnover = {
-    throw_zone: possession.turn_throw_zone || "Unknown",
-    receive_zone: possession.turn_receive_zone || "Unknown",
+    throw_zone: Number(possession.turn_throw_zone) || 1,
+    receive_zone: Number(possession.turn_receive_zone) || 1,
     thrower: possession.turn_thrower_name || "Unknown",
     receiver: possession.turn_intended_receiver_name || "Unknown",
     turnover_reason: possession.turnover_reason || "Unknown",
@@ -195,7 +186,7 @@ export default function PointView({
         prev.filter((p) => !(p.point_id === possession.point_id && p.possession_number === possession.possession_number))
       );
       setCurrentIndex((prev) => Math.max(prev - 1, 0)); // go back if on last possession
-      closeDelete();
+      deleteDisclosure.onClose();
     } catch (error) {
       console.log(error);
     }
@@ -215,14 +206,14 @@ export default function PointView({
           </Dialog.Body>
 
           <Dialog.Footer display="flex" justifyContent="space-between">
-            <Button onClick={closeDelete}>Cancel</Button>
+            <Button onClick={deleteDisclosure.onClose}>Cancel</Button>
             <Button colorPalette="red" onClick={handleDelete}>
               Confirm Delete
             </Button>
           </Dialog.Footer>
 
           <Dialog.CloseTrigger asChild>
-            <CloseButton position="absolute" top="2" right="2" onClick={closeDelete} />
+            <CloseButton position="absolute" top="2" right="2" onClick={deleteDisclosure.onClose} />
           </Dialog.CloseTrigger>
         </Dialog.Content>
       </Dialog.Positioner>
@@ -247,13 +238,13 @@ export default function PointView({
 
       {/* Navigation controls */}
       <HStack justify="space-between" mt={5}>
-        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handlePrev} isDisabled={currentIndex === 0}>
+        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handlePrev} disabled={currentIndex === 0}>
           <FaLongArrowAltLeft />
         </IconButton>
         <Text textAlign="center">
           Possession {currentIndex + 1} of {point.length}
         </Text>
-        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handleNext} isDisabled={currentIndex === point.length - 1}>
+        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handleNext} disabled={currentIndex === point.length - 1}>
           <FaLongArrowAltRight />
         </IconButton>
       </HStack>
@@ -264,13 +255,13 @@ export default function PointView({
       />
       {possessionOutcome == "Turnover" && currentPossession == possessionCount ? (
         <HStack justify="space-between">
-          <Dialog.Root open={isEditOpen} onOpenChange={(open) => !open && closeEdit()}>
+          <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
             <Dialog.Trigger asChild>
-              <Button onClick={openEdit}>Edit Possession</Button>
+              <Button onClick={editDisclosure.onOpen}>Edit Possession</Button>
             </Dialog.Trigger>
             <EditPossessionDialog
               possession={possession}
-              onClose={closeEdit}
+              onClose={editDisclosure.onClose}
               onUpdate={handleUpdate}
               outcome={possessionOutcome}
               offence_player_list={offencePlayers}
@@ -278,9 +269,9 @@ export default function PointView({
             />
           </Dialog.Root>
           <Button>Add Next Possession</Button>
-          <Dialog.Root open={isDeleteOpen} onOpenChange={(open) => !open && closeDelete()}>
+          <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
             <Dialog.Trigger asChild>
-              <Button colorScheme="red" onClick={openDelete}>
+              <Button colorScheme="red" onClick={deleteDisclosure.onOpen}>
                 Delete Possession
               </Button>
             </Dialog.Trigger>
@@ -289,22 +280,22 @@ export default function PointView({
         </HStack>
       ) : possessionOutcome != "Turnover" && currentPossession == possessionCount ? (
         <HStack justify="space-between">
-          <Dialog.Root open={isEditOpen} onOpenChange={(open) => !open && closeEdit()}>
+          <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
             <Dialog.Trigger asChild>
-              <Button onClick={openEdit}>Edit Possession</Button>
+              <Button onClick={editDisclosure.onOpen}>Edit Possession</Button>
             </Dialog.Trigger>
             <EditPossessionDialog
               possession={possession}
-              onClose={closeEdit}
+              onClose={editDisclosure.onClose}
               onUpdate={handleUpdate}
               outcome={possessionOutcome}
               offence_player_list={offencePlayers}
               defence_player_list={defencePlayers}
             />
           </Dialog.Root>
-          <Dialog.Root open={isDeleteOpen} onOpenChange={(open) => !open && closeDelete()}>
+          <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
             <Dialog.Trigger asChild>
-              <Button colorPalette="red" onClick={openDelete}>
+              <Button colorPalette="red" onClick={deleteDisclosure.onOpen}>
                 Delete Possession
               </Button>
             </Dialog.Trigger>
@@ -313,13 +304,13 @@ export default function PointView({
         </HStack>
       ) : (
         <HStack justify="space-between">
-          <Dialog.Root open={isEditOpen} onOpenChange={(open) => !open && closeEdit()}>
+          <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
             <Dialog.Trigger asChild>
-              <Button onClick={openEdit}>Edit Possession</Button>
+              <Button onClick={editDisclosure.onOpen}>Edit Possession</Button>
             </Dialog.Trigger>
             <EditPossessionDialog
               possession={possession}
-              onClose={closeEdit}
+              onClose={editDisclosure.onClose}
               onUpdate={handleUpdate}
               outcome={possessionOutcome}
               offence_player_list={offencePlayers}

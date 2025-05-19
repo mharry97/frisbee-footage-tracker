@@ -13,7 +13,7 @@ export default function PossessionOverview({
                                         outcome,
                                       }: PossessionOverviewProps) {
   return (
-    <HStack spacing={6} w="80%" mx="auto" justify="space-between">
+    <HStack gap={6} w="80%" mx="auto" justify="space-between">
       <VStack>
         <Text fontWeight="bold">Offence Team</Text>
         <Text color="yellow.400" fontWeight="bold">{offence_team}</Text>

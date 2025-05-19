@@ -24,7 +24,7 @@ export default function PointOverview({
             No scoring possession has been added yet. Currently {possessions} possessions have been recorded.
           </Text>
         ) : (
-          <HStack spacing={6} w="80%" mx="auto" justify="space-between">
+          <HStack gap={6} w="80%" mx="auto" justify="space-between">
             <VStack>
               <Text fontWeight="bold">Outcome</Text>
               <Text color="yellow.400" fontWeight="bold">{outcome}</Text>

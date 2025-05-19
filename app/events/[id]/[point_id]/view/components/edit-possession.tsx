@@ -50,8 +50,8 @@ export default function EditPossessionDialog({
   const [offenceInitList, setOInitList] = useState<ListItem[]>([]);
   const [offenceMainList, setOMainList] = useState<ListItem[]>([]);
 
-  const [thrownTo, setThrownTo] = useState(possession.turn_receive_zone ?? null);
-  const [thrownFrom, setThrownFrom] = useState(possession.turn_throw_zone ?? null);
+  const [thrownTo, setThrownTo] = useState<number | null>(possession.turn_receive_zone ?? null);
+  const [thrownFrom, setThrownFrom] = useState<number | null>(possession.turn_throw_zone ?? null);
   const [turnoverThrower, setTurnoverThrower] = useState(possession.turn_thrower ?? "");
   const [turnoverReceiver, setTurnoverReceiver] = useState(possession.turn_intended_receiver ?? "");
   const [turnoverReason, setTurnoverReason] = useState(possession.turnover_reason ?? "");
@@ -90,8 +90,8 @@ export default function EditPossessionDialog({
       throws: Number(numThrows),
       is_score: possession.is_score,
       turn_thrower: clean(turnoverThrower),
-      turn_throw_zone: Number(thrownFrom),
-      turn_receive_zone: Number(thrownTo),
+      turn_throw_zone: thrownFrom,
+      turn_receive_zone: thrownTo,
       turn_intended_receiver: clean(turnoverReceiver),
       turnover_reason: turnoverReason,
       d_player: clean(dPlayer),
@@ -110,7 +110,7 @@ export default function EditPossessionDialog({
             <Dialog.Title>Edit Possession</Dialog.Title>
           </Dialog.Header>
           <Dialog.Body>
-            <VStack spacing={4}>
+            <VStack gap={4}>
               <CustomDropdownInput
                 label="Defence Initiation"
                 placeholder="e.g. Flex"
@@ -151,8 +151,9 @@ export default function EditPossessionDialog({
                     <NativeSelect.Root>
                       <NativeSelect.Field
                         placeholder="Select Zone"
-                        value={thrownFrom}
-                        onChange={(e) => setThrownFrom(e.currentTarget.value)}
+                        value={thrownFrom ?? ""}
+                        onChange={(e) => {setThrownFrom(Number(e.currentTarget.value));
+                        }}
                       >
                         {Array.from({ length: 12 }, (_, i) => {
                           const val = (i + 1).toString();
@@ -171,8 +172,9 @@ export default function EditPossessionDialog({
                     <NativeSelect.Root>
                       <NativeSelect.Field
                         placeholder="Select Zone"
-                        value={thrownTo}
-                        onChange={(e) => setThrownTo(e.currentTarget.value)}
+                        value={thrownTo ?? ""}
+                        onChange={(e) => {setThrownTo(Number(e.currentTarget.value));
+                        }}
                       >
                         {Array.from({ length: 12 }, (_, i) => {
                           const val = (i + 1).toString();

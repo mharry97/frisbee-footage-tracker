@@ -3,9 +3,9 @@ import {Box, Container, Text} from "@chakra-ui/react";
 import PossessionOverview from "@/app/events/[id]/[point_id]/view/components/possession-overview";
 import PossessionPlays from "@/app/events/[id]/[point_id]/view/components/possession-plays";
 import PossessionOutcomeTurnover from "@/app/events/[id]/[point_id]/view/components/possession-outcome";
-import type PossessionOutcomeProps from "./possession-outcome"
-import type PossessionPlayProps from "./possession-plays"
-import type PossessionOverviewProps from "./possession-overview"
+import type { PossessionOutcomeProps } from "./possession-outcome"
+import type { PossessionPlayProps } from "./possession-plays"
+import type { PossessionOverviewProps } from "./possession-overview"
 
 type PointSectionProps = {
   overview: PossessionOverviewProps;

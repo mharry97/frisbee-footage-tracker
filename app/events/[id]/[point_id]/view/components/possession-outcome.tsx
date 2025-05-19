@@ -8,14 +8,14 @@ import {
 import React from "react";
 
 export type PossessionOutcomeProps = {
-  throw_zone: string;
-  receive_zone: string;
+  throw_zone: number;
+  receive_zone: number;
   thrower: string;
   receiver: string;
   turnover_reason: string;
   d_player: string;
   scorer: string;
-  assister: number;
+  assister: string;
   method: string;
   outcome: string;
 };
@@ -34,14 +34,14 @@ export default function PossessionOutcomeDetails({
                                         }: PossessionOutcomeProps) {
   return (
     outcome === "Turnover" ? (
-      <VStack spacing={6} align="center" mb={4} mt={4}>
+      <VStack gap={6} align="center" mb={4} mt={4}>
         <Center>
           <Image src="/pitch-zoned.png" alt="Pitch Zoned" mb={4} />
         </Center>
 
         <SimpleGrid columns={2} gapX={20} gapY={7}>
-          <StatBox label="Thrown From" value={throw_zone} />
-          <StatBox label="Thrown To" value={receive_zone} />
+          <StatBox label="Thrown From" value={String(throw_zone)} />
+          <StatBox label="Thrown To" value={String(receive_zone)} />
           <StatBox label="Thrower" value={thrower} />
           <StatBox label="Receiver" value={receiver} />
           <StatBox label="Turnover Reason" value={turnover_reason} />
@@ -49,7 +49,7 @@ export default function PossessionOutcomeDetails({
         </SimpleGrid>
       </VStack>
     ) : (
-      <HStack spacing={6} w="80%" mx="auto" justify="space-between">
+      <HStack gap={6} w="80%" mx="auto" justify="space-between">
         <VStack>
           <Text fontWeight="bold">Score Player</Text>
           <Text color="yellow.400" fontWeight="bold">{scorer}</Text>
