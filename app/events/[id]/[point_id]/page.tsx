@@ -9,7 +9,6 @@ import {
   Image,
   Field,
   NativeSelect,
-  Box,
 } from "@chakra-ui/react";
 import Header from "@/components/header";
 import {
@@ -208,6 +207,72 @@ export default function PointPage({
     }
   };
 
+  //Test function (still writes players)
+
+  // const handleAdd = async () => {
+  //   try {
+  //     function maybeLogPlayer(
+  //       playerId: string | null,
+  //       name: string,
+  //       playerList: Player[],
+  //       teamId: string
+  //     ) {
+  //       const isNew = playerId && !playerList.some((p) => p.player_id === playerId);
+  //       if (isNew) {
+  //         console.log("New player to add:", {
+  //           player_id: playerId,
+  //           player_name: name,
+  //           team_id: teamId,
+  //         });
+  //       } else {
+  //         console.log("Existing player:", { player_id: playerId, player_name: name });
+  //       }
+  //     }
+  //
+  //     const scorePlayerId = await getOrCreatePlayerId(scorePlayer, currentOffenceTeamId, possessionOPlayers);
+  //     maybeLogPlayer(scorePlayerId, scorePlayer, possessionOPlayers, currentOffenceTeamId);
+  //
+  //     const assistPlayerId = await getOrCreatePlayerId(assistPlayer, currentOffenceTeamId, possessionOPlayers);
+  //     maybeLogPlayer(assistPlayerId, assistPlayer, possessionOPlayers, currentOffenceTeamId);
+  //
+  //     const turnoverThrowerId = await getOrCreatePlayerId(turnoverThrower, currentOffenceTeamId, possessionOPlayers);
+  //     maybeLogPlayer(turnoverThrowerId, turnoverThrower, possessionOPlayers, currentOffenceTeamId);
+  //
+  //     const turnoverReceiverId = await getOrCreatePlayerId(turnoverReceiver, currentOffenceTeamId, possessionOPlayers);
+  //     maybeLogPlayer(turnoverReceiverId, turnoverReceiver, possessionOPlayers, currentOffenceTeamId);
+  //
+  //     const dPlayerId = await getOrCreatePlayerId(dPlayer, currentDefenceTeamId, possessionDPlayers);
+  //     maybeLogPlayer(dPlayerId, dPlayer, possessionDPlayers, currentDefenceTeamId);
+  //
+  //     const possessionData = {
+  //       point_id: point_id,
+  //       offence_init: oInitPlay,
+  //       defence_init: dInitPlay,
+  //       offence_main: oMainPlay,
+  //       defence_main: dMainPlay,
+  //       throws: parseInt(numThrows),
+  //       turn_throw_zone: parseInt(thrownFrom),
+  //       turn_receive_zone: parseInt(thrownTo),
+  //       turnover_reason: turnoverReason,
+  //       score_method: scoreMethod,
+  //       score_player: scorePlayerId,
+  //       assist_player: assistPlayerId,
+  //       offence_team: currentOffenceTeamId,
+  //       defence_team: currentDefenceTeamId,
+  //       turn_thrower: turnoverThrowerId,
+  //       turn_intended_receiver: turnoverReceiverId,
+  //       d_player: dPlayerId,
+  //       possession_number: possessionCount,
+  //       is_score: possessionType === "score"
+  //     };
+  //
+  //     console.log("Possession payload:", possessionData);
+  //   } catch (error) {
+  //     console.error("Error preparing data:", error);
+  //   }
+  // };
+
+
   // Determine footage provider based on pointData.timestamp_url.
   const currentPoint = pointData[0];
   const eventName = eventData ? eventData.event_name : "Event";
@@ -321,13 +386,7 @@ export default function PointPage({
       {possessionType === "turnover" && (
         <>
           <Text fontSize="md" fontWeight="semibold" mb={4}>Turnover Info</Text>
-          <HStack gap={4}>
-            <Image src="/pitch-zoned.png" mb={4} alt="Pitch Zoned"/>
-            <Box>
-              <Text color="gray.400">Note: The attacking endzone is possession specific. So if Team A turns over in zone 8 attacking the endzone, when you do the next possession, Team B are then picking up the disc in zone 5.</Text>
-            </Box>
-          </HStack>
-
+          <Image src="/pitch-zoned.png" mb={4} alt="Pitch Zoned"/>
           <HStack gap={4}>
             <Field.Root mb={4}>
               <Field.Label>Thrown From</Field.Label>

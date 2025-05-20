@@ -9,7 +9,8 @@ import {
   IconButton,
   useDisclosure,
   Portal,
-  Dialog, CloseButton
+  Dialog,
+  CloseButton
 } from "@chakra-ui/react";
 import Header from "@/components/header";
 import { fetchDetailPoint } from "@/app/points/supabase";
@@ -257,7 +258,7 @@ export default function PointView({
         <HStack justify="space-between">
           <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
             <Dialog.Trigger asChild>
-              <Button onClick={editDisclosure.onOpen}>Edit Possession</Button>
+              <Button onClick={editDisclosure.onOpen}>Edit</Button>
             </Dialog.Trigger>
             <EditPossessionDialog
               possession={possession}
@@ -268,11 +269,11 @@ export default function PointView({
               defence_player_list={defencePlayers}
             />
           </Dialog.Root>
-          <Button>Add Next Possession</Button>
+          <Button colorPalette = "green" onClick={() => window.location.href = `/events/${id}/${point_id}`}>Add Next Possession</Button>
           <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
             <Dialog.Trigger asChild>
-              <Button colorScheme="red" onClick={deleteDisclosure.onOpen}>
-                Delete Possession
+              <Button colorPalette="red" onClick={deleteDisclosure.onOpen}>
+                Delete
               </Button>
             </Dialog.Trigger>
             {DeleteConfirm}
@@ -282,7 +283,7 @@ export default function PointView({
         <HStack justify="space-between">
           <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
             <Dialog.Trigger asChild>
-              <Button onClick={editDisclosure.onOpen}>Edit Possession</Button>
+              <Button onClick={editDisclosure.onOpen}>Edit</Button>
             </Dialog.Trigger>
             <EditPossessionDialog
               possession={possession}
@@ -296,7 +297,7 @@ export default function PointView({
           <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
             <Dialog.Trigger asChild>
               <Button colorPalette="red" onClick={deleteDisclosure.onOpen}>
-                Delete Possession
+                Delete
               </Button>
             </Dialog.Trigger>
             {DeleteConfirm}
@@ -306,7 +307,7 @@ export default function PointView({
         <HStack justify="space-between">
           <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
             <Dialog.Trigger asChild>
-              <Button onClick={editDisclosure.onOpen}>Edit Possession</Button>
+              <Button onClick={editDisclosure.onOpen}>Edit</Button>
             </Dialog.Trigger>
             <EditPossessionDialog
               possession={possession}
