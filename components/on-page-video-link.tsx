@@ -1,7 +1,7 @@
 import { WatchButton } from "@/components/watch-button";
 import React from "react";
 import { getFootageProvider } from "@/lib/utils";
-import {Center} from "@chakra-ui/react";
+import {AspectRatio, Center} from "@chakra-ui/react";
 
 type TurnoverFormProps = {
   url: string;
@@ -12,14 +12,14 @@ export default function OnPageVideoLink({ url }: TurnoverFormProps) {
 
   if (provider === "google_drive" || provider === "youtube") {
     return (
+    <AspectRatio ratio={16 / 9} w="full" maxW="4xl" mx="auto">
       <iframe
         src={url}
-        width="100%"
-        height="315"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
-        style={{ marginTop: "16px" }}
-      ></iframe>
+        style={{ border: 0 }}
+      />
+    </AspectRatio>
     );
   }
 
