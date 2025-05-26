@@ -85,20 +85,18 @@ export async function fetchOMainPlays(): Promise<Play[]> {
 // Write possession to Supabase
 export async function writePossession(possessionData: Possession): Promise<Point[]> {
   try {
-    // Insert and return the newly created row(s)
-    const { data: insertedData } = await supabase
+    const { data } = await supabase
       .from("possessions")
-      .insert(possessionData)
+      .insert([possessionData])
       .select();
 
-    if (insertedData) {
-      return insertedData
-    }
-  } catch (error) {
-    console.error("Error writing point:", error);
-    throw error;
+    return data as Point[];
+  } catch (err) {
+    console.error("writePossession error:", err);
+    return [];
   }
 }
+
 
 // Upsert player names
 export async function upsertPlayer(player_name: string, team_id: string, player_id: string) {
