@@ -318,7 +318,7 @@ export default function PointPage({
       resetForm();
     } else if (possessionType === "score") {
       void handleAdd()
-      window.location.href = `/events/${id}`;
+      // window.location.href = `/events/${id}`;
     }
   };
 

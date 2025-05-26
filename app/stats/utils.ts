@@ -111,8 +111,8 @@ export function teamStats(
 
       // Count Breaks
       if (possession.possession_number % 2 === 0) {
-        ensureTeam(possession.defence_team);
-        statsMap.get(possession.defence_team)!.Breaks++;
+        ensureTeam(possession.offence_team);
+        statsMap.get(possession.offence_team)!.Breaks++;
       }
     }
 
