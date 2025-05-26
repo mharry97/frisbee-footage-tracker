@@ -110,16 +110,15 @@ export async function writePossession(possessionData: Possession): Promise<Point
 
 // Upsert player names
 export async function upsertPlayer(player_name: string, team_id: string, player_id: string) {
-  const { error } = await supabase
+  const { error, data } = await supabase
     .from("players")
     .upsert([{ player_name, team_id, player_id }], {
       onConflict: "team_id, player_name",
     });
 
-  if (error) {
-    throw new Error("Error upserting player: " + error.message);
-  }
+  return { error, data };
 }
+
 
 // Fetch number of possessions for a given point
 export async function fetchPossessionsForPoint(point_id: string) {

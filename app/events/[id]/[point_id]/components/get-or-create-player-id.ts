@@ -9,20 +9,27 @@ export async function getOrCreatePlayerId(
 ): Promise<string | null> {
   const trimmed = value.trim();
 
-  // If it's empty, return null
   if (!trimmed) return null;
 
-  // If it's already in the playerList as an ID, return it directly
   const foundById = playerList.find((p) => p.player_id === trimmed);
   if (foundById) return foundById.player_id;
 
-  // If it's a known name, return the matching ID
   const foundByName = playerList.find((p) => p.player_name === trimmed);
   if (foundByName) return foundByName.player_id;
 
-  // Otherwise, create a new UUID and upsert
   const newId = uuidv4();
-  await upsertPlayer(trimmed, teamId, newId);
+  const { error } = await upsertPlayer(trimmed, teamId, newId);
 
+  if (error) {
+    console.error("Failed to insert player", {
+      name: trimmed,
+      teamId,
+      newId,
+      error,
+    });
+    return null;
+  }
+
+  console.log("New player inserted:", { name: trimmed, newId });
   return newId;
 }
