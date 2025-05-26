@@ -4,7 +4,7 @@ import type { Point, Possession } from "@/lib/supabase"
 // Fetch point info
 export async function fetchPointById(pointId: string): Promise<Point[]> {
   try {
-    const { data, error } = await supabase.from("points").select("*").eq("point_id", pointId)
+    const { data } = await supabase.from("points").select("*").eq("point_id", pointId)
 
     console.log(pointId)
     return data || []
