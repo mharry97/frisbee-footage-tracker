@@ -4,9 +4,8 @@ import type { Point, Possession } from "@/lib/supabase"
 // Fetch point info
 export async function fetchPointById(pointId: string): Promise<Point[]> {
   try {
-    const { data, error } = await supabase.from("points").select("*").eq("point_id", pointId)
+    const { data } = await supabase.from("points").select("*").eq("point_id", pointId)
 
-    if (error) throw error
     console.log(pointId)
     return data || []
   } catch (error) {
@@ -23,13 +22,12 @@ export type Play = {
 
 export async function fetchDInitPlays(): Promise<Play[]> {
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("possessions")
       .select("play:defence_init, count:count()")
       .neq('defence_init', '')
       .order("defence_init");
 
-    if (error) throw error
 
     return data || []
   } catch (error) {
@@ -40,13 +38,12 @@ export async function fetchDInitPlays(): Promise<Play[]> {
 
 export async function fetchOInitPlays(): Promise<Play[]> {
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("possessions")
       .select("play:offence_init, count:count()")
       .neq('offence_init', '')
       .order("offence_init");
 
-    if (error) throw error
 
     return data || []
   } catch (error) {
@@ -57,13 +54,11 @@ export async function fetchOInitPlays(): Promise<Play[]> {
 
 export async function fetchDMainPlays(): Promise<Play[]> {
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("possessions")
       .select("play:defence_main, count:count()")
       .neq('defence_main', '')
       .order("defence_main");
-
-    if (error) throw error
 
     return data || []
   } catch (error) {
@@ -74,13 +69,11 @@ export async function fetchDMainPlays(): Promise<Play[]> {
 
 export async function fetchOMainPlays(): Promise<Play[]> {
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("possessions")
       .select("play:offence_main, count:count()")
       .neq('offence_main', '')
       .order("offence_main");
-
-    if (error) throw error
 
     return data || []
   } catch (error) {
@@ -92,42 +85,37 @@ export async function fetchOMainPlays(): Promise<Play[]> {
 // Write possession to Supabase
 export async function writePossession(possessionData: Possession): Promise<Point[]> {
   try {
-    // Insert and return the newly created row(s)
-    const { data: insertedData, error } = await supabase
+    const { data } = await supabase
       .from("possessions")
-      .insert(possessionData)
+      .insert([possessionData])
       .select();
 
-    if (error || !insertedData) {
-      throw error;
-    }
-    return insertedData;
-  } catch (error) {
-    console.error("Error writing point:", error);
-    throw error;
+    return data as Point[];
+  } catch (err) {
+    console.error("writePossession error:", err);
+    return [];
   }
 }
 
+
 // Upsert player names
 export async function upsertPlayer(player_name: string, team_id: string, player_id: string) {
-  const { error } = await supabase
+  const { error, data } = await supabase
     .from("players")
     .upsert([{ player_name, team_id, player_id }], {
       onConflict: "team_id, player_name",
     });
 
-  if (error) {
-    throw new Error("Error upserting player: " + error.message);
-  }
+  return { error, data };
 }
+
 
 // Fetch number of possessions for a given point
 export async function fetchPossessionsForPoint(point_id: string) {
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("possessions")
     .select("*")
     .eq("point_id", point_id);
 
-  if (error) throw error;
   return data;
 }
