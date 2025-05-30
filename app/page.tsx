@@ -59,6 +59,11 @@ export default function LoginPage() {
               autoComplete="current-password"
               required
             />
+            {errorMsg && (
+              <Text color="red.300" fontSize="sm" alignSelf="start">
+                {errorMsg}
+              </Text>
+              )}
             <Button type="submit" colorScheme="green" loading={loading} disabled={loading} w="full">
               Login
             </Button>

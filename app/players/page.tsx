@@ -33,14 +33,17 @@ function PlayersPageContent() {
 
   const toggleUserStatus = async (playerId: string, isActive: boolean) => {
     try {
-      const { error } = await supabase.from("players").update({ is_active: !isActive }).eq("player_id", playerId)
+      await supabase
+        .from("players")
+        .update({ is_active: !isActive })
+        .eq("player_id", playerId);
 
-      if (error) throw error
-      await loadData()
+      await loadData();
     } catch (error) {
-      console.error("Error updating user status:", error)
+      console.error("Error updating user status:", error);
     }
-  }
+  };
+
 
   if (loading) {
     return (
