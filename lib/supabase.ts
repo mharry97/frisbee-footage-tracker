@@ -1,19 +1,84 @@
-import { createClient } from "@supabase/supabase-js"
+import { createBrowserClient } from "@supabase/ssr"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error("Missing Supabase environment variables. Please check your .env file or environment configuration.")
 }
 
-export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "", {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-  },
-})
+export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
+
+// Auth helper functions
+export function usernameToEmail(username: string): string {
+  return `${username}@app.local`
+}
+
+export function emailToUsername(email: string): string {
+  return email.replace("@app.local", "")
+}
+
+// Get current user's player data
+export async function getCurrentPlayerData() {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return null
+
+  const username = emailToUsername(user.email!)
+
+  const { data: player, error } = await supabase
+    .from("players")
+    .select("*")
+    .eq("username", username)
+    .eq("is_active", true)
+    .single()
+
+  if (error) {
+    console.error("Error fetching player data:", error)
+    return null
+  }
+
+  return player
+}
+
+// Create a new user account
+export async function createUserAccount(
+  username: string,
+  password: string,
+  playerName: string,
+  teamId: string,
+  isAdmin = false,
+) {
+  const email = usernameToEmail(username)
+
+  // Create auth user
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email,
+    password,
+  })
+
+  if (authError) throw authError
+
+  // Create player record
+  const { data: playerData, error: playerError } = await supabase
+    .from("players")
+    .insert({
+      auth_user_id: authData.user?.id,
+      username,
+      player_name: playerName,
+      team_id: teamId,
+      is_admin: isAdmin,
+      is_active: true,
+    })
+    .select()
+    .single()
+
+  if (playerError) throw playerError
+
+  return { authData, playerData }
+}
 
 // Type definitions for database tables
 export type Source = {
@@ -60,7 +125,6 @@ export type Team = {
   is_home_team: boolean
 }
 
-
 export type Activity = {
   activity_id: string
   created_at: string
@@ -75,7 +139,7 @@ export type Player = {
   player_name: string
   team_id: string
   username: string
-  password_hash: string
+  auth_user_id: string
   is_active: boolean
   is_admin: boolean
 }
@@ -88,29 +152,29 @@ export type TeamPlayer = {
 }
 
 export type Possession = {
-  point_id: string,
-  offence_init: string,
-  defence_init: string,
-  offence_main: string,
-  defence_main: string,
-  throws: number,
-  turn_throw_zone: number,
-  turn_receive_zone: number,
-  turnover_reason: string,
-  score_method: string,
-  score_player: string | null,
-  assist_player: string | null,
-  offence_team: string,
-  defence_team: string,
-  turn_thrower: string | null,
-  turn_intended_receiver: string | null,
-  d_player: string | null,
-  possession_number: number,
+  point_id: string
+  offence_init: string
+  defence_init: string
+  offence_main: string
+  defence_main: string
+  throws: number
+  turn_throw_zone: number
+  turn_receive_zone: number
+  turnover_reason: string
+  score_method: string
+  score_player: string | null
+  assist_player: string | null
+  offence_team: string
+  defence_team: string
+  turn_thrower: string | null
+  turn_intended_receiver: string | null
+  d_player: string | null
+  possession_number: number
   is_score: boolean
 }
 
 export type Clip = {
-  clip_id: string;
+  clip_id: string
   title: string
   description: string
   event_id: string | null
@@ -124,7 +188,7 @@ export type Playlist = {
   title: string
   description: string
   is_public: boolean
-  creator: string | null,
+  creator: string | null
 }
 
 export type PlaylistClip = {
@@ -141,50 +205,48 @@ export type PrivatePlaylistClip = {
 // Fetch all events from Supabase
 export async function fetchPlayerTeamMapping(): Promise<TeamPlayer[]> {
   try {
-    const { data } = await supabase
-      .from("team_player_mapping")
-      .select("*");
+    const { data } = await supabase.from("team_player_mapping").select("*")
 
     return data ?? []
   } catch (error) {
-    console.error("Error fetching team/player mapping:", error);
-    return [];
+    console.error("Error fetching team/player mapping:", error)
+    return []
   }
 }
 
 export type PointDetailed = {
-  possession_id: string;
-  point_id: string;
-  event_id: string;
-  event_name: string;
-  offence_init: string | null;
-  defence_init: string | null;
-  offence_main: string | null;
-  defence_main: string | null;
-  throws: number | null;
-  turn_throw_zone: number | null;
-  turn_receive_zone: number | null;
-  turnover_reason: string | null;
-  score_method: string | null;
-  offence_team: string | null;
-  offence_team_name: string | null;
-  defence_team: string | null;
-  defence_team_name: string | null;
-  possession_number: number | null;
-  is_score: boolean;
-  timestamp_url: string | null;
-  point_offence_team: string | null;
-  point_offence_team_name: string | null;
-  point_defence_team: string | null;
-  point_defence_team_name: string | null;
-  score_player: string | null;
-  score_player_name: string | null;
-  assist_player: string | null;
-  assist_player_name: string | null;
-  turn_thrower: string | null;
-  turn_thrower_name: string | null;
-  turn_intended_receiver: string | null;
-  turn_intended_receiver_name: string | null;
-  d_player: string | null;
-  d_player_name: string | null;
-};
+  possession_id: string
+  point_id: string
+  event_id: string
+  event_name: string
+  offence_init: string | null
+  defence_init: string | null
+  offence_main: string | null
+  defence_main: string | null
+  throws: number | null
+  turn_throw_zone: number | null
+  turn_receive_zone: number | null
+  turnover_reason: string | null
+  score_method: string | null
+  offence_team: string | null
+  offence_team_name: string | null
+  defence_team: string | null
+  defence_team_name: string | null
+  possession_number: number | null
+  is_score: boolean
+  timestamp_url: string | null
+  point_offence_team: string | null
+  point_offence_team_name: string | null
+  point_defence_team: string | null
+  point_defence_team_name: string | null
+  score_player: string | null
+  score_player_name: string | null
+  assist_player: string | null
+  assist_player_name: string | null
+  turn_thrower: string | null
+  turn_thrower_name: string | null
+  turn_intended_receiver: string | null
+  turn_intended_receiver_name: string | null
+  d_player: string | null
+  d_player_name: string | null
+}
