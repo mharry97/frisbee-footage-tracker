@@ -29,7 +29,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
       <Container maxW="4xl">
         <Header
           title={sourceData ? sourceData.title : ""}
-          buttonText="sources"
+          buttonText="Sources"
           redirectUrl="/sources"
         />
       </Container>
