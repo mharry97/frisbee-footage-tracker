@@ -76,7 +76,7 @@ function EventsPageContent() {
       </Container>
     </>
   );
-};
+}
 
 export default function EventsPage() {
   return (

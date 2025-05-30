@@ -56,7 +56,7 @@ function SourcesPageContent() {
         ) : (
           <BaseGrid>
             {sources.map((source) => (
-              <SourceCard key={source.id} {...source} />
+              <SourceCard {...source} />
             ))}
           </BaseGrid>
         )}
