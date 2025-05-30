@@ -1,31 +1,19 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import {
-  Container,
-  Heading,
-  Button,
-  Table,
-  Badge,
-  VStack,
-  HStack,
-  Text,
-} from "@chakra-ui/react"
+import { Container, Heading, Button, Table, Badge, VStack, HStack, Text } from "@chakra-ui/react"
 import { supabase } from "@/lib/supabase"
-import { useRequireAuth } from "@/lib/auth-context"
 import type { Player, Team } from "@/lib/supabase"
+import { AuthWrapper } from "@/components/auth-wrapper"
 
-export default function UsersPage() {
-  const { player: currentPlayer } = useRequireAuth()
+function PlayersPageContent() {
   const [players, setPlayers] = useState<Player[]>([])
   const [teams, setTeams] = useState<Team[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (currentPlayer?.is_admin) {
-      loadData()
-    }
-  }, [currentPlayer])
+    loadData()
+  }, [])
 
   const loadData = async () => {
     try {
@@ -54,64 +42,60 @@ export default function UsersPage() {
     }
   }
 
-  if (!currentPlayer?.is_admin) {
-    return (
-      <Container maxW="4xl" py={8}>
-        <Text color="red.500">Access denied. Admin privileges required.</Text>
-      </Container>
-    )
-  }
-
   if (loading) {
     return (
       <Container maxW="4xl" py={8}>
-        <Text>Loading...</Text>
+        <Text color="white">Loading...</Text>
       </Container>
     )
   }
 
   return (
     <Container maxW="6xl" py={8}>
-      <VStack spacing={6} align="stretch">
+      <VStack gap={6} align="stretch">
         <HStack justify="space-between">
           <Heading color="white">User Management</Heading>
           <Button colorScheme="green">Add User</Button>
         </HStack>
 
-        <Table variant="simple" bg="gray.800" borderRadius="md">
-          <Thead>
-            <Tr>
-              <Th color="gray.300">Name</Th>
-              <Th color="gray.300">Username</Th>
-              <Th color="gray.300">Team</Th>
-              <Th color="gray.300">Role</Th>
-              <Th color="gray.300">Status</Th>
-              <Th color="gray.300">Actions</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
+        <Table.Root size="lg" interactive colorPalette="gray">
+          <Table.Header>
+            <Table.Row>
+              <Table.ColumnHeader>Name</Table.ColumnHeader>
+              <Table.ColumnHeader>Username</Table.ColumnHeader>
+              <Table.ColumnHeader>Team</Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="center" width="15%">
+                Role
+              </Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="center" width="15%">
+                Status
+              </Table.ColumnHeader>
+              <Table.ColumnHeader textAlign="right" width="25%">
+                Actions
+              </Table.ColumnHeader>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
             {players.map((player) => {
               const team = teams.find((t) => t.team_id === player.team_id)
               return (
-                <Tr key={player.player_id}>
-                  <Td color="white">{player.player_name}</Td>
-                  <Td color="white">{player.username}</Td>
-                  <Td color="white">{team?.team_name || "Unknown"}</Td>
-                  <Td>
-                    <Badge colorScheme={player.is_admin ? "yellow" : "blue"}>
-                      {player.is_admin ? "Admin" : "User"}
-                    </Badge>
-                  </Td>
-                  <Td>
-                    <Badge colorScheme={player.is_active ? "green" : "red"}>
+                <Table.Row key={player.player_id}>
+                  <Table.Cell>{player.player_name}</Table.Cell>
+                  <Table.Cell>{player.username}</Table.Cell>
+                  <Table.Cell>{team?.team_name || "Unknown"}</Table.Cell>
+                  <Table.Cell textAlign="center">
+                    <Badge colorPalette={player.is_admin ? "red" : "blue"}>{player.is_admin ? "Admin" : "User"}</Badge>
+                  </Table.Cell>
+                  <Table.Cell textAlign="center">
+                    <Badge colorPalette={player.is_active ? "green" : "red"}>
                       {player.is_active ? "Active" : "Inactive"}
                     </Badge>
-                  </Td>
-                  <Td>
-                    <HStack spacing={2}>
+                  </Table.Cell>
+                  <Table.Cell textAlign="right">
+                    <HStack gap={2} justify="flex-end">
                       <Button
                         size="sm"
-                        colorScheme={player.is_active ? "red" : "green"}
+                        colorPalette={player.is_active ? "red" : "green"}
                         variant="outline"
                         onClick={() => toggleUserStatus(player.player_id, player.is_active)}
                       >
@@ -121,13 +105,21 @@ export default function UsersPage() {
                         Reset Password
                       </Button>
                     </HStack>
-                  </Td>
-                </Tr>
+                  </Table.Cell>
+                </Table.Row>
               )
             })}
-          </Tbody>
-        </Table>
+          </Table.Body>
+        </Table.Root>
       </VStack>
     </Container>
+  )
+}
+
+export default function PlayersPage() {
+  return (
+    <AuthWrapper requireAdmin={true}>
+      <PlayersPageContent />
+    </AuthWrapper>
   )
 }

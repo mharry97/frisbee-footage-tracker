@@ -22,6 +22,7 @@ import { fetchHomePlayers } from "@/app/players/supabase";
 import { writePoint, writePointPlayers } from "./supabase";
 import { useRouter } from "next/navigation";
 import { getFootageProvider, convertTimestampToSeconds, convertYoutubeUrlToEmbed } from "@/lib/utils";
+import {AuthWrapper} from "@/components/auth-wrapper";
 
 // Main helper: computes the timestamp_url based on the footage provider.
 function getTimestampUrl(sourceUrl: string, timestamp: string): string {
@@ -164,108 +165,112 @@ export default function EventPage({
 
   if (loading) {
     return (
-      <Container maxW="4xl" mt={20}>
-        <LoadingSpinner text="Loading point form..." />
-      </Container>
+      <AuthWrapper>
+        <Container maxW="4xl" mt={20}>
+          <LoadingSpinner text="Loading point form..." />
+        </Container>
+      </AuthWrapper>
     );
   }
 
   return (
-    <Container maxW="4xl">
-      <Header
-        title="Point Form"
-        buttonText="event"
-        redirectUrl={`/events/${id}`}
-      />
-
-      {/* Source Dropdown */}
-      <Field.Root mb={4}>
-        <Field.Label>Source</Field.Label>
-        <NativeSelect.Root>
-          <NativeSelect.Field
-            placeholder="Select Source"
-            value={source}
-            onChange={(e) => setSource(e.currentTarget.value)}
-          >
-            {sources.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.title}
-              </option>
-            ))}
-          </NativeSelect.Field>
-          <NativeSelect.Indicator />
-        </NativeSelect.Root>
-      </Field.Root>
-
-      {/* Timestamp Input */}
-      <Field.Root mb={4}>
-        <Field.Label>Timestamp</Field.Label>
-        <Input
-          placeholder="e.g. 6:32"
-          value={timestamp}
-          onChange={(e) => setTimestamp(e.currentTarget.value)}
+    <AuthWrapper>
+      <Container maxW="4xl">
+        <Header
+          title="Point Form"
+          buttonText="event"
+          redirectUrl={`/events/${id}`}
         />
-      </Field.Root>
 
-      {/* Offence Team Dropdown */}
-      <Field.Root mb={4}>
-        <Field.Label>Offence Team</Field.Label>
-        <NativeSelect.Root>
-          <NativeSelect.Field
-            placeholder="Select Offence Team"
-            value={offenceTeam}
-            onChange={(e) => setOffenceTeam(e.currentTarget.value)}
-          >
-            {teamData.map((t) => (
-              <option key={t.team_id} value={t.team_id}>
-                {t.team_name}
-              </option>
+        {/* Source Dropdown */}
+        <Field.Root mb={4}>
+          <Field.Label>Source</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field
+              placeholder="Select Source"
+              value={source}
+              onChange={(e) => setSource(e.currentTarget.value)}
+            >
+              {sources.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.title}
+                </option>
+              ))}
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
+
+        {/* Timestamp Input */}
+        <Field.Root mb={4}>
+          <Field.Label>Timestamp</Field.Label>
+          <Input
+            placeholder="e.g. 6:32"
+            value={timestamp}
+            onChange={(e) => setTimestamp(e.currentTarget.value)}
+          />
+        </Field.Root>
+
+        {/* Offence Team Dropdown */}
+        <Field.Root mb={4}>
+          <Field.Label>Offence Team</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field
+              placeholder="Select Offence Team"
+              value={offenceTeam}
+              onChange={(e) => setOffenceTeam(e.currentTarget.value)}
+            >
+              {teamData.map((t) => (
+                <option key={t.team_id} value={t.team_id}>
+                  {t.team_name}
+                </option>
+              ))}
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
+
+        {/* Player Dropdowns (only if a home team exists) */}
+        {hasHomeTeam && (
+          <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
+            {Array.from({ length: 7 }).map((_, index) => (
+              <Field.Root mb={4} key={index}>
+                <Field.Label>{`Player ${index + 1}`}</Field.Label>
+                <NativeSelect.Root>
+                  <NativeSelect.Field
+                    placeholder={`Select Player ${index + 1}`}
+                    value={selectedPlayers[index]}
+                    onChange={(e) => {
+                      const newSelections = [...selectedPlayers];
+                      newSelections[index] = e.currentTarget.value;
+                      setSelectedPlayers(newSelections);
+                    }}
+                  >
+                    {homePlayers.map((p) => (
+                      <option key={p.player_id} value={p.player_id}>
+                        {p.player_name}
+                      </option>
+                    ))}
+                  </NativeSelect.Field>
+                  <NativeSelect.Indicator />
+                </NativeSelect.Root>
+              </Field.Root>
             ))}
-          </NativeSelect.Field>
-          <NativeSelect.Indicator />
-        </NativeSelect.Root>
-      </Field.Root>
+          </SimpleGrid>
+        )}
 
-      {/* Player Dropdowns (only if a home team exists) */}
-      {hasHomeTeam && (
-        <SimpleGrid columns={{ base: 1, md: 2 }} gap={4}>
-          {Array.from({ length: 7 }).map((_, index) => (
-            <Field.Root mb={4} key={index}>
-              <Field.Label>{`Player ${index + 1}`}</Field.Label>
-              <NativeSelect.Root>
-                <NativeSelect.Field
-                  placeholder={`Select Player ${index + 1}`}
-                  value={selectedPlayers[index]}
-                  onChange={(e) => {
-                    const newSelections = [...selectedPlayers];
-                    newSelections[index] = e.currentTarget.value;
-                    setSelectedPlayers(newSelections);
-                  }}
-                >
-                  {homePlayers.map((p) => (
-                    <option key={p.player_id} value={p.player_id}>
-                      {p.player_name}
-                    </option>
-                  ))}
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
-            </Field.Root>
-          ))}
-        </SimpleGrid>
-      )}
-
-      {/* Add and Cancel buttons */}
-      <Flex flexDirection="row" justifyContent="space-between" mb={4}>
-        <Field.Root>
-          <Button onClick={handleCancel}>Cancel</Button>
-        </Field.Root>
-        <Field.Root>
-          <Button onClick={handleAdd} colorPalette="green">
-            Add
-          </Button>
-        </Field.Root>
-      </Flex>
-    </Container>
+        {/* Add and Cancel buttons */}
+        <Flex flexDirection="row" justifyContent="space-between" mb={4}>
+          <Field.Root>
+            <Button onClick={handleCancel}>Cancel</Button>
+          </Field.Root>
+          <Field.Root>
+            <Button onClick={handleAdd} colorPalette="green">
+              Add
+            </Button>
+          </Field.Root>
+        </Flex>
+      </Container>
+    </AuthWrapper>
   );
 }

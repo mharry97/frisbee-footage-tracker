@@ -3,8 +3,9 @@
 import { Container, Box, Heading, Text } from "@chakra-ui/react";
 import { MenuGrid } from "@/app/dashboard/components/menu-grid";
 import { useRequireAuth } from "@/lib/auth-context"
+import {AuthWrapper} from "@/components/auth-wrapper";
 
-export default function DashboardPage() {
+function DashboardPageContent() {
   const { player, loading } = useRequireAuth()
 
   if (loading) {
@@ -20,23 +21,31 @@ export default function DashboardPage() {
   }
 
   const menuItems = [
-    { title: "sources", icon: "database", href: "/sources" },
-    { title: "events", icon: "calendar", href: "/events" },
-    { title: "clips", icon: "film", href: "/clips" },
-    { title: "points", icon: "scoreboard", href: "/points" },
-    { title: "stats", icon: "bar-chart", href: "/stats" },
-    { title: "playlists", icon: "playlist", href: "/playlists" },
-    ...(player.is_admin ? [{ title: "users", icon: "users", href: "/users" }] : []),
+    { title: "Sources", icon: "database", href: "/sources" },
+    { title: "Events", icon: "calendar", href: "/events" },
+    { title: "Clips", icon: "film", href: "/clips" },
+    { title: "Points", icon: "scoreboard", href: "/points" },
+    { title: "Stats", icon: "bar-chart", href: "/stats" },
+    { title: "Playlists", icon: "playlist", href: "/playlists" },
+    ...(player.is_admin ? [{ title: "Players", icon: "users", href: "/players" }] : []),
   ];
 
   return (
     <Box minH="100vh" bg="black" p={4}>
       <Container maxW="4xl">
         <Heading as="h1" size="4xl" fontWeight="light" color="white" mb={8} mt={4}>
-          footage tracker
+          Hello, {player.username}
         </Heading>
         <MenuGrid items={menuItems} />
       </Container>
     </Box>
   );
+}
+
+export default function DashboardPage() {
+  return (
+    <AuthWrapper>
+      <DashboardPageContent />
+    </AuthWrapper>
+  )
 }

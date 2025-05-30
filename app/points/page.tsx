@@ -8,9 +8,10 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import {fetchAllPoints} from "@/app/points/supabase";
 import type {Point} from "@/lib/supabase";
 import {BaseTeamInfo, fetchTeamMapping} from "@/app/teams/supabase";
+import {AuthWrapper} from "@/components/auth-wrapper";
 
 
-export default function EventsPage() {
+function EventsPageContent() {
   const [loading, setLoading] = useState(true);
   const [points, setPoints] = useState<Point[]>([]);
   const [teamMapping, setTeamMapping] = useState<BaseTeamInfo[]>([]);
@@ -35,8 +36,6 @@ export default function EventsPage() {
   const teamIdToName = Object.fromEntries(
     teamMapping.map((t) => [t.team_id, t.team_name])
   );
-
-
 
   return (
     <>
@@ -78,4 +77,12 @@ export default function EventsPage() {
     </>
   );
 };
+
+export default function EventsPage() {
+  return (
+    <AuthWrapper>
+      <EventsPageContent />
+    </AuthWrapper>
+  )
+}
 

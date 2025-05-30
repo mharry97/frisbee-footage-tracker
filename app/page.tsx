@@ -37,13 +37,13 @@ export default function LoginPage() {
 
   return (
     <Container maxWidth="4xl" centerContent py={20}>
-      <VStack spacing={6} align="center" maxW="sm" w="full">
+      <VStack gap={6} align="center" maxW="sm" w="full">
         <Text fontSize="4xl" fontWeight="light" color="white">
-          footage tracker
+          Footage Tracker
         </Text>
 
         <form onSubmit={handleLogin} style={{ width: "100%" }}>
-          <VStack spacing={4} w="full">
+          <VStack gap={4} w="full">
             <Input
               placeholder="Username"
               value={username}
@@ -59,7 +59,6 @@ export default function LoginPage() {
               autoComplete="current-password"
               required
             />
-
             <Button type="submit" colorScheme="green" loading={loading} disabled={loading} w="full">
               Login
             </Button>

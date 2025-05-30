@@ -29,6 +29,7 @@ import {GenericTableItem, MyDynamicTable, myPieChart, myStackedBarChart} from "@
 import {playerStats, SequenceStat, sequenceStats, teamStats} from "@/app/stats/utils";
 import {fetchEventClips} from "@/app/clips/supabase";
 import {ClipGrid} from "@/app/clips/components/clip-grid";
+import {AuthWrapper} from "@/components/auth-wrapper";
 
 export default function EventPage({ params }: { params: Promise<{ id: string }> }) {
   // Unwrap the promised params
@@ -314,17 +315,19 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
   const defaultTab = isTraining ? "activities" : "overview";
 
   return (
-    <Container maxW="4xl">
-      <Header
-        title={eventData ? eventData.event_name : ""}
-        buttonText="events"
-        redirectUrl="/events"
-      />
-      {loading ? (
-        <LoadingSpinner text="loading..." />
-      ) : (
-        <CustomTabs defaultValue={defaultTab} tabs={tabs} />
-      )}
-    </Container>
+    <AuthWrapper>
+      <Container maxW="4xl">
+        <Header
+          title={eventData ? eventData.event_name : ""}
+          buttonText="events"
+          redirectUrl="/events"
+        />
+        {loading ? (
+          <LoadingSpinner text="loading..." />
+        ) : (
+          <CustomTabs defaultValue={defaultTab} tabs={tabs} />
+        )}
+      </Container>
+    </AuthWrapper>
   );
 }

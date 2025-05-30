@@ -1,84 +1,19 @@
-import { createBrowserClient } from "@supabase/ssr"
+import { createClient } from "@supabase/supabase-js"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error("Missing Supabase environment variables. Please check your .env file or environment configuration.")
 }
 
-export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
-
-// Auth helper functions
-export function usernameToEmail(username: string): string {
-  return `${username}@app.local`
-}
-
-export function emailToUsername(email: string): string {
-  return email.replace("@app.local", "")
-}
-
-// Get current user's player data
-export async function getCurrentPlayerData() {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) return null
-
-  const username = emailToUsername(user.email!)
-
-  const { data: player, error } = await supabase
-    .from("players")
-    .select("*")
-    .eq("username", username)
-    .eq("is_active", true)
-    .single()
-
-  if (error) {
-    console.error("Error fetching player data:", error)
-    return null
-  }
-
-  return player
-}
-
-// Create a new user account
-export async function createUserAccount(
-  username: string,
-  password: string,
-  playerName: string,
-  teamId: string,
-  isAdmin = false,
-) {
-  const email = usernameToEmail(username)
-
-  // Create auth user
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email,
-    password,
-  })
-
-  if (authError) throw authError
-
-  // Create player record
-  const { data: playerData, error: playerError } = await supabase
-    .from("players")
-    .insert({
-      auth_user_id: authData.user?.id,
-      username,
-      player_name: playerName,
-      team_id: teamId,
-      is_admin: isAdmin,
-      is_active: true,
-    })
-    .select()
-    .single()
-
-  if (playerError) throw playerError
-
-  return { authData, playerData }
-}
+export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "", {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  },
+})
 
 // Type definitions for database tables
 export type Source = {
@@ -125,14 +60,14 @@ export type Team = {
   is_home_team: boolean
 }
 
-export type Activity = {
-  activity_id: string
-  created_at: string
-  title: string
-  timestamp: string
-  source_id: string
-  event_id?: string
-}
+// export type Activity = {
+//   activity_id: string
+//   created_at: string
+//   title: string
+//   timestamp: string
+//   source_id: string
+//   event_id?: string
+// }
 
 export type Player = {
   player_id: string
@@ -196,11 +131,11 @@ export type PlaylistClip = {
   clip_id: string
 }
 
-export type PrivatePlaylistClip = {
-  playlist_id: string
-  clip_id: string
-  user_id: string
-}
+// export type PrivatePlaylistClip = {
+//   playlist_id: string
+//   clip_id: string
+//   user_id: string
+// }
 
 // Fetch all events from Supabase
 export async function fetchPlayerTeamMapping(): Promise<TeamPlayer[]> {
