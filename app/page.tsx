@@ -10,7 +10,6 @@ export default function LoginPage() {
   const router = useRouter()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
-  const [errorMsg, setErrorMsg] = useState("")
   const [loading, setLoading] = useState(false)
 
   // Redirect if already logged in
@@ -23,13 +22,12 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setErrorMsg("")
 
     try {
       await login(username, password)
       router.push("/dashboard")
     } catch (error: any) {
-      setErrorMsg(error.message || "Login failed")
+      console.log(error.message || "Login failed")
     } finally {
       setLoading(false)
     }
@@ -59,11 +57,6 @@ export default function LoginPage() {
               autoComplete="current-password"
               required
             />
-            {errorMsg && (
-              <Text color="red.300" fontSize="sm" alignSelf="start">
-                {errorMsg}
-              </Text>
-              )}
             <Button type="submit" colorScheme="green" loading={loading} disabled={loading} w="full">
               Login
             </Button>

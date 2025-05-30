@@ -34,7 +34,7 @@ function PlaylistsPageContent() {
   return (
     <>
       <Container maxW="4xl">
-        <Header title="playlists" buttonText="Dashboard" redirectUrl="/dashboard" />
+        <Header title="Playlists" buttonText="Dashboard" redirectUrl="/dashboard" />
         {loading ? (
           <LoadingSpinner text="loading playlists..." />
         ) : (
