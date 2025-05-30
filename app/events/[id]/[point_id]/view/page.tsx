@@ -22,6 +22,7 @@ import { FaLongArrowAltLeft, FaLongArrowAltRight } from "react-icons/fa";
 import {deletePossession, updatePossession} from "@/app/possessions/supabase";
 import EditPossessionDialog from "@/app/events/[id]/[point_id]/view/components/edit-possession";
 import {fetchPlayersForTeam} from "@/app/players/supabase";
+import {AuthWrapper} from "@/components/auth-wrapper";
 
 export default function PointView({
                                     params,
@@ -70,21 +71,23 @@ export default function PointView({
 
   if (loading || point.length === 0) {
     return (
-      <Container maxW="4xl" py={8}>
-        <Header title="Point Info" buttonText="Back" redirectUrl={`/events/${id}`} />
-        <Text mt={8} color="white">
-          {loading ? "Loading point data" : "No data found for this point yet."}
-        </Text>
-        {!loading && (
-          <Button
-            colorPalette="green"
-            mt={6}
-            onClick={() => window.location.href = `/events/${id}/${point_id}`}
-          >
-            Add Possession
-          </Button>
-        )}
-      </Container>
+      <AuthWrapper>
+        <Container maxW="4xl" py={8}>
+          <Header title="Point Info" buttonText="Back" redirectUrl={`/events/${id}`} />
+          <Text mt={8} color="white">
+            {loading ? "Loading point data" : "No data found for this point yet."}
+          </Text>
+          {!loading && (
+            <Button
+              colorPalette="green"
+              mt={6}
+              onClick={() => window.location.href = `/events/${id}/${point_id}`}
+            >
+              Add Possession
+            </Button>
+          )}
+        </Container>
+      </AuthWrapper>
     );
   }
 
@@ -222,104 +225,106 @@ export default function PointView({
   )
 
   return (
-    <Container maxW="4xl" py={8}>
-      <Header title={point[0].event_name} buttonText="Back" redirectUrl={`/events/${id}`} />
-      <Text mt={4} fontSize="lg" color="gray.400">
-        {`Offence: ${point[0].point_offence_team_name}`}
-      </Text>
-
-      <PointOverview
-        last_possession_type={lastOutcome}
-        possessions={possessionCount}
-        outcome={outcome}
-        scorer={scorer}
-      />
-
-      <OnPageVideoLink url={point[0].timestamp_url!} />
-
-      {/* Navigation controls */}
-      <HStack justify="space-between" mt={5}>
-        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handlePrev} disabled={currentIndex === 0}>
-          <FaLongArrowAltLeft />
-        </IconButton>
-        <Text textAlign="center">
-          Possession {currentIndex + 1} of {point.length}
+    <AuthWrapper>
+      <Container maxW="4xl" py={8}>
+        <Header title={point[0].event_name} buttonText="Back" redirectUrl={`/events/${id}`} />
+        <Text mt={4} fontSize="lg" color="gray.400">
+          {`Offence: ${point[0].point_offence_team_name}`}
         </Text>
-        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handleNext} disabled={currentIndex === point.length - 1}>
-          <FaLongArrowAltRight />
-        </IconButton>
-      </HStack>
-      <PossessionSection
-        overview={overview}
-        plays={plays}
-        turnover={turnover}
-      />
-      {possessionOutcome == "Turnover" && currentPossession == possessionCount ? (
-        <HStack justify="space-between">
-          <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
-            <Dialog.Trigger asChild>
-              <Button onClick={editDisclosure.onOpen}>Edit</Button>
-            </Dialog.Trigger>
-            <EditPossessionDialog
-              possession={possession}
-              onClose={editDisclosure.onClose}
-              onUpdate={handleUpdate}
-              outcome={possessionOutcome}
-              offence_player_list={offencePlayers}
-              defence_player_list={defencePlayers}
-            />
-          </Dialog.Root>
-          <Button colorPalette = "green" onClick={() => window.location.href = `/events/${id}/${point_id}`}>Add Next Possession</Button>
-          <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
-            <Dialog.Trigger asChild>
-              <Button colorPalette="red" onClick={deleteDisclosure.onOpen}>
-                Delete
-              </Button>
-            </Dialog.Trigger>
-            {DeleteConfirm}
-          </Dialog.Root>
+
+        <PointOverview
+          last_possession_type={lastOutcome}
+          possessions={possessionCount}
+          outcome={outcome}
+          scorer={scorer}
+        />
+
+        <OnPageVideoLink url={point[0].timestamp_url!} />
+
+        {/* Navigation controls */}
+        <HStack justify="space-between" mt={5}>
+          <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handlePrev} disabled={currentIndex === 0}>
+            <FaLongArrowAltLeft />
+          </IconButton>
+          <Text textAlign="center">
+            Possession {currentIndex + 1} of {point.length}
+          </Text>
+          <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handleNext} disabled={currentIndex === point.length - 1}>
+            <FaLongArrowAltRight />
+          </IconButton>
         </HStack>
-      ) : possessionOutcome != "Turnover" && currentPossession == possessionCount ? (
-        <HStack justify="space-between">
-          <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
-            <Dialog.Trigger asChild>
-              <Button onClick={editDisclosure.onOpen}>Edit</Button>
-            </Dialog.Trigger>
-            <EditPossessionDialog
-              possession={possession}
-              onClose={editDisclosure.onClose}
-              onUpdate={handleUpdate}
-              outcome={possessionOutcome}
-              offence_player_list={offencePlayers}
-              defence_player_list={defencePlayers}
-            />
-          </Dialog.Root>
-          <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
-            <Dialog.Trigger asChild>
-              <Button colorPalette="red" onClick={deleteDisclosure.onOpen}>
-                Delete
-              </Button>
-            </Dialog.Trigger>
-            {DeleteConfirm}
-          </Dialog.Root>
-        </HStack>
-      ) : (
-        <HStack justify="space-between">
-          <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
-            <Dialog.Trigger asChild>
-              <Button onClick={editDisclosure.onOpen}>Edit</Button>
-            </Dialog.Trigger>
-            <EditPossessionDialog
-              possession={possession}
-              onClose={editDisclosure.onClose}
-              onUpdate={handleUpdate}
-              outcome={possessionOutcome}
-              offence_player_list={offencePlayers}
-              defence_player_list={defencePlayers}
-            />
-          </Dialog.Root>
-        </HStack>
-      )}
-    </Container>
+        <PossessionSection
+          overview={overview}
+          plays={plays}
+          turnover={turnover}
+        />
+        {possessionOutcome == "Turnover" && currentPossession == possessionCount ? (
+          <HStack justify="space-between">
+            <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
+              <Dialog.Trigger asChild>
+                <Button onClick={editDisclosure.onOpen}>Edit</Button>
+              </Dialog.Trigger>
+              <EditPossessionDialog
+                possession={possession}
+                onClose={editDisclosure.onClose}
+                onUpdate={handleUpdate}
+                outcome={possessionOutcome}
+                offence_player_list={offencePlayers}
+                defence_player_list={defencePlayers}
+              />
+            </Dialog.Root>
+            <Button colorPalette = "green" onClick={() => window.location.href = `/events/${id}/${point_id}`}>Add Next Possession</Button>
+            <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
+              <Dialog.Trigger asChild>
+                <Button colorPalette="red" onClick={deleteDisclosure.onOpen}>
+                  Delete
+                </Button>
+              </Dialog.Trigger>
+              {DeleteConfirm}
+            </Dialog.Root>
+          </HStack>
+        ) : possessionOutcome != "Turnover" && currentPossession == possessionCount ? (
+          <HStack justify="space-between">
+            <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
+              <Dialog.Trigger asChild>
+                <Button onClick={editDisclosure.onOpen}>Edit</Button>
+              </Dialog.Trigger>
+              <EditPossessionDialog
+                possession={possession}
+                onClose={editDisclosure.onClose}
+                onUpdate={handleUpdate}
+                outcome={possessionOutcome}
+                offence_player_list={offencePlayers}
+                defence_player_list={defencePlayers}
+              />
+            </Dialog.Root>
+            <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
+              <Dialog.Trigger asChild>
+                <Button colorPalette="red" onClick={deleteDisclosure.onOpen}>
+                  Delete
+                </Button>
+              </Dialog.Trigger>
+              {DeleteConfirm}
+            </Dialog.Root>
+          </HStack>
+        ) : (
+          <HStack justify="space-between">
+            <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
+              <Dialog.Trigger asChild>
+                <Button onClick={editDisclosure.onOpen}>Edit</Button>
+              </Dialog.Trigger>
+              <EditPossessionDialog
+                possession={possession}
+                onClose={editDisclosure.onClose}
+                onUpdate={handleUpdate}
+                outcome={possessionOutcome}
+                offence_player_list={offencePlayers}
+                defence_player_list={defencePlayers}
+              />
+            </Dialog.Root>
+          </HStack>
+        )}
+      </Container>
+    </AuthWrapper>
   );
 }

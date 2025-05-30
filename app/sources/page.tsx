@@ -10,8 +10,9 @@ import { fetchSources, insertSource } from "@/app/sources/supabase";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import FloatingActionButton from "@/components/ui/plus-button";
 import { AddSourceModal } from "@/app/sources/components/add-source-modal";
+import {AuthWrapper} from "@/components/auth-wrapper";
 
-export default function SourcesPage() {
+function SourcesPageContent() {
   const [sources, setSources] = useState<Source[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,7 +56,7 @@ export default function SourcesPage() {
         ) : (
           <BaseGrid>
             {sources.map((source) => (
-              <SourceCard key={source.id} {...source} />
+              <SourceCard {...source} />
             ))}
           </BaseGrid>
         )}
@@ -70,4 +71,12 @@ export default function SourcesPage() {
       />
     </>
   );
+}
+
+export default function SourcesPage() {
+  return (
+    <AuthWrapper>
+      <SourcesPageContent />
+    </AuthWrapper>
+  )
 }

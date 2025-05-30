@@ -33,6 +33,7 @@ import {getOrCreatePlayerId} from "@/app/events/[id]/[point_id]/components/get-o
 import { AddClipModal } from "@/app/clips/components/add-clip-modal";
 import OnPageVideoLink from "@/components/on-page-video-link";
 import ThrowCounter from "@/components/throws-input";
+import {AuthWrapper} from "@/components/auth-wrapper";
 
 
 export default function PointPage({
@@ -323,205 +324,209 @@ export default function PointPage({
   };
 
   return (
-    <Container maxW="4xl">
-      <Header title={eventName} buttonText="Back" redirectUrl={`/events/${id}`} />
-      <Text mt={4} fontSize="lg" color="gray.400">{`${offence_team_name} on O starting ${currentPoint.timestamp}`}</Text>
-      <OnPageVideoLink url={currentPoint.timestamp_url}/>
-      <>
-        {/* Display dynamic Possession count and current offence team */}
-        <Text textStyle="3xl" mb={4} mt={4}>{`Possession #${possessionCount}`}</Text>
-        <Text textStyle="xl" mb={4} color="gray.400">{`Offence: ${currentOffenceTeam}`}</Text>
-        <HStack gap={4}>
-          <CustomDropdownInput
-            label="Defence Initiation"
-            placeholder="e.g. Flex"
-            value={dInitPlay}
-            onChange={(val) => setDInitPlay(val)}
-            options={dInitPlays.map((p) => ({ value: p.play, label: p.play }))}
-            customOptionValue="+ Add Strategy"
-          />
-          <CustomDropdownInput
-            label="Offence Initiation"
-            placeholder="e.g. Slash"
-            value={oInitPlay}
-            onChange={(val) => setOInitPlay(val)}
-            options={oInitPlays.map((p) => ({ value: p.play, label: p.play }))}
-          />
-        </HStack>
-        <HStack gap={4}>
-          <CustomDropdownInput
-            label="Defence Main Play"
-            placeholder="e.g. Flick"
-            value={dMainPlay}
-            onChange={(val) => setDMainPlay(val)}
-            options={dMainPlays.map((p) => ({ value: p.play, label: p.play }))}
-          />
-          <CustomDropdownInput
-            label="Offence Main Play"
-            placeholder="e.g. Vertical Stack"
-            value={oMainPlay}
-            onChange={(val) => setOMainPlay(val)}
-            options={oMainPlays.map((p) => ({ value: p.play, label: p.play }))}
-          />
-        </HStack>
-        <ThrowCounter value={numThrows} onChange={setNumThrows} />
-      </>
-
-      <Field.Root mb={4}>
-        <Field.Label>Possession Outcome</Field.Label>
-        <NativeSelect.Root>
-          <NativeSelect.Field
-            placeholder="Select option"
-            value={possessionType}
-            onChange={(e) => setPossessionType(e.currentTarget.value)}
-          >
-            <option value="turnover">Turnover</option>
-            <option value="score">Score</option>
-          </NativeSelect.Field>
-          <NativeSelect.Indicator />
-        </NativeSelect.Root>
-      </Field.Root>
-
-      {/* Render additional fields based on the selected possession outcome */}
-      {possessionType === "turnover" && (
+    <AuthWrapper>
+      <Container maxW="4xl">
+        <Header title={eventName} buttonText="Back" redirectUrl={`/events/${id}`} />
+        <Text mt={4} fontSize="lg" color="gray.400">{`${offence_team_name} on O starting ${currentPoint.timestamp}`}</Text>
+        <OnPageVideoLink url={currentPoint.timestamp_url}/>
         <>
-          <Text fontSize="md" fontWeight="semibold" mb={4}>Turnover Info</Text>
-          <Image src="/pitch-zoned.png" mb={4} alt="Pitch Zoned"/>
+          {/* Display dynamic Possession count and current offence team */}
+          <Text textStyle="3xl" mb={4} mt={4}>{`Possession #${possessionCount}`}</Text>
+          <Text textStyle="xl" mb={4} color="gray.400">{`Offence: ${currentOffenceTeam}`}</Text>
           <HStack gap={4}>
-            <Field.Root mb={4}>
-              <Field.Label>Thrown From</Field.Label>
-              <NativeSelect.Root>
-                <NativeSelect.Field
-                  placeholder="Select Zone"
-                  value={thrownFrom}
-                  onChange={(e) => setThrownFrom(e.currentTarget.value)}
-                >
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const val = (i + 1).toString();
-                    return (
-                      <option key={val} value={val}>
-                        {`Zone ${val}`}
-                      </option>
-                    );
-                  })}
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
-            </Field.Root>
-            <Field.Root mb={4}>
-              <Field.Label>Intended Catch Zone</Field.Label>
-              <NativeSelect.Root>
-                <NativeSelect.Field
-                  placeholder="Select Zone"
-                  value={thrownTo}
-                  onChange={(e) => setThrownTo(e.currentTarget.value)}
-                >
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const val = (i + 1).toString();
-                    return (
-                      <option key={val} value={val}>
-                        {`Zone ${val}`}
-                      </option>
-                    );
-                  })}
-                </NativeSelect.Field>
-                <NativeSelect.Indicator />
-              </NativeSelect.Root>
-            </Field.Root>
+            <CustomDropdownInput
+              label="Defence Initiation"
+              placeholder="e.g. Flex"
+              value={dInitPlay}
+              onChange={(val) => setDInitPlay(val)}
+              options={dInitPlays.map((p) => ({ value: p.play, label: p.play }))}
+              customOptionValue="+ Add Strategy"
+            />
+            <CustomDropdownInput
+              label="Offence Initiation"
+              placeholder="e.g. Slash"
+              value={oInitPlay}
+              onChange={(val) => setOInitPlay(val)}
+              options={oInitPlays.map((p) => ({ value: p.play, label: p.play }))}
+            />
           </HStack>
-          <CustomDropdownInput
-            label="Turnover Thower"
-            placeholder="Player Name"
-            value={turnoverThrower}
-            onChange={(val) => setTurnoverThrower(val)}
-            options={possessionOPlayers.map((p) => ({ value: p.player_id, label: p.player_name }))}
-          />
-          <CustomDropdownInput
-            label="Turnover Intended Receiver"
-            placeholder="Player Name"
-            value={turnoverReceiver}
-            onChange={(val) => setTurnoverReceiver(val)}
-            options={possessionOPlayers.map((p) => ({ value: p.player_id, label: p.player_name }))}
-          />
-          <Field.Root mb={4}>
-            <Field.Label>Turnover Reason</Field.Label>
-            <NativeSelect.Root>
-              <NativeSelect.Field
-                placeholder="Select option"
-                value={turnoverReason}
-                onChange={(e) => setTurnoverReason(e.currentTarget.value)}
-              >
-                <option value="Drop">Drop</option>
-                <option value="Stallout">Stallout</option>
-                <option value="Hand/Foot Block">Hand/Foot Block</option>
-                <option value="Block">Block</option>
-                <option value="Forced Error">Forced Error</option>
-                <option value="Throw Away">Throw Away</option>
-              </NativeSelect.Field>
-              <NativeSelect.Indicator />
-            </NativeSelect.Root>
-          </Field.Root>
-          <CustomDropdownInput
-            label="D Player (if applicable)"
-            placeholder="Player Name"
-            value={dPlayer}
-            onChange={(val) => setDPlayer(val)}
-            options={possessionDPlayers.map((p) => ({ value: p.player_id, label: p.player_name }))}
-          />
-
+          <HStack gap={4}>
+            <CustomDropdownInput
+              label="Defence Main Play"
+              placeholder="e.g. Flick"
+              value={dMainPlay}
+              onChange={(val) => setDMainPlay(val)}
+              options={dMainPlays.map((p) => ({ value: p.play, label: p.play }))}
+            />
+            <CustomDropdownInput
+              label="Offence Main Play"
+              placeholder="e.g. Vertical Stack"
+              value={oMainPlay}
+              onChange={(val) => setOMainPlay(val)}
+              options={oMainPlays.map((p) => ({ value: p.play, label: p.play }))}
+            />
+          </HStack>
+          <ThrowCounter value={numThrows} onChange={setNumThrows} />
         </>
-      )}
-      {possessionType === "score" && (
-        <>
-          <Text fontSize="md" fontWeight="semibold" mb={4}>Score Info</Text>
-          <CustomDropdownInput
-            label="Assist Thrower"
-            placeholder="Player Name"
-            value={assistPlayer}
-            onChange={(val) => setAssistPlayer(val)}
-            options={possessionOPlayers.map((p) => ({ value: p.player_id, label: p.player_name }))}
-          />
-          <CustomDropdownInput
-            label="Scorer"
-            placeholder="Player Name"
-            value={scorePlayer}
-            onChange={(val) => setScorePlayer(val)}
-            options={possessionOPlayers.map((p) => ({ value: p.player_id, label: p.player_name }))}
-          />
-          <Field.Root mb={4}>
-            <Field.Label>Score Method</Field.Label>
-            <NativeSelect.Root>
-              <NativeSelect.Field
-                placeholder="Select option"
-                value={scoreMethod}
-                onChange={(e) => setScoreMethod(e.currentTarget.value)}
-              >
-                <option value="Flow">Flow</option>
-                <option value="Endzone Set">Endzone Set</option>
-                <option value="Deep Shot">Deep Shot</option>
-              </NativeSelect.Field>
-              <NativeSelect.Indicator />
-            </NativeSelect.Root>
-          </Field.Root>
-        </>
-      )}
 
-      {/* Submit Button */}
-      <Button
-        mb={4}
-        colorPalette="green"
-        disabled={!possessionType}
-        onClick={handleSubmit}
-      >
-        {possessionType === "turnover" ? "Add Possession" : "Add Point"}
-      </Button>
-      <FloatingClipButton onClick={() => setIsClipModalOpen(true)} />
-      <AddClipModal
-        isOpen={isClipModalOpen}
-        onClose={() => setIsClipModalOpen(false)}
-        eventId={id}
-        baseUrl = {currentPoint.base_url}
-      />
-    </Container>
-  );
+        <Field.Root mb={4}>
+          <Field.Label>Possession Outcome</Field.Label>
+          <NativeSelect.Root>
+            <NativeSelect.Field
+              placeholder="Select option"
+              value={possessionType}
+              onChange={(e) => setPossessionType(e.currentTarget.value)}
+            >
+              <option value="turnover">Turnover</option>
+              <option value="score">Score</option>
+            </NativeSelect.Field>
+            <NativeSelect.Indicator />
+          </NativeSelect.Root>
+        </Field.Root>
+
+        {/* Render additional fields based on the selected possession outcome */}
+        {possessionType === "turnover" && (
+          <>
+            <Text fontSize="md" fontWeight="semibold" mb={4}>Turnover Info</Text>
+            <Image src="/pitch-zoned.png" mb={4} alt="Pitch Zoned"/>
+            <HStack gap={4}>
+              <Field.Root mb={4}>
+                <Field.Label>Thrown From</Field.Label>
+                <NativeSelect.Root>
+                  <NativeSelect.Field
+                    placeholder="Select Zone"
+                    value={thrownFrom}
+                    onChange={(e) => setThrownFrom(e.currentTarget.value)}
+                  >
+                    {Array.from({ length: 12 }, (_, i) => {
+                      const val = (i + 1).toString();
+                      return (
+                        <option key={val} value={val}>
+                          {`Zone ${val}`}
+                        </option>
+                      );
+                    })}
+                  </NativeSelect.Field>
+                  <NativeSelect.Indicator />
+                </NativeSelect.Root>
+              </Field.Root>
+              <Field.Root mb={4}>
+                <Field.Label>Intended Catch Zone</Field.Label>
+                <NativeSelect.Root>
+                  <NativeSelect.Field
+                    placeholder="Select Zone"
+                    value={thrownTo}
+                    onChange={(e) => setThrownTo(e.currentTarget.value)}
+                  >
+                    {Array.from({ length: 12 }, (_, i) => {
+                      const val = (i + 1).toString();
+                      return (
+                        <option key={val} value={val}>
+                          {`Zone ${val}`}
+                        </option>
+                      );
+                    })}
+                  </NativeSelect.Field>
+                  <NativeSelect.Indicator />
+                </NativeSelect.Root>
+              </Field.Root>
+            </HStack>
+            <CustomDropdownInput
+              label="Turnover Thower"
+              placeholder="Player Name"
+              value={turnoverThrower}
+              onChange={(val) => setTurnoverThrower(val)}
+              options={possessionOPlayers.map((p) => ({ value: p.player_id, label: p.player_name }))}
+            />
+            <CustomDropdownInput
+              label="Turnover Intended Receiver"
+              placeholder="Player Name"
+              value={turnoverReceiver}
+              onChange={(val) => setTurnoverReceiver(val)}
+              options={possessionOPlayers.map((p) => ({ value: p.player_id, label: p.player_name }))}
+            />
+            <Field.Root mb={4}>
+              <Field.Label>Turnover Reason</Field.Label>
+              <NativeSelect.Root>
+                <NativeSelect.Field
+                  placeholder="Select option"
+                  value={turnoverReason}
+                  onChange={(e) => setTurnoverReason(e.currentTarget.value)}
+                >
+                  <option value="Drop">Drop</option>
+                  <option value="Stallout">Stallout</option>
+                  <option value="Hand/Foot Block">Hand/Foot Block</option>
+                  <option value="Block">Block</option>
+                  <option value="Forced Error">Forced Error</option>
+                  <option value="Throw Away">Throw Away</option>
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+            </Field.Root>
+            <CustomDropdownInput
+              label="D Player (if applicable)"
+              placeholder="Player Name"
+              value={dPlayer}
+              onChange={(val) => setDPlayer(val)}
+              options={possessionDPlayers.map((p) => ({ value: p.player_id, label: p.player_name }))}
+            />
+
+          </>
+        )}
+        {possessionType === "score" && (
+          <>
+            <Text fontSize="md" fontWeight="semibold" mb={4}>Score Info</Text>
+            <CustomDropdownInput
+              label="Assist Thrower"
+              placeholder="Player Name"
+              value={assistPlayer}
+              onChange={(val) => setAssistPlayer(val)}
+              options={possessionOPlayers.map((p) => ({ value: p.player_id, label: p.player_name }))}
+            />
+            <CustomDropdownInput
+              label="Scorer"
+              placeholder="Player Name"
+              value={scorePlayer}
+              onChange={(val) => setScorePlayer(val)}
+              options={possessionOPlayers.map((p) => ({ value: p.player_id, label: p.player_name }))}
+            />
+            <Field.Root mb={4}>
+              <Field.Label>Score Method</Field.Label>
+              <NativeSelect.Root>
+                <NativeSelect.Field
+                  placeholder="Select option"
+                  value={scoreMethod}
+                  onChange={(e) => setScoreMethod(e.currentTarget.value)}
+                >
+                  <option value="Flow">Flow</option>
+                  <option value="Endzone Set">Endzone Set</option>
+                  <option value="Deep Shot">Deep Shot</option>
+                </NativeSelect.Field>
+                <NativeSelect.Indicator />
+              </NativeSelect.Root>
+            </Field.Root>
+          </>
+        )}
+
+        {/* Submit Button */}
+        <Button
+          mb={4}
+          colorPalette="green"
+          disabled={!possessionType}
+          onClick={handleSubmit}
+        >
+          {possessionType === "turnover" ? "Add Possession" : "Add Point"}
+        </Button>
+        <FloatingClipButton onClick={() => setIsClipModalOpen(true)} />
+        <AddClipModal
+          isOpen={isClipModalOpen}
+          onClose={() => setIsClipModalOpen(false)}
+          eventId={id}
+          baseUrl = {currentPoint.base_url}
+        />
+      </Container>
+    </AuthWrapper>
+    );
 }
+
+

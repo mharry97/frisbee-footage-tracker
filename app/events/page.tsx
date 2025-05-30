@@ -13,8 +13,9 @@ import { AddEventModal } from "@/app/events/components/add-event-modal";
 import { EventCardProps } from "@/app/events/components/event-card";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import FloatingActionButton from "@/components/ui/plus-button";
+import {AuthWrapper} from "@/components/auth-wrapper";
 
-export default function EventsPage() {
+function EventsPageContent() {
   const [events, setEvents] = useState<EventCardProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -90,4 +91,12 @@ export default function EventsPage() {
       />
     </>
   );
+}
+
+export default function EventsPage() {
+  return (
+    <AuthWrapper>
+      <EventsPageContent />
+    </AuthWrapper>
+  )
 }

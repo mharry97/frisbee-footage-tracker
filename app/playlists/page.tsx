@@ -12,8 +12,9 @@ import { AddPlaylistModal } from "@/app/playlists/components/add-playlist-modal"
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import FloatingActionButton from "@/components/ui/plus-button";
 import {fetchPlaylists, PlaylistWithCreator} from "@/app/playlists/supabase";
+import {AuthWrapper} from "@/components/auth-wrapper";
 
-export default function PlaylistsPage() {
+function PlaylistsPageContent() {
   const [loading, setLoading] = useState(true);
   const [playlists, setPlaylists] = useState<PlaylistWithCreator[]>([]);
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
@@ -71,4 +72,12 @@ export default function PlaylistsPage() {
       />
     </>
   );
+}
+
+export default function PlaylistsPage() {
+  return (
+    <AuthWrapper>
+      <PlaylistsPageContent />
+    </AuthWrapper>
+  )
 }

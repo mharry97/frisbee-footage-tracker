@@ -13,6 +13,7 @@ import {fetchPlaylist} from "@/app/playlists/supabase";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import {AddSourceClipModal} from "@/app/clips/components/add-clip-from-source";
 import FloatingClipButton from "@/components/ui/add-clip-button";
+import {AuthWrapper} from "@/components/auth-wrapper";
 
 
 
@@ -50,23 +51,25 @@ export default function PointPage({
   }, [id]);
 
   return (
-    <Container maxW="4xl">
-      {loading ? (
-        <LoadingSpinner text="loading..." />
-      ) : (
-        <>
-          <Header title={playlistData?.title || ""} buttonText="playlists" redirectUrl="/playlists"/>
-          <Text textStyle="xl" mb={4} mt ={4}>{playlistData?.description}</Text>
-          <Separator />
-          <ClipGrid clips={clips}></ClipGrid>
-          <FloatingClipButton onClick={() => setIsClipModalOpen(true)} />
-          <AddSourceClipModal
-            isOpen={isClipModalOpen}
-            onClose={() => setIsClipModalOpen(false)}
-            playlistId={id}
-          />
-        </>
-      )}
-    </Container>
+    <AuthWrapper>
+      <Container maxW="4xl">
+        {loading ? (
+          <LoadingSpinner text="loading..." />
+        ) : (
+          <>
+            <Header title={playlistData?.title || ""} buttonText="playlists" redirectUrl="/playlists"/>
+            <Text textStyle="xl" mb={4} mt ={4}>{playlistData?.description}</Text>
+            <Separator />
+            <ClipGrid clips={clips}></ClipGrid>
+            <FloatingClipButton onClick={() => setIsClipModalOpen(true)} />
+            <AddSourceClipModal
+              isOpen={isClipModalOpen}
+              onClose={() => setIsClipModalOpen(false)}
+              playlistId={id}
+            />
+          </>
+        )}
+      </Container>
+    </AuthWrapper>
   );
 }

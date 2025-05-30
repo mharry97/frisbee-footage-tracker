@@ -5,6 +5,7 @@ import { Container } from "@chakra-ui/react";
 import Header from "@/components/header";
 import { Source } from "@/lib/supabase"
 import { fetchSourceById } from "@/app/sources/supabase";
+import {AuthWrapper} from "@/components/auth-wrapper";
 
 export default function EventPage({ params }: { params: Promise<{ id: string }> }) {
   // Unwrap the promised params
@@ -24,12 +25,14 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
   }, [id]);
 
   return (
-    <Container maxW="4xl">
-      <Header
-        title={sourceData ? sourceData.title : ""}
-        buttonText="sources"
-        redirectUrl="/sources"
-      />
-    </Container>
+    <AuthWrapper>
+      <Container maxW="4xl">
+        <Header
+          title={sourceData ? sourceData.title : ""}
+          buttonText="sources"
+          redirectUrl="/sources"
+        />
+      </Container>
+    </AuthWrapper>
   );
 }
