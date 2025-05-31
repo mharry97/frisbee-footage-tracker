@@ -120,19 +120,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error
   }
 
-  async function signInWithEmail(username: string, password: string) {
-    const email = usernameToEmail(username)
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    // if (error) {
-    //   throw error
-    // } else {
-    //   return redirect(data.url)
-    // }
-  }
-
   const logout = async () => {
     const { error } = await supabase.auth.signOut()
     if (error) throw error
