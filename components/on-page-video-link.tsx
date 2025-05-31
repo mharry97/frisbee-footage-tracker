@@ -3,7 +3,7 @@
 import { WatchButton } from "@/components/watch-button";
 import React, { useState, useEffect } from "react";
 import { getFootageProvider } from "@/lib/utils";
-import {AspectRatio, Center, Container, Text} from "@chakra-ui/react";
+import {AspectRatio, Center, Container, Link, Text} from "@chakra-ui/react";
 import { getVeoVideoUrl } from "@/app/sources/actions";
 
 type TurnoverFormProps = {
@@ -65,9 +65,10 @@ export default function OnPageVideoLink({ url }: TurnoverFormProps) {
         <Container>
           <Text>
             For interactive view, open on{" "}
-            <Text as="a" href={url} target="_blank" color="blue.400" textDecoration="underline">
+            <Link href={url} color="blue.400" textDecoration="underline">
               Veo
-            </Text>
+            </Link>
+
           </Text>
           <AspectRatio ratio={16 / 9} w="full" maxW="4xl" mx="auto">
             <video
