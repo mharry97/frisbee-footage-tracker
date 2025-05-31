@@ -107,4 +107,25 @@ export function getTeamName(teams: Team[], teamId: string): string {
   return team ? team.team_name : "";
 }
 
-baseUrlToTimestampUrl("https://www.youtube.com/watch?v=p_OTaf-U5IE", "16:32")
+export function normalizeTimestampToHHMMSS(input: string): string {
+  const parts = input.split(":").map(Number)
+
+  if (parts.length === 2) {
+    const [minutes, seconds] = parts
+    const hours = Math.floor(minutes / 60)
+    const remainingMinutes = minutes % 60
+    return [
+      hours.toString().padStart(2, "0"),
+      remainingMinutes.toString().padStart(2, "0"),
+      seconds.toString().padStart(2, "0"),
+    ].join(":")
+  }
+
+  if (parts.length === 3) {
+    return parts.map((p) => p.toString().padStart(2, "0")).join(":")
+  }
+
+  return "00:00:00"
+}
+
+
