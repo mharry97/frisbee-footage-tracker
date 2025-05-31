@@ -42,7 +42,7 @@ function EventsPageContent() {
       <Container maxW="4xl">
         <Header
           title="Point Search"
-          buttonText="dashboard"
+          buttonText="Dashboard"
           redirectUrl="/dashboard"
         />
         {loading ? (

@@ -296,17 +296,17 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
     : [
       {
         value: "overview",
-        label: "overview",
+        label: "Overview",
         content: <OverviewContent />,
       },
       {
         value: "points",
-        label: "points",
+        label: "Points",
         content: <PointsContent />,
       },
       {
         value: "clips",
-        label: "clips",
+        label: "Clips",
         content: <ClipsContent />,
       },
     ];
@@ -319,7 +319,7 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
       <Container maxW="4xl">
         <Header
           title={eventData ? eventData.event_name : ""}
-          buttonText="events"
+          buttonText="Events"
           redirectUrl="/events"
         />
         {loading ? (

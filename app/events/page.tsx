@@ -52,7 +52,7 @@ function EventsPageContent() {
   return (
     <>
       <Container maxW="4xl">
-        <Header title="events" buttonText="dashboard" redirectUrl="/dashboard" />
+        <Header title="Events" buttonText="Dashboard" redirectUrl="/dashboard" />
         {loading ? (
           <LoadingSpinner text="loading events..." />
         ) : (

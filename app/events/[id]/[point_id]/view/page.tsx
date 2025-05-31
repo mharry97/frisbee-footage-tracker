@@ -73,7 +73,7 @@ export default function PointView({
     return (
       <AuthWrapper>
         <Container maxW="4xl" py={8}>
-          <Header title="Point Info" buttonText="Back" redirectUrl={`/events/${id}`} />
+          <Header title="Point Info" buttonText="Event" redirectUrl={`/events/${id}`} />
           <Text mt={8} color="white">
             {loading ? "Loading point data" : "No data found for this point yet."}
           </Text>

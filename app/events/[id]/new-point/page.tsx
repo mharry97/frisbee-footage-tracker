@@ -178,7 +178,7 @@ export default function EventPage({
       <Container maxW="4xl">
         <Header
           title="Point Form"
-          buttonText="event"
+          buttonText="Event"
           redirectUrl={`/events/${id}`}
         />
 

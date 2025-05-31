@@ -50,7 +50,7 @@ function SourcesPageContent() {
   return (
     <>
       <Container maxW="4xl">
-        <Header title="sources" buttonText="dashboard" redirectUrl="/dashboard" />
+        <Header title="Sources" buttonText="Dashboard" redirectUrl="/dashboard" />
         {loading ? (
           <LoadingSpinner text="loading sources..." />
         ) : (

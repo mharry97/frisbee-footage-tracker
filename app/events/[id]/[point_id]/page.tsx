@@ -326,7 +326,7 @@ export default function PointPage({
   return (
     <AuthWrapper>
       <Container maxW="4xl">
-        <Header title={eventName} buttonText="Back" redirectUrl={`/events/${id}`} />
+        <Header title={eventName} buttonText="Event" redirectUrl={`/events/${id}`} />
         <Text mt={4} fontSize="lg" color="gray.400">{`${offence_team_name} on O starting ${currentPoint.timestamp}`}</Text>
         <OnPageVideoLink url={currentPoint.timestamp_url}/>
         <>

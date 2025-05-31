@@ -57,7 +57,7 @@ export default function PointPage({
           <LoadingSpinner text="loading..." />
         ) : (
           <>
-            <Header title={playlistData?.title || ""} buttonText="playlists" redirectUrl="/playlists"/>
+            <Header title={playlistData?.title || ""} buttonText="Playlists" redirectUrl="/playlists"/>
             <Text textStyle="xl" mb={4} mt ={4}>{playlistData?.description}</Text>
             <Separator />
             <ClipGrid clips={clips}></ClipGrid>
