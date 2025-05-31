@@ -41,10 +41,10 @@ const getCurrentPlayerData = async (): Promise<Player | null> => {
   }
 
   const { data, error } = await supabase
-    .from("players")
-    .select("player_id, username, player_name, team_id, is_admin, is_active, auth_user_id")
-    .eq("auth_user_id", user.id)
-    .single()
+      .from("players")
+      .select("player_id, username, player_name, team_id, is_admin, is_active, auth_user_id")
+      .eq("auth_user_id", user.id)
+      .single()
 
   if (error) {
     console.error("Error fetching player data:", error)
@@ -59,6 +59,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [player, setPlayer] = useState<Player | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Add debugging to your auth context
+  const loadPlayerData = async () => {
+    console.log("🔄 Starting to load player data...")
+    try {
+      const playerData = await getCurrentPlayerData()
+      console.log("Player data loaded:", playerData)
+      setPlayer(playerData)
+    } catch (error) {
+      console.error("Error loading player data:", error)
+      setPlayer(null)
+    } finally {
+      console.log("Setting loading to false")
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -70,33 +86,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })
 
-    // Listen for auth changes
+    // Listen for auth changes - FIXED: No async callback!
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state change:", event, !!session)
+
+      // Set user immediately (synchronous)
       setUser(session?.user ?? null)
-      if (session?.user) {
-        await loadPlayerData()
-      } else {
-        setPlayer(null)
-        setLoading(false)
-      }
+
+      // Dispatch async work AFTER callback finishes
+      setTimeout(() => {
+        if (session?.user) {
+          loadPlayerData()
+        } else {
+          setPlayer(null)
+          setLoading(false)
+        }
+      }, 0)
     })
 
     return () => subscription.unsubscribe()
   }, [])
-
-  const loadPlayerData = async () => {
-    try {
-      const playerData = await getCurrentPlayerData()
-      setPlayer(playerData)
-    } catch (error) {
-      console.error("Error loading player data:", error)
-      setPlayer(null)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const login = async (username: string, password: string) => {
     const email = usernameToEmail(username)
@@ -107,6 +118,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })
 
     if (error) throw error
+  }
+
+  async function signInWithEmail(username: string, password: string) {
+    const email = usernameToEmail(username)
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+    // if (error) {
+    //   throw error
+    // } else {
+    //   return redirect(data.url)
+    // }
   }
 
   const logout = async () => {
@@ -122,18 +146,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        player,
-        loading,
-        login,
-        logout,
-        changePassword,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+      <AuthContext.Provider
+          value={{
+            user,
+            player,
+            loading,
+            login,
+            logout,
+            changePassword,
+          }}
+      >
+        {children}
+      </AuthContext.Provider>
   )
 }
 
