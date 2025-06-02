@@ -107,25 +107,25 @@ export function getTeamName(teams: Team[], teamId: string): string {
   return team ? team.team_name : "";
 }
 
-export function normalizeTimestampToHHMMSS(input: string): string {
-  const parts = input.split(":").map(Number)
+export function normalizeTimestampToHHMMSS(time: string): string {
+  const [minStr, secStr] = time.split(":");
 
-  if (parts.length === 2) {
-    const [minutes, seconds] = parts
-    const hours = Math.floor(minutes / 60)
-    const remainingMinutes = minutes % 60
-    return [
-      hours.toString().padStart(2, "0"),
-      remainingMinutes.toString().padStart(2, "0"),
-      seconds.toString().padStart(2, "0"),
-    ].join(":")
+  const minutes = parseInt(minStr, 10);
+  const seconds = parseInt(secStr, 10);
+
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+
+  const pad = (num: number) => String(num).padStart(2, "0");
+
+  if (hours > 0) {
+    return `${hours}:${pad(remainingMinutes)}:${pad(seconds)}`;
   }
 
-  if (parts.length === 3) {
-    return parts.map((p) => p.toString().padStart(2, "0")).join(":")
-  }
-
-  return "00:00:00"
+  // if under 1 hour, return M:SS (no leading zeros)
+  return `${minutes}:${pad(seconds)}`;
 }
+
+
 
 

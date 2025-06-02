@@ -11,13 +11,15 @@ export async function getVeoVideoUrl(veoUrl: string): Promise<string | null> {
       return null
     }
 
+    // console.log(veoUrl)
     const matchId = matchIdMatch[1]
 
     // Extract timestamp fragment (e.g. #t=68:52)
-    const timeMatch = veoUrl.match(/[#?&]t=([0-9]{1,2}:[0-9]{2})/)
+    const timeMatch = veoUrl.match(/[#?&]t=([0-9]+:[0-9]{2})/)
     const formattedTimestamp = timeMatch
       ? normalizeTimestampToHHMMSS(timeMatch[1])
       : null
+    // console.log(formattedTimestamp)
 
     const apiUrl = `https://app.veo.co/api/app/matches/${matchId}/videos/`
 
