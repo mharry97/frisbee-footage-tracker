@@ -14,7 +14,7 @@ type HeaderProps = {
 const Header: React.FC<HeaderProps> = ({ title, buttonText, redirectUrl, onBack }) => {
   const router = useRouter();
 
-  const handleClick = onBack ? onBack : () => router.push(redirectUrl || '/dashboard');
+  const handleClick = onBack ? onBack : () => router.push(redirectUrl || '/');
 
   return (
     <Box bg="black" pt={4}>
