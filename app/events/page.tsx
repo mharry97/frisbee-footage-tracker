@@ -52,9 +52,9 @@ function EventsPageContent() {
   return (
     <>
       <Container maxW="4xl">
-        <Header title="Events" buttonText="Dashboard" redirectUrl="/dashboard" />
+        <Header title="Events" buttonText="Home" redirectUrl="/" />
         {loading ? (
-          <LoadingSpinner text="loading events..." />
+          <LoadingSpinner text="Loading events..." />
         ) : (
           <Table.Root
             size="lg"

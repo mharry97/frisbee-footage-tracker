@@ -9,7 +9,7 @@ export default function PointView(){
 
   return (
     <Container maxW="4xl" py={8}>
-      <Header title="Coming Soon" buttonText="dashboard" redirectUrl={`/dashboard`} />
+      <Header title="Coming Soon" buttonText="Home" redirectUrl={`/`} />
     </Container>
   );
 }

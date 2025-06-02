@@ -50,9 +50,9 @@ function SourcesPageContent() {
   return (
     <>
       <Container maxW="4xl">
-        <Header title="Sources" buttonText="Dashboard" redirectUrl="/dashboard" />
+        <Header title="Sources" buttonText="Home" redirectUrl="/" />
         {loading ? (
-          <LoadingSpinner text="loading sources..." />
+          <LoadingSpinner text="Loading sources..." />
         ) : (
           <BaseGrid>
             {sources.map((source) => (
