@@ -42,11 +42,11 @@ function EventsPageContent() {
       <Container maxW="4xl">
         <Header
           title="Point Search"
-          buttonText="Dashboard"
-          redirectUrl="/dashboard"
+          buttonText="Home"
+          redirectUrl="/"
         />
         {loading ? (
-          <LoadingSpinner text="loading..." />
+          <LoadingSpinner text="Loading..." />
         ) : (
           <>
             <Table.Root size="lg" interactive colorPalette={"gray"}>

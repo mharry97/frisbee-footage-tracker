@@ -54,7 +54,7 @@ export default function PointPage({
     <AuthWrapper>
       <Container maxW="4xl">
         {loading ? (
-          <LoadingSpinner text="loading..." />
+          <LoadingSpinner text="Loading info" />
         ) : (
           <>
             <Header title={playlistData?.title || ""} buttonText="Playlists" redirectUrl="/playlists"/>
