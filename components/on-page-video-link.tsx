@@ -63,13 +63,6 @@ export default function OnPageVideoLink({ url }: TurnoverFormProps) {
     if (veoVideoUrl) {
       return (
         <Container>
-          <Text>
-            For interactive view, open on{" "}
-            <Link href={url} color="blue.400" textDecoration="underline">
-              Veo
-            </Link>
-
-          </Text>
           <AspectRatio ratio={16 / 9} w="full" maxW="4xl" mx="auto">
             <video
               src={veoVideoUrl}
@@ -83,6 +76,13 @@ export default function OnPageVideoLink({ url }: TurnoverFormProps) {
               Your browser does not support the video tag.
             </video>
           </AspectRatio>
+          <Text>
+            For interactive view, open on{" "}
+            <Link href={url} color="blue.400" textDecoration="underline">
+              Veo
+            </Link>
+
+          </Text>
         </Container>
       );
     }
