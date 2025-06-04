@@ -56,3 +56,18 @@ export async function fetchDetailPoint(point_id: string): Promise<PointDetailed[
   if (error) throw error;
   return data ?? [];
 }
+
+// Fetch all points from detailed view
+export async function fetchAllPointsDetailed(): Promise<PointDetailed[]> {
+  try {
+    const { data } = await supabase
+      .from("all_points_view")
+      .select("*")
+      .order("event_date", { ascending: false });
+
+    return data ?? []
+  } catch (error) {
+    console.error("Error fetching points:", error);
+    return [];
+  }
+}
