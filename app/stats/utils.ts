@@ -181,104 +181,104 @@ const isDrop = (row: PointDetailed, playerId: string) =>
   row.turn_thrower === playerId && row.turnover_reason === "Drop";
 
 // Get all player stats
-export function getPlayerStats(points: PointDetailed[]) {
-  const statsMap: Record<string, any> = {}
-
-  for (const row of points) {
-    const playerIds = [
-      row.score_player,
-      row.assist_player,
-      row.d_player,
-      row.turn_thrower
-    ].filter(Boolean)
-
-    for (const pid of new Set(playerIds)) {
-      if (!pid) continue
-      if (!statsMap[pid]) {
-        statsMap[pid] = {
-          player_id: pid,
-          player_name:
-            row.score_player === pid ? row.score_player_name
-              : row.assist_player === pid ? row.assist_player_name
-                : row.d_player === pid ? row.d_player_name
-                  : row.turn_thrower === pid ? row.turn_thrower_name
-                    : "",
-          scores: 0,
-          assists: 0,
-          ds: 0,
-          throwaways: 0,
-          drops: 0,
-          plusMinus: 0,
-        }
-      }
-
-      const stats = statsMap[pid]
-
-      if (row.score_player === pid) stats.scores++
-      if (row.assist_player === pid) stats.assists++
-      if (row.d_player === pid) stats.ds++
-      if (isThrowaway(row, pid)) stats.throwaways++
-      if (isDrop(row, pid)) stats.drops++
-
-      stats.plusMinus =
-        stats.scores + stats.assists + stats.ds - stats.throwaways - stats.drops
-    }
-  }
-
-  return Object.values(statsMap)
-}
-
-// Get player stats by game
-export function getPlayerStatsByGame(points: PointDetailed[]) {
-  const groupedStats: Record<string, any> = {}
-
-  for (const row of points) {
-    const gameId = row.event_id
-    const gameKey = `${row.event_id}__${row.score_player || row.assist_player || row.d_player || row.turn_thrower}`
-
-    const playerIds = [row.score_player, row.assist_player, row.d_player, row.turn_thrower].filter(Boolean)
-
-    for (const pid of new Set(playerIds)) {
-      if (!pid) continue
-
-      const key = `${gameId}__${pid}`
-
-      if (!groupedStats[key]) {
-        groupedStats[key] = {
-          event_id: row.event_id,
-          event_name: row.event_name,
-          player_id: pid,
-          player_name:
-            row.score_player === pid ? row.score_player_name
-              : row.assist_player === pid ? row.assist_player_name
-                : row.d_player === pid ? row.d_player_name
-                  : row.turn_thrower === pid ? row.turn_thrower_name
-                    : "",
-          scores: 0,
-          assists: 0,
-          ds: 0,
-          throwaways: 0,
-          drops: 0,
-          plusMinus: 0,
-        }
-      }
-
-      const stats = groupedStats[key]
-
-      if (row.score_player === pid) stats.scores++
-      if (row.assist_player === pid) stats.assists++
-      if (row.d_player === pid) stats.ds++
-      if (isThrowaway(row, pid)) stats.throwaways++
-      if (isDrop(row, pid)) stats.drops++
-
-      stats.plusMinus =
-        stats.scores + stats.assists + stats.ds - stats.throwaways - stats.drops
-    }
-  }
-
-  return Object.values(groupedStats)
-}
-
-
-
-
+// export function getPlayerStats(points: PointDetailed[]) {
+//   const statsMap: Record<string, any> = {}
+//
+//   for (const row of points) {
+//     const playerIds = [
+//       row.score_player,
+//       row.assist_player,
+//       row.d_player,
+//       row.turn_thrower
+//     ].filter(Boolean)
+//
+//     for (const pid of new Set(playerIds)) {
+//       if (!pid) continue
+//       if (!statsMap[pid]) {
+//         statsMap[pid] = {
+//           player_id: pid,
+//           player_name:
+//             row.score_player === pid ? row.score_player_name
+//               : row.assist_player === pid ? row.assist_player_name
+//                 : row.d_player === pid ? row.d_player_name
+//                   : row.turn_thrower === pid ? row.turn_thrower_name
+//                     : "",
+//           scores: 0,
+//           assists: 0,
+//           ds: 0,
+//           throwaways: 0,
+//           drops: 0,
+//           plusMinus: 0,
+//         }
+//       }
+//
+//       const stats = statsMap[pid]
+//
+//       if (row.score_player === pid) stats.scores++
+//       if (row.assist_player === pid) stats.assists++
+//       if (row.d_player === pid) stats.ds++
+//       if (isThrowaway(row, pid)) stats.throwaways++
+//       if (isDrop(row, pid)) stats.drops++
+//
+//       stats.plusMinus =
+//         stats.scores + stats.assists + stats.ds - stats.throwaways - stats.drops
+//     }
+//   }
+//
+//   return Object.values(statsMap)
+// }
+//
+// // Get player stats by game
+// export function getPlayerStatsByGame(points: PointDetailed[]) {
+//   const groupedStats: Record<string, any> = {}
+//
+//   for (const row of points) {
+//     const gameId = row.event_id
+//     const gameKey = `${row.event_id}__${row.score_player || row.assist_player || row.d_player || row.turn_thrower}`
+//
+//     const playerIds = [row.score_player, row.assist_player, row.d_player, row.turn_thrower].filter(Boolean)
+//
+//     for (const pid of new Set(playerIds)) {
+//       if (!pid) continue
+//
+//       const key = `${gameId}__${pid}`
+//
+//       if (!groupedStats[key]) {
+//         groupedStats[key] = {
+//           event_id: row.event_id,
+//           event_name: row.event_name,
+//           player_id: pid,
+//           player_name:
+//             row.score_player === pid ? row.score_player_name
+//               : row.assist_player === pid ? row.assist_player_name
+//                 : row.d_player === pid ? row.d_player_name
+//                   : row.turn_thrower === pid ? row.turn_thrower_name
+//                     : "",
+//           scores: 0,
+//           assists: 0,
+//           ds: 0,
+//           throwaways: 0,
+//           drops: 0,
+//           plusMinus: 0,
+//         }
+//       }
+//
+//       const stats = groupedStats[key]
+//
+//       if (row.score_player === pid) stats.scores++
+//       if (row.assist_player === pid) stats.assists++
+//       if (row.d_player === pid) stats.ds++
+//       if (isThrowaway(row, pid)) stats.throwaways++
+//       if (isDrop(row, pid)) stats.drops++
+//
+//       stats.plusMinus =
+//         stats.scores + stats.assists + stats.ds - stats.throwaways - stats.drops
+//     }
+//   }
+//
+//   return Object.values(groupedStats)
+// }
+//
+//
+//
+//

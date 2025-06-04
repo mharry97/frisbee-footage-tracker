@@ -1,6 +1,5 @@
 import {PointDetailed, supabase} from "@/lib/supabase";
 import type { Point } from "@/lib/supabase";
-import {ascending} from "d3-array";
 
 // Fetch basic info for all points from Supabase for a given event_id
 export async function fetchEventPoints(event_id: string): Promise<Point[]> {
@@ -58,16 +57,16 @@ export async function fetchDetailPoint(point_id: string): Promise<PointDetailed[
 }
 
 // Fetch all points from detailed view
-export async function fetchAllPointsDetailed(): Promise<PointDetailed[]> {
-  try {
-    const { data } = await supabase
-      .from("all_points_view")
-      .select("*")
-      .order("event_date", { ascending: false });
-
-    return data ?? []
-  } catch (error) {
-    console.error("Error fetching points:", error);
-    return [];
-  }
-}
+// export async function fetchAllPointsDetailed(): Promise<PointDetailed[]> {
+//   try {
+//     const { data } = await supabase
+//       .from("all_points_view")
+//       .select("*")
+//       .order("event_date", { ascending: false });
+//
+//     return data ?? []
+//   } catch (error) {
+//     console.error("Error fetching points:", error);
+//     return [];
+//   }
+// }
