@@ -84,7 +84,6 @@ function PlayersPageContent() {
               return (
                 <Table.Row key={player.player_id}>
                   <Table.Cell>{player.player_name}</Table.Cell>
-                  <Table.Cell>{player.username}</Table.Cell>
                   <Table.Cell>{team?.team_name || "Unknown"}</Table.Cell>
                   <Table.Cell textAlign="center">
                     <Badge colorPalette={player.is_admin ? "red" : "blue"}>{player.is_admin ? "Admin" : "User"}</Badge>

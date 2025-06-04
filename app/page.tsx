@@ -84,7 +84,7 @@ const pointCards: PointCard[] = [
   { title: "Solent Scrims - Solent", timestamp: "109:16", offence_team: "Solent", outcome: "break", url: ""  },
 ]
 
-export function HorizontalIconMenu() {
+function HorizontalIconMenu() {
   return (
     <Box
       overflowX="auto"
@@ -92,9 +92,8 @@ export function HorizontalIconMenu() {
       width="100%"
     >
       <HStack
-        spacing={3}
+        gap={3}
         px={2}
-        justifyContent={{ base: "flex-start", md: "center" }}
       >
         {menuItems.map((item) => (
           <ChakraLink
@@ -110,14 +109,14 @@ export function HorizontalIconMenu() {
               h="120px"
               justifyContent="center"
               alignItems="center"
-              spacing={1}
+              gap={1}
               bg="transparent"
               _hover={{ bg: "whiteAlpha.100", rounded: "md" }}
               transition="background-color 0.2s ease-in-out"
               rounded="md"
             >
               <Icon as={item.iconComponent} boxSize="30px" color="white" />
-              <Text fontSize="xs" color="white" textAlign="center" noOfLines={1}>
+              <Text fontSize="xs" color="white" textAlign="center">
                 {item.title}
               </Text>
             </VStack>
