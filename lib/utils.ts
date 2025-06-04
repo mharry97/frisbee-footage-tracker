@@ -61,7 +61,7 @@ export function convertTimestampToSeconds(timestamp: string): number {
     return parts[0]; // already seconds
   }
 
-  return 0; // Default fallback for invalid input
+  return 0;
 }
 
 // Extracts the YouTube video ID from a URL using a regex.

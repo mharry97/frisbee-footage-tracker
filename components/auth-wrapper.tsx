@@ -18,7 +18,7 @@ export function AuthWrapper({ children, requireAdmin = false, fallback }: AuthWr
       fallback || (
         <Box minH="100vh" bg="black" p={4} display="flex" alignItems="center" justifyContent="center">
           <Text color="white" fontSize="xl">
-            Loading...
+            Authenticating...
           </Text>
         </Box>
       )

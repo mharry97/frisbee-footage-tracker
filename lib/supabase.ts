@@ -184,4 +184,6 @@ export type PointDetailed = {
   turn_intended_receiver_name: string | null
   d_player: string | null
   d_player_name: string | null
+  timestamp: string | null
+  event_date: string | null
 }

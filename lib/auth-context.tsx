@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Add debugging to your auth context
   const loadPlayerData = async () => {
-    console.log("🔄 Starting to load player data...")
+    console.log("Starting to load player data...")
     try {
       const playerData = await getCurrentPlayerData()
       console.log("Player data loaded:", playerData)
@@ -162,7 +162,7 @@ export function useRequireAuth() {
 
   useEffect(() => {
     if (!auth.loading && !auth.user) {
-      router.push("/")
+      router.push("/login")
     }
   }, [auth.loading, auth.user, router])
 

@@ -1,5 +1,5 @@
 // Utility functions for transforming supabase responses into specific stat formats
-import type { Possession, TeamPlayer } from "@/lib/supabase";
+import type {Possession, TeamPlayer} from "@/lib/supabase";
 
 // Get player level info from possessions
 interface PlayerStats {
@@ -171,5 +171,3 @@ export function sequenceStats(
 
   return Array.from(sequenceMap.values());
 }
-
-
