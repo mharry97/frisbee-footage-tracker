@@ -73,10 +73,9 @@ export type Player = {
   player_id: string
   player_name: string
   team_id: string
-  username: string
-  auth_user_id: string
-  is_active: boolean
   is_admin: boolean
+  is_active: boolean
+  auth_user_id: string
 }
 
 export type TeamPlayer = {

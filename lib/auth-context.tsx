@@ -3,19 +3,8 @@
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import type { User } from "@supabase/supabase-js"
-import { supabase } from "./supabase"
+import { supabase, type Player } from "./supabase"
 import { useRouter } from "next/navigation"
-
-// Define types
-export interface Player {
-  player_id: string
-  username: string
-  player_name: string
-  team_id: string
-  is_admin: boolean
-  is_active: boolean
-  auth_user_id: string
-}
 
 interface AuthContextType {
   user: User | null
@@ -42,7 +31,7 @@ const getCurrentPlayerData = async (): Promise<Player | null> => {
 
   const { data, error } = await supabase
       .from("players")
-      .select("player_id, username, player_name, team_id, is_admin, is_active, auth_user_id")
+      .select("player_id, player_name, team_id, is_admin, is_active, auth_user_id")
       .eq("auth_user_id", user.id)
       .single()
 
@@ -86,7 +75,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     })
 
-    // Listen for auth changes - FIXED: No async callback!
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {

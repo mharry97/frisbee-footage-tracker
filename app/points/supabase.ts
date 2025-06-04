@@ -30,19 +30,16 @@ export async function fetchEventPoints(event_id: string): Promise<Point[]> {
 
 // Fetch all points
 export async function fetchAllPoints(): Promise<Point[]> {
-  try {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("points")
       .select("*")
       .order("created_at", { ascending: false });
 
-    return data ?? []
-  } catch (error) {
-    console.error("Error fetching points:", error);
-    return [];
-  }
+  if (error) throw error;
+  return data ?? [];
 }
 
+// Fetch all possessions specific point
 export async function fetchDetailPoint(point_id: string): Promise<PointDetailed[]> {
   const { data, error } = await supabase
     .from("all_points_view")
@@ -54,17 +51,14 @@ export async function fetchDetailPoint(point_id: string): Promise<PointDetailed[
   return data ?? [];
 }
 
-// Fetch all points from detailed view
-// export async function fetchAllPointsDetailed(): Promise<PointDetailed[]> {
-//   try {
-//     const { data } = await supabase
-//       .from("all_points_view")
-//       .select("*")
-//       .order("event_date", { ascending: false });
-//
-//     return data ?? []
-//   } catch (error) {
-//     console.error("Error fetching points:", error);
-//     return [];
-//   }
-// }
+//Fetch all possessions
+export async function fetchAllPointsDetailed(): Promise<PointDetailed[]> {
+    const { data, error } = await supabase
+      .from("all_points_view")
+      .select("*")
+      .order("event_date", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
