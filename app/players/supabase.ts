@@ -9,12 +9,11 @@ export async function fetchHomePlayers(): Promise<Player[]> {
 
   if (!teamId) return [];
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("players")
       .select("*")
       .eq("team_id", teamId)
       .order("player_name");
-    if (error) throw error;
     return data || [];
   } catch (error) {
     console.error("Error fetching players:", error);
@@ -25,9 +24,8 @@ export async function fetchHomePlayers(): Promise<Player[]> {
 // Fetch players for a team
 export async function fetchPlayersForTeam(teamId: string): Promise<Player[]> {
   try {
-    const { data, error } = await supabase.from("players").select("*").eq("team_id", teamId).order("player_name")
+    const { data } = await supabase.from("players").select("*").eq("team_id", teamId).order("player_name")
 
-    if (error) throw error
 
     return data || []
   } catch (error) {

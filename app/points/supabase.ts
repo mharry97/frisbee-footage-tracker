@@ -4,13 +4,11 @@ import type { Point } from "@/lib/supabase";
 // Fetch basic info for all points from Supabase for a given event_id
 export async function fetchEventPoints(event_id: string): Promise<Point[]> {
   try {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("points")
       .select("*")
       .eq("event_id", event_id)
       .order("created_at", { ascending: false });
-
-    if (error) throw error;
 
     return (data || []).map((point) => ({
       offence_team: point.offence_team,
