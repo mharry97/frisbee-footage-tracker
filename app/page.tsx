@@ -10,7 +10,7 @@ import {
   Icon,
   Center,
   Separator,
-  Card, Button, SimpleGrid
+  Card, Button, SimpleGrid, Dialog, Portal, CloseButton
 } from "@chakra-ui/react";
 import NextLink from 'next/link';
 import { AuthWrapper } from "@/components/auth-wrapper";
@@ -27,6 +27,7 @@ import React, {useEffect, useState} from "react";
 import {getPlayerPointsPlayed, PointsByPlayer} from "@/app/players/supabase.ts";
 import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/players/utils.ts";
 import {fetchAllPointsDetailed} from "@/app/points/supabase.ts";
+import OnPageVideoLink from "@/components/on-page-video-link.tsx";
 
 interface StatTileProps {
   title: string;
@@ -216,8 +217,32 @@ function HomepageContent() {
               </Text>
             </Card.Body>
             <Card.Footer gap="2">
-              <Button variant="solid">View</Button>
-              <Button variant="ghost">Quick View</Button>
+              <Button
+                variant="solid"
+                key={`/events/${item.event_id}/${item.point_id}/view`}
+                as={NextLink}
+                href={`/events/${item.event_id}/${item.point_id}/view`}
+              >
+                View
+              </Button>
+              <Dialog.Root size="full">
+                <Dialog.Trigger asChild>
+                  <Button variant="ghost">Quick View</Button>
+                </Dialog.Trigger>
+                <Portal>
+                  <Dialog.Backdrop />
+                  <Dialog.Positioner>
+                    <Dialog.Content>
+                      <Dialog.Body>
+                        <OnPageVideoLink url={item.timestamp_url} />
+                      </Dialog.Body>
+                      <Dialog.CloseTrigger asChild>
+                        <CloseButton size="sm" />
+                      </Dialog.CloseTrigger>
+                    </Dialog.Content>
+                  </Dialog.Positioner>
+                </Portal>
+              </Dialog.Root>
             </Card.Footer>
           </Card.Root>
         ))}
