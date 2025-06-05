@@ -34,35 +34,30 @@ export async function fetchPlayersForTeam(teamId: string): Promise<Player[]> {
   }
 }
 
-//Get all possession info for a certain player
-// export async function getPossessionsForPlayer(playerId: string) {
-//   // Step 1: Get all point_ids the player was involved in
-//   const { data: pointPlayerRows, error: pointError } = await supabase
-//     .from("point_players")
-//     .select("point_id")
-//     .eq("player_id", playerId);
-//
-//   if (pointError) {
-//     console.error("Error fetching point-player links:", pointError);
-//     return [];
-//   }
-//
-//   const pointIds = pointPlayerRows?.map((row) => row.point_id) ?? [];
-//
-//   if (pointIds.length === 0) return [];
-//
-//   // Step 2: Get possessions for those point_ids
-//   const { data: possessions, error: possessionsError } = await supabase
-//     .from("possessions")
-//     .select("*")
-//     .in("point_id", pointIds);
-//
-//   if (possessionsError) {
-//     console.error("Error fetching possessions:", possessionsError);
-//     return [];
-//   }
-//
-//   return possessions;
-// }
 
-// fetch all points details
+// Get the number of points played by each player
+export type PointsByPlayer = {
+  point_id: string;
+  player_id: string;
+  player_name: string;
+  event_name: string;
+  event_id: string;
+  event_date: string;
+  timestamp: string;
+  timestamp_url: string;
+  point_offence_team: string;
+  point_offence_team_name: string;
+  point_defence_team: string;
+  point_defence_team_name: string;
+  outcome: string;
+}
+
+export async function getPlayerPointsPlayed(player_id: string):  Promise<PointsByPlayer[]> {
+  const { error, data } = await supabase
+    .from('point_players_exp')
+    .select("*")
+    .eq("player_id", player_id)
+
+  if (error) throw error;
+  return data ?? [];
+}

@@ -23,7 +23,10 @@ import { LuClapperboard } from "react-icons/lu";
 import { MdOutlineScoreboard } from "react-icons/md";
 import { MdOutlineAdminPanelSettings } from "react-icons/md";
 import { IoPeopleOutline } from "react-icons/io5";
-import React from "react";
+import React, {useEffect, useState} from "react";
+import {getPlayerPointsPlayed, PointsByPlayer} from "@/app/players/supabase.ts";
+import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/players/utils.ts";
+import {fetchAllPointsDetailed} from "@/app/points/supabase.ts";
 
 interface StatTileProps {
   title: string;
@@ -58,33 +61,7 @@ interface HorizontalMenuItem {
   iconComponent: React.ElementType;
 }
 
-interface PointCard {
-  title: string;
-  timestamp: string;
-  offence_team: string;
-  outcome: string;
-  url: string;
-}
-
-// Menu items
-const menuItems: HorizontalMenuItem[] = [
-  { title: "Sources", href: "/sources", iconComponent: FiDatabase },
-  { title: "Events", href: "/events", iconComponent: FaRegCalendarAlt },
-  { title: "Playlists", href: "/playlists", iconComponent: TbPlaylistAdd },
-  { title: "Clips", href: "/clips", iconComponent: LuClapperboard },
-  { title: "Points", href: "/points", iconComponent: MdOutlineScoreboard },
-  { title: "Admin", href: "/players", iconComponent: MdOutlineAdminPanelSettings },
-  { title: "Teams", href: "/teams", iconComponent: IoPeopleOutline },
-];
-
-const pointCards: PointCard[] = [
-  { title: "Solent Scrims - Solent", timestamp: "102:36", offence_team: "Smash'D", outcome: "break", url: "" },
-  { title: "Solent Scrims - Solent", timestamp: "105:21", offence_team: "Smash'D", outcome: "score", url: "" },
-  { title: "Solent Scrims - Solent", timestamp: "107:51", offence_team: "Solent", outcome: "break", url: ""  },
-  { title: "Solent Scrims - Solent", timestamp: "109:16", offence_team: "Solent", outcome: "break", url: ""  },
-]
-
-function HorizontalIconMenu() {
+function HorizontalIconMenu({ menuItems }: { menuItems: HorizontalMenuItem[] }) {
   return (
     <Box
       overflowX="auto"
@@ -129,14 +106,53 @@ function HorizontalIconMenu() {
 
 function HomepageContent() {
   const { player } = useAuth();
+  const [playerPoints, setPlayerPoints] = useState<PointsByPlayer[]>([]);
+  const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!player) {
+  useEffect(() => {
+    if (!player) return;
+
+    (async () => {
+      try {
+        const points = await getPlayerPointsPlayed(player.player_id);
+        setPlayerPoints(points);
+
+        const allPoints = await fetchAllPointsDetailed();
+        const allStats = getPlayerStatsFromPossessions(allPoints);
+
+        const currentPlayerStats = allStats[String(player.player_id)] ?? null;
+
+        setPlayerStats(currentPlayerStats ?? null);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [player]);
+
+  if (!player || loading) {
     return (
       <Box minH="100vh" bg="gray.900" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white">Loading player data or not authenticated...</Text>
+        <Text color="white">Loading player data...</Text>
       </Box>
     );
   }
+
+  // Menu items
+  const menuItems: HorizontalMenuItem[] = [
+    { title: "Sources", href: "/sources", iconComponent: FiDatabase },
+    { title: "Events", href: "/events", iconComponent: FaRegCalendarAlt },
+    { title: "Playlists", href: "/playlists", iconComponent: TbPlaylistAdd },
+    { title: "Clips", href: "/clips", iconComponent: LuClapperboard },
+    { title: "Points", href: "/points", iconComponent: MdOutlineScoreboard },
+    { title: "Teams", href: "/teams", iconComponent: IoPeopleOutline },
+    ...(player.is_admin ? [{ title: "Admin", href: "/players", iconComponent: MdOutlineAdminPanelSettings }] : []),
+  ];
+
+  const turns = (playerStats?.drops ?? 0) + (playerStats?.throwaways ?? 0);
+  const pointsPlayed = playerPoints.length
 
 
   return (
@@ -144,7 +160,7 @@ function HomepageContent() {
       <Heading as="h1" fontWeight="light" size='4xl' color="white" mb={4} mt={4}>
         Hello, {player.player_name}
       </Heading>
-      <HorizontalIconMenu></HorizontalIconMenu>
+      <HorizontalIconMenu menuItems={menuItems}></HorizontalIconMenu>
       <HStack mb={6}>
         <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
         <Text flexShrink="0" fontSize="2xl" >Player Overview</Text>
@@ -158,45 +174,45 @@ function HomepageContent() {
       >
         <StatTile
           title="+/-"
-          value={8}
+          value={playerStats?.plusMinus ?? 0}
           // help="(Scores+Assists+Ds)-Turns" Currently throws off alignment
         />
         <StatTile
           title="Points Played"
-          value={8}
+          value={pointsPlayed}
         />
         <StatTile
           title="Scores"
-          value={8}
+          value={playerStats?.scores ?? 0}
         />
         <StatTile
           title="Assists"
-          value={8}
+          value={playerStats?.assists ?? 0}
         />
         <StatTile
           title="Ds"
-          value={8}
+          value={playerStats?.ds ?? 0}
         />
         <StatTile
           title="Turns"
-          value={8}
+          value={turns}
         />
       </Box>
       <HStack mb={6}>
         <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
-        <Text flexShrink="0" fontSize="xl" >Points</Text>
+        <Text flexShrink="0" fontSize="xl" >Your Points</Text>
         <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
       </HStack>
-      <SimpleGrid columns={{ base: 1, md: 2 }} gap={8}>
-        {pointCards.map((item, index) => (
+      <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
+        {playerPoints.map((item, index) => (
           <Card.Root key={index} variant="elevated">
             <Card.Header>
-              <Card.Title>{item.title}</Card.Title>
+              <Card.Title>{item.event_name}</Card.Title>
               <Card.Description>{item.timestamp}</Card.Description>
             </Card.Header>
             <Card.Body>
               <Text color={item.outcome === "break" ? "red.400" : "green.400"}>
-                Offence Team: {item.offence_team}
+                Offence Team: {item.point_offence_team_name}
               </Text>
             </Card.Body>
             <Card.Footer gap="2">
