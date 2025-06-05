@@ -10,7 +10,7 @@ import {
   Icon,
   Center,
   Separator,
-  Card, Button, SimpleGrid, Dialog, Portal, CloseButton
+  Card, Button, SimpleGrid, Dialog, Portal, CloseButton, Badge
 } from "@chakra-ui/react";
 import NextLink from 'next/link';
 import { AuthWrapper } from "@/components/auth-wrapper";
@@ -210,16 +210,23 @@ function HomepageContent() {
             <Card.Header>
               <Card.Title>{item.event_name}</Card.Title>
               <Card.Description>{item.timestamp}</Card.Description>
-            </Card.Header>
-            <Card.Body>
-              <Text color={item.point_outcome === "break" ? "red.400" : "green.400"}>
+              <Text>
                 Offence Team: {item.point_offence_team_name}
               </Text>
+            </Card.Header>
+            <Card.Body>
+              <Card.Description>
+                {item.point_outcome === "break" ? (
+                  <Badge colorPalette="red">Break</Badge>
+                ) : (
+                  <Badge colorPalette="green">Hold</Badge>
+                )}
+              </Card.Description>
             </Card.Body>
             <Card.Footer gap="2">
               <NextLink href={`/events/${item.event_id}/${item.point_id}/view`} passHref>
                 <Button variant="solid">
-                  View
+                  Details
                 </Button>
               </NextLink>
               <Dialog.Root size="full">
