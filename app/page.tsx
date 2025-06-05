@@ -135,8 +135,8 @@ function HomepageContent() {
 
   if (!player || loading) {
     return (
-      <Box minH="100vh" bg="gray.900" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white">Loading player data...</Text>
+      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
+        <Text color="white" fontSize="lg">Loading player data...</Text>
       </Box>
     );
   }
@@ -212,13 +212,13 @@ function HomepageContent() {
               <Card.Description>{item.timestamp}</Card.Description>
             </Card.Header>
             <Card.Body>
-              <Text color={item.outcome === "break" ? "red.400" : "green.400"}>
+              <Text color={item.point_outcome === "break" ? "red.400" : "green.400"}>
                 Offence Team: {item.point_offence_team_name}
               </Text>
             </Card.Body>
             <Card.Footer gap="2">
               <NextLink href={`/events/${item.event_id}/${item.point_id}/view`} passHref>
-                <Button as="a" variant="solid">
+                <Button variant="solid">
                   View
                 </Button>
               </NextLink>

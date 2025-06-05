@@ -49,7 +49,7 @@ export type PointsByPlayer = {
   point_offence_team_name: string;
   point_defence_team: string;
   point_defence_team_name: string;
-  outcome: string;
+  point_outcome: string;
 }
 
 export async function getPlayerPointsPlayed(player_id: string):  Promise<PointsByPlayer[]> {
