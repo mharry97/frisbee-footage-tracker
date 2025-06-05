@@ -62,3 +62,4 @@ export async function fetchAllPointsDetailed(): Promise<PointDetailed[]> {
   return data ?? [];
 }
 
+
