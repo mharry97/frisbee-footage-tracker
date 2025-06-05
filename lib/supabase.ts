@@ -78,13 +78,6 @@ export type Player = {
   auth_user_id: string
 }
 
-export type TeamPlayer = {
-  player_id: string
-  player_name: string
-  team_id: string
-  team_name: string
-}
-
 export type Possession = {
   point_id: string
   offence_init: string
@@ -135,18 +128,6 @@ export type PlaylistClip = {
 //   clip_id: string
 //   user_id: string
 // }
-
-// Fetch all events from Supabase
-export async function fetchPlayerTeamMapping(): Promise<TeamPlayer[]> {
-  try {
-    const { data } = await supabase.from("team_player_mapping").select("*")
-
-    return data ?? []
-  } catch (error) {
-    console.error("Error fetching team/player mapping:", error)
-    return []
-  }
-}
 
 export type PointDetailed = {
   possession_id: string

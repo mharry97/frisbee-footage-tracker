@@ -1,5 +1,6 @@
 // Utility functions for transforming supabase responses into specific stat formats
-import type {Possession, TeamPlayer} from "@/lib/supabase";
+import type {Possession} from "@/lib/supabase";
+import {TeamPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
 
 // Get player level info from possessions
 interface PlayerStats {

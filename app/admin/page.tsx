@@ -1,119 +1,149 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Container, Heading, Button, Table, Badge, VStack, HStack, Text } from "@chakra-ui/react"
-import { supabase } from "@/lib/supabase"
-import type { Player, Team } from "@/lib/supabase"
+import React, {useState, useEffect, useCallback} from "react"
+import {
+  Container,
+  Heading,
+  Badge,
+  HStack,
+  Text,
+  Box,
+  Card,
+  Dialog,
+  Portal,
+  CloseButton,
+  SimpleGrid,
+  Button,
+} from "@chakra-ui/react"
 import { AuthWrapper } from "@/components/auth-wrapper"
+import { getHomeTeamPlayerInfo } from "@/app/admin/supabase"
+import { TeamPlayer } from "@/app/teams/[team_id]/[player_id]/supabase"
+import { useAuth } from "@/lib/auth-context"
+import FloatingActionButton from "@/components/ui/plus-button"
+import NewUserDetailsPortal from "@/app/admin/component/new-user-details"
+import EditUserDetailsPortal from "@/app/admin/component/edit-user-details"
 
 function PlayersPageContent() {
-  const [players, setPlayers] = useState<Player[]>([])
-  const [teams, setTeams] = useState<Team[]>([])
+  const { player } = useAuth()
+  const [players, setPlayers] = useState<TeamPlayer[]>([])
   const [loading, setLoading] = useState(true)
+  const [editingPlayer, setEditingPlayer] = useState<TeamPlayer | null>(null)
 
-  useEffect(() => {
-    loadData()
-  }, [])
-
-  const loadData = async () => {
+  const refreshPlayers = useCallback(async () => {
+    if (!player) return
+    setLoading(true)
     try {
-      const [playersResponse, teamsResponse] = await Promise.all([
-        supabase.from("players").select("*").order("player_name"),
-        supabase.from("teams").select("*").order("team_name"),
-      ])
-
-      setPlayers(playersResponse.data || [])
-      setTeams(teamsResponse.data || [])
-    } catch (error) {
-      console.error("Error loading data:", error)
+      const result = await getHomeTeamPlayerInfo(player.team_id)
+      setPlayers(result)
+    } catch (err) {
+      console.error("Error refreshing players:", err)
     } finally {
       setLoading(false)
     }
-  }
+  }, [player])
 
-  const toggleUserStatus = async (playerId: string, isActive: boolean) => {
-    try {
-      await supabase
-        .from("players")
-        .update({ is_active: !isActive })
-        .eq("player_id", playerId);
+  useEffect(() => {
+    (async () => {
+      await refreshPlayers()
+    })()
+  }, [refreshPlayers])
 
-      await loadData();
-    } catch (error) {
-      console.error("Error updating user status:", error);
-    }
-  };
-
-
-  if (loading) {
+  if (!player || loading) {
     return (
-      <Container maxW="4xl" py={8}>
-        <Text color="white">Loading...</Text>
-      </Container>
+      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
+        <Text color="white" fontSize="lg">Loading player data...</Text>
+      </Box>
     )
   }
 
   return (
-    <Container maxW="6xl" py={8}>
-      <VStack gap={6} align="stretch">
-        <HStack justify="space-between">
-          <Heading color="white">User Management</Heading>
-          <Button colorScheme="green">Add User</Button>
-        </HStack>
+    <Container maxW="4xl">
+      <Heading as="h1" fontWeight="light" size="4xl" color="white" mb={4} mt={4}>
+        Admin
+      </Heading>
 
-        <Table.Root size="lg" interactive colorPalette="gray">
-          <Table.Header>
-            <Table.Row>
-              <Table.ColumnHeader>Name</Table.ColumnHeader>
-              <Table.ColumnHeader>Username</Table.ColumnHeader>
-              <Table.ColumnHeader>Team</Table.ColumnHeader>
-              <Table.ColumnHeader textAlign="center" width="15%">
-                Role
-              </Table.ColumnHeader>
-              <Table.ColumnHeader textAlign="center" width="15%">
-                Status
-              </Table.ColumnHeader>
-              <Table.ColumnHeader textAlign="right" width="25%">
-                Actions
-              </Table.ColumnHeader>
-            </Table.Row>
-          </Table.Header>
-          <Table.Body>
-            {players.map((player) => {
-              const team = teams.find((t) => t.team_id === player.team_id)
-              return (
-                <Table.Row key={player.player_id}>
-                  <Table.Cell>{player.player_name}</Table.Cell>
-                  <Table.Cell>{team?.team_name || "Unknown"}</Table.Cell>
-                  <Table.Cell textAlign="center">
-                    <Badge colorPalette={player.is_admin ? "red" : "blue"}>{player.is_admin ? "Admin" : "User"}</Badge>
-                  </Table.Cell>
-                  <Table.Cell textAlign="center">
-                    <Badge colorPalette={player.is_active ? "green" : "red"}>
-                      {player.is_active ? "Active" : "Inactive"}
-                    </Badge>
-                  </Table.Cell>
-                  <Table.Cell textAlign="right">
-                    <HStack gap={2} justify="flex-end">
-                      <Button
-                        size="sm"
-                        colorPalette={player.is_active ? "red" : "green"}
-                        variant="outline"
-                        onClick={() => toggleUserStatus(player.player_id, player.is_active)}
-                      >
-                        {player.is_active ? "Deactivate" : "Activate"}
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        Reset Password
-                      </Button>
-                    </HStack>
-                  </Table.Cell>
-                </Table.Row>
-              )
-            })}
-          </Table.Body>
-        </Table.Root>
-      </VStack>
+      <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
+        {players.map((item, index) => (
+          <Card.Root key={index} variant="elevated">
+            <Card.Header>
+              <Card.Title>{item.player_name}</Card.Title>
+              <Card.Description>{item.username || "No account"}</Card.Description>
+            </Card.Header>
+            <Card.Body>
+              <HStack gap={2}>
+                <Badge colorPalette={item.is_active ? "green" : "red"}>
+                  {item.is_active ? "Active" : "Inactive"}
+                </Badge>
+                <Badge colorPalette={item.is_editor ? "green" : "red"}>
+                  {item.is_editor ? "Editor" : "Non-Editor"}
+                </Badge>
+                <Badge colorPalette={item.is_admin ? "green" : "red"}>
+                  {item.is_admin ? "Admin" : "Non-Admin"}
+                </Badge>
+              </HStack>
+            </Card.Body>
+            <Card.Footer gap={2}>
+              <Dialog.Root>
+                <Dialog.Trigger asChild>
+                  <Button
+                    variant="solid"
+                    onClick={() => setEditingPlayer(item)}
+                  >
+                    Update User
+                  </Button>
+                </Dialog.Trigger>
+                <Portal>
+                  <Dialog.Backdrop />
+                  <Dialog.Positioner>
+                    <Dialog.Content>
+                      <Dialog.Header>Edit User</Dialog.Header>
+                      <Dialog.Body>
+                        {editingPlayer && (
+                          <EditUserDetailsPortal
+                            onSuccess={refreshPlayers}
+                            defaultValues={{
+                              player_name: editingPlayer.player_name,
+                              email: editingPlayer.username ?? "",
+                              is_active: editingPlayer.is_active,
+                              is_admin: editingPlayer.is_admin,
+                              is_editor: editingPlayer.is_editor,
+                            }}
+                            playerId={editingPlayer.player_id}
+                            auth_user_id={editingPlayer.auth_user_id}
+                          />
+                        )}
+                      </Dialog.Body>
+                      <Dialog.CloseTrigger asChild>
+                        <CloseButton />
+                      </Dialog.CloseTrigger>
+                    </Dialog.Content>
+                  </Dialog.Positioner>
+                </Portal>
+              </Dialog.Root>
+            </Card.Footer>
+          </Card.Root>
+        ))}
+      </SimpleGrid>
+
+      <Dialog.Root>
+        <Dialog.Trigger asChild>
+          <FloatingActionButton />
+        </Dialog.Trigger>
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>Add User</Dialog.Header>
+              <Dialog.Body>
+                <NewUserDetailsPortal onSuccess={refreshPlayers} />
+              </Dialog.Body>
+              <Dialog.CloseTrigger asChild>
+                <CloseButton />
+              </Dialog.CloseTrigger>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
     </Container>
   )
 }

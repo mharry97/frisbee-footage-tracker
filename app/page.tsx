@@ -149,7 +149,7 @@ function HomepageContent() {
     { title: "Clips", href: "/clips", iconComponent: LuClapperboard },
     { title: "Points", href: "/points", iconComponent: MdOutlineScoreboard },
     { title: "Teams", href: "/teams", iconComponent: IoPeopleOutline },
-    ...(player.is_admin ? [{ title: "Admin", href: "/players", iconComponent: MdOutlineAdminPanelSettings }] : []),
+    ...(player.is_admin ? [{ title: "Admin", href: "/admin", iconComponent: MdOutlineAdminPanelSettings }] : []),
   ];
 
   const turns = (playerStats?.drops ?? 0) + (playerStats?.throwaways ?? 0);

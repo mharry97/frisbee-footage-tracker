@@ -1,7 +1,19 @@
 import { type Player, supabase } from "@/lib/supabase";
 import { getHomeTeam } from "@/app/teams/supabase";
 
-
+export type TeamPlayer = {
+  player_id: string
+  player_name: string
+  team_id: string
+  team_name: string
+  is_home_team: boolean
+  is_admin: boolean
+  is_editor: boolean
+  notes: string
+  is_active: boolean
+  username: string
+  auth_user_id: string
+}
 
 // Get home team players
 export async function fetchHomePlayers(): Promise<Player[]> {
@@ -19,6 +31,16 @@ export async function fetchHomePlayers(): Promise<Player[]> {
     console.error("Error fetching players:", error);
     return [];
   }
+}
+
+// Fetch team player mappings
+export async function fetchPlayerTeamMapping(): Promise<TeamPlayer[]> {
+  const { data, error } = await supabase
+    .from("view_player_info")
+    .select("*")
+
+  if (error) throw error;
+  return data ?? []
 }
 
 // Fetch players for a team
