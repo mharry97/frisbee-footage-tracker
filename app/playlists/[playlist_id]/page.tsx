@@ -20,10 +20,10 @@ import {AuthWrapper} from "@/components/auth-wrapper";
 export default function PointPage({
                                     params,
                                   }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ playlist_id: string }>;
 }) {
   // Unwrap the promised params
-  const { id } = React.use(params);
+  const { playlist_id } = React.use(params);
   const [loading, setLoading] = useState(true);
   const [clips, setClips] = useState<Clip[]>([]);
   const [playlistData, setPlaylistData] = useState<Playlist | null>(null);
@@ -31,14 +31,14 @@ export default function PointPage({
 
   // Fetch data needed for page
   useEffect(() => {
-    if (!id) return;
+    if (!playlist_id) return;
 
     (async () => {
       try {
-        const clips = await fetchPlaylistClips(id);
+        const clips = await fetchPlaylistClips(playlist_id);
         setClips(clips);
 
-        const playlistData = await fetchPlaylist(id);
+        const playlistData = await fetchPlaylist(playlist_id);
         setPlaylistData(playlistData);
 
 
@@ -48,7 +48,7 @@ export default function PointPage({
         setLoading(false);
       }
     })();
-  }, [id]);
+  }, [playlist_id]);
 
   return (
     <AuthWrapper>
@@ -65,7 +65,7 @@ export default function PointPage({
             <AddSourceClipModal
               isOpen={isClipModalOpen}
               onClose={() => setIsClipModalOpen(false)}
-              playlistId={id}
+              playlistId={playlist_id}
             />
           </>
         )}

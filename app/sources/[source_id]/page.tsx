@@ -7,22 +7,22 @@ import { Source } from "@/lib/supabase"
 import { fetchSourceById } from "@/app/sources/supabase";
 import {AuthWrapper} from "@/components/auth-wrapper";
 
-export default function EventPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EventPage({ params }: { params: Promise<{ source_id: string }> }) {
   // Unwrap the promised params
-  const { id } = React.use(params);
+  const { source_id } = React.use(params);
   const [sourceData, setSourceData] = useState<Source | null>(null);
 
   // Fetch Source
   useEffect(() => {
-    if (!id) return;
+    if (!source_id) return;
     async function loadSource() {
-      const sources = await fetchSourceById(id);
+      const sources = await fetchSourceById(source_id);
       if (sources.length > 0) {
         setSourceData(sources[0]);
       }
     }
     loadSource();
-  }, [id]);
+  }, [source_id]);
 
   return (
     <AuthWrapper>

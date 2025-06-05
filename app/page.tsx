@@ -24,8 +24,8 @@ import { MdOutlineScoreboard } from "react-icons/md";
 import { MdOutlineAdminPanelSettings } from "react-icons/md";
 import { IoPeopleOutline } from "react-icons/io5";
 import React, {useEffect, useState} from "react";
-import {getPlayerPointsPlayed, PointsByPlayer} from "@/app/players/supabase.ts";
-import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/players/utils.ts";
+import {getPlayerPointsPlayed, PointsByPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
+import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/teams/[team_id]/[player_id]/utils.ts";
 import {fetchAllPointsDetailed} from "@/app/points/supabase.ts";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
 
