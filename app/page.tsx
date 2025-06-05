@@ -217,14 +217,11 @@ function HomepageContent() {
               </Text>
             </Card.Body>
             <Card.Footer gap="2">
-              <Button
-                variant="solid"
-                key={`/events/${item.event_id}/${item.point_id}/view`}
-                as={NextLink}
-                href={`/events/${item.event_id}/${item.point_id}/view`}
-              >
-                View
-              </Button>
+              <NextLink href={`/events/${item.event_id}/${item.point_id}/view`} passHref>
+                <Button as="a" variant="solid">
+                  View
+                </Button>
+              </NextLink>
               <Dialog.Root size="full">
                 <Dialog.Trigger asChild>
                   <Button variant="ghost">Quick View</Button>
