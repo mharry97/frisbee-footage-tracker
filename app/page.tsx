@@ -10,7 +10,7 @@ import {
   Icon,
   Center,
   Separator,
-  Card, Button, SimpleGrid, Dialog, Portal, CloseButton
+  Card, Button, SimpleGrid, Dialog, Portal, CloseButton, Badge
 } from "@chakra-ui/react";
 import NextLink from 'next/link';
 import { AuthWrapper } from "@/components/auth-wrapper";
@@ -24,8 +24,8 @@ import { MdOutlineScoreboard } from "react-icons/md";
 import { MdOutlineAdminPanelSettings } from "react-icons/md";
 import { IoPeopleOutline } from "react-icons/io5";
 import React, {useEffect, useState} from "react";
-import {getPlayerPointsPlayed, PointsByPlayer} from "@/app/players/supabase.ts";
-import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/players/utils.ts";
+import {getPlayerPointsPlayed, PointsByPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
+import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/teams/[team_id]/[player_id]/utils.ts";
 import {fetchAllPointsDetailed} from "@/app/points/supabase.ts";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
 
@@ -135,8 +135,8 @@ function HomepageContent() {
 
   if (!player || loading) {
     return (
-      <Box minH="100vh" bg="gray.900" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white">Loading player data...</Text>
+      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
+        <Text color="white" fontSize="lg">Loading player data...</Text>
       </Box>
     );
   }
@@ -149,7 +149,7 @@ function HomepageContent() {
     { title: "Clips", href: "/clips", iconComponent: LuClapperboard },
     { title: "Points", href: "/points", iconComponent: MdOutlineScoreboard },
     { title: "Teams", href: "/teams", iconComponent: IoPeopleOutline },
-    ...(player.is_admin ? [{ title: "Admin", href: "/players", iconComponent: MdOutlineAdminPanelSettings }] : []),
+    ...(player.is_admin ? [{ title: "Admin", href: "/admin", iconComponent: MdOutlineAdminPanelSettings }] : []),
   ];
 
   const turns = (playerStats?.drops ?? 0) + (playerStats?.throwaways ?? 0);
@@ -210,16 +210,23 @@ function HomepageContent() {
             <Card.Header>
               <Card.Title>{item.event_name}</Card.Title>
               <Card.Description>{item.timestamp}</Card.Description>
-            </Card.Header>
-            <Card.Body>
-              <Text color={item.outcome === "break" ? "red.400" : "green.400"}>
+              <Text>
                 Offence Team: {item.point_offence_team_name}
               </Text>
+            </Card.Header>
+            <Card.Body>
+              <Card.Description>
+                {item.point_outcome === "break" ? (
+                  <Badge colorPalette="red">Break</Badge>
+                ) : (
+                  <Badge colorPalette="green">Hold</Badge>
+                )}
+              </Card.Description>
             </Card.Body>
             <Card.Footer gap="2">
               <NextLink href={`/events/${item.event_id}/${item.point_id}/view`} passHref>
-                <Button as="a" variant="solid">
-                  View
+                <Button variant="solid">
+                  Details
                 </Button>
               </NextLink>
               <Dialog.Root size="full">

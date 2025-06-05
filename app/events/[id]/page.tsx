@@ -19,17 +19,18 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomTabs from "@/components/tabbed-page";
 import { fetchEvent } from "@/app/events/supabase";
 import { fetchEventPoints } from "@/app/points/supabase";
-import type {Clip, Event, Point, Possession, TeamPlayer} from "@/lib/supabase";
+import type {Clip, Event, Point, Possession } from "@/lib/supabase";
 import FloatingActionButton from "@/components/ui/plus-button";
 import {BaseTeamInfo, fetchTeamMapping} from "@/app/teams/supabase";
 import {fetchEventPossessions} from "@/app/possessions/supabase";
 import {convertTimestampToSeconds} from "@/lib/utils";
-import {fetchPlayerTeamMapping} from "@/lib/supabase";
+import {fetchPlayerTeamMapping} from "@/app/teams/[team_id]/[player_id]/supabase";
 import {GenericTableItem, MyDynamicTable, myPieChart, myStackedBarChart} from "@/app/stats/charts";
 import {playerStats, SequenceStat, sequenceStats, teamStats} from "@/app/stats/utils";
 import {fetchEventClips} from "@/app/clips/supabase";
 import {ClipGrid} from "@/app/clips/components/clip-grid";
 import {AuthWrapper} from "@/components/auth-wrapper";
+import {TeamPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
 
 export default function EventPage({ params }: { params: Promise<{ id: string }> }) {
   // Unwrap the promised params

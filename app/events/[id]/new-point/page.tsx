@@ -18,7 +18,7 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import { fetchEvent } from "@/app/events/supabase";
 import { fetchBaseTeamInfo } from "@/app/teams/supabase";
 import type { BaseTeamInfo } from "@/app/teams/supabase";
-import { fetchHomePlayers } from "@/app/players/supabase";
+import { fetchHomePlayers } from "@/app/teams/[team_id]/[player_id]/supabase";
 import { writePoint, writePointPlayers } from "./supabase";
 import { useRouter } from "next/navigation";
 import { getFootageProvider, convertTimestampToSeconds, convertYoutubeUrlToEmbed } from "@/lib/utils";

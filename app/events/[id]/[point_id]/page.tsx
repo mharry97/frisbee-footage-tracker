@@ -27,7 +27,7 @@ import FloatingClipButton from "@/components/ui/add-clip-button";
 import { fetchEvent } from "@/app/events/supabase";
 import { BaseTeamInfo, fetchTeamMapping } from "@/app/teams/supabase";
 import CustomDropdownInput from "@/app/events/[id]/[point_id]/components/custom-dropdown-with-add";
-import {fetchPlayersForTeam} from "@/app/players/supabase";
+import {fetchPlayersForTeam} from "@/app/teams/[team_id]/[player_id]/supabase";
 import { writePossession} from "@/app/events/[id]/[point_id]/supabase";
 import {getOrCreatePlayerId} from "@/app/events/[id]/[point_id]/components/get-or-create-player-id";
 import { AddClipModal } from "@/app/clips/components/add-clip-modal";

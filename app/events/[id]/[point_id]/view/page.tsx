@@ -21,7 +21,7 @@ import PossessionSection from "@/app/events/[id]/[point_id]/view/components/poss
 import { FaLongArrowAltLeft, FaLongArrowAltRight } from "react-icons/fa";
 import {deletePossession, updatePossession} from "@/app/possessions/supabase";
 import EditPossessionDialog from "@/app/events/[id]/[point_id]/view/components/edit-possession";
-import {fetchPlayersForTeam} from "@/app/players/supabase";
+import {fetchPlayersForTeam} from "@/app/teams/[team_id]/[player_id]/supabase";
 import {AuthWrapper} from "@/components/auth-wrapper";
 
 export default function PointView({
