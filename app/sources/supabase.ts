@@ -1,62 +1,35 @@
 import { supabase } from "@/lib/supabase"
-import type { Source } from "@/lib/supabase"
+
+// Type definitions for database tables
+export type Source = {
+  source_id: string
+  created_at: string
+  title: string
+  url: string
+  recorded_date: string
+  created_by: string
+}
 
 // Fetch all sources from Supabase
 export async function fetchSources(): Promise<Source[]> {
-  try {
     const { data, error } = await supabase
       .from("sources")
       .select("*")
-      .order("recorded_date", { ascending: false });
+      .order("recorded_date", { ascending: false })
+      .order("title", { ascending: true });
 
     if (error) throw error;
-
-    return (data || []).map((source) => ({
-      id: source.id,
-      created_at: source.created_at,
-      title: source.title,
-      url: source.url,
-      recorded_date: source.recorded_date
-    }));
-  } catch (error) {
-    console.error("Error fetching sources:", error);
-    return [];
-  }
-}
-
-// Insert row to source table
-export async function insertSource(
-  title: string,
-  url: string,
-  recordedDate: string
-): Promise<void> {
-  const { error } = await supabase
-    .from("sources")
-    .insert([{ title, url, recorded_date: recordedDate }])
-    .single();
-
-  if (error) throw error;
+    return data || []
 }
 
 // Fetch single source
 export async function fetchSourceById(id: string): Promise<Source[]> {
-  try {
     const { data, error } = await supabase
       .from("sources")
       .select("*")
-      .eq("id", id)
+      .eq("source_id", id)
 
     if (error) throw error;
 
-    return (data || []).map((source) => ({
-      id: source.id,
-      created_at: source.created_at,
-      title: source.title,
-      url: source.url,
-      recorded_date: source.recorded_date
-    }));
-  } catch (error) {
-    console.error("Error fetching sources:", error);
-    return [];
-  }
+    return data || ""
 }

@@ -15,15 +15,6 @@ export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "", {
   },
 })
 
-// Type definitions for database tables
-export type Source = {
-  id: string
-  created_at: string
-  title: string
-  url: string
-  recorded_date: string
-}
-
 export type Event = {
   event_id: string
   event_name: string
