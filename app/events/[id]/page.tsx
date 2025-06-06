@@ -12,9 +12,8 @@ import {
   SimpleGrid,
   Separator,
   Box,
-  Grid,
+  Grid, Text,
 } from "@chakra-ui/react";
-import Header from "@/components/header";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomTabs from "@/components/tabbed-page";
 import { fetchEvent } from "@/app/events/supabase";
@@ -29,12 +28,16 @@ import {GenericTableItem, MyDynamicTable, myPieChart, myStackedBarChart} from "@
 import {playerStats, SequenceStat, sequenceStats, teamStats} from "@/app/stats/utils";
 import {fetchEventClips} from "@/app/clips/supabase";
 import {ClipGrid} from "@/app/clips/components/clip-grid";
-import {AuthWrapper} from "@/components/auth-wrapper";
 import {TeamPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
+import {useParams} from "next/navigation";
+import {useAuth} from "@/lib/auth-context.tsx";
+import StandardHeader from "@/components/standard-header.tsx";
+import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 
-export default function EventPage({ params }: { params: Promise<{ id: string }> }) {
+function EventPageContent() {
   // Unwrap the promised params
-  const { id } = React.use(params);
+  const { id } = useParams<{ id: string }>();
+  const { player } = useAuth();
   const [eventData, setEventData] = useState<Event | null>(null);
   const [points, setPoints] = useState<Point[]>([]);
   const [possessions, setPossessions] = useState<Possession[]>([]);
@@ -315,20 +318,30 @@ export default function EventPage({ params }: { params: Promise<{ id: string }> 
   // Determine the default tab
   const defaultTab = isTraining ? "activities" : "overview";
 
+  if (!player || loading) {
+    return (
+      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
+        <Text color="white" fontSize="lg">Loading player data...</Text>
+      </Box>
+    )
+  }
+
+  return (
+    <Container maxW="4xl">
+      <StandardHeader text={eventData ? eventData.event_name : ""} is_admin={player.is_admin} />
+      {loading ? (
+        <LoadingSpinner text="loading..." />
+      ) : (
+        <CustomTabs defaultValue={defaultTab} tabs={tabs} />
+      )}
+    </Container>
+  );
+}
+
+export default function EventPage() {
   return (
     <AuthWrapper>
-      <Container maxW="4xl">
-        <Header
-          title={eventData ? eventData.event_name : ""}
-          buttonText="Events"
-          redirectUrl="/events"
-        />
-        {loading ? (
-          <LoadingSpinner text="loading..." />
-        ) : (
-          <CustomTabs defaultValue={defaultTab} tabs={tabs} />
-        )}
-      </Container>
+      <EventPageContent />
     </AuthWrapper>
-  );
+  )
 }

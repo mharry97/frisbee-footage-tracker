@@ -2,28 +2,27 @@
 
 import React, { useEffect, useState } from "react";
 import {
+  Box,
   Container, Separator,
   Text
 } from "@chakra-ui/react";
-import Header from "@/components/header";
 import type {Clip, Playlist} from "@/lib/supabase";
 import { fetchPlaylistClips } from "@/app/clips/supabase";
 import {ClipGrid} from "@/app/clips/components/clip-grid";
 import {fetchPlaylist} from "@/app/playlists/supabase";
-import LoadingSpinner from "@/components/ui/loading-spinner";
 import {AddSourceClipModal} from "@/app/clips/components/add-clip-from-source";
 import FloatingClipButton from "@/components/ui/add-clip-button";
-import {AuthWrapper} from "@/components/auth-wrapper";
+import {useParams} from "next/navigation";
+import {useAuth} from "@/lib/auth-context.tsx";
+import {AuthWrapper} from "@/components/auth-wrapper.tsx";
+import StandardHeader from "@/components/standard-header.tsx";
 
 
 
-export default function PointPage({
-                                    params,
-                                  }: {
-  params: Promise<{ playlist_id: string }>;
-}) {
+function PointPageContent() {
   // Unwrap the promised params
-  const { playlist_id } = React.use(params);
+  const { playlist_id } = useParams<{ playlist_id: string }>();
+  const { player } = useAuth();
   const [loading, setLoading] = useState(true);
   const [clips, setClips] = useState<Clip[]>([]);
   const [playlistData, setPlaylistData] = useState<Playlist | null>(null);
@@ -50,26 +49,34 @@ export default function PointPage({
     })();
   }, [playlist_id]);
 
+  if (!player || loading) {
+    return (
+      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
+        <Text color="white" fontSize="lg">Loading player data...</Text>
+      </Box>
+    )
+  }
+
+  return (
+    <Container maxW="4xl">
+      <StandardHeader text={playlistData?.title || ""} is_admin={player.is_admin} />
+      <Text textStyle="xl" mb={4} mt ={4}>{playlistData?.description}</Text>
+      <Separator />
+      <ClipGrid clips={clips}></ClipGrid>
+      <FloatingClipButton onClick={() => setIsClipModalOpen(true)} />
+      <AddSourceClipModal
+        isOpen={isClipModalOpen}
+        onClose={() => setIsClipModalOpen(false)}
+        playlistId={playlist_id}
+      />
+    </Container>
+  );
+}
+
+export default function PointPage() {
   return (
     <AuthWrapper>
-      <Container maxW="4xl">
-        {loading ? (
-          <LoadingSpinner text="Loading info" />
-        ) : (
-          <>
-            <Header title={playlistData?.title || ""} buttonText="Playlists" redirectUrl="/playlists"/>
-            <Text textStyle="xl" mb={4} mt ={4}>{playlistData?.description}</Text>
-            <Separator />
-            <ClipGrid clips={clips}></ClipGrid>
-            <FloatingClipButton onClick={() => setIsClipModalOpen(true)} />
-            <AddSourceClipModal
-              isOpen={isClipModalOpen}
-              onClose={() => setIsClipModalOpen(false)}
-              playlistId={playlist_id}
-            />
-          </>
-        )}
-      </Container>
+      <PointPageContent />
     </AuthWrapper>
-  );
+  )
 }

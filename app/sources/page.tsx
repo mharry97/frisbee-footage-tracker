@@ -1,7 +1,7 @@
 "use client";
 
 import React, {useCallback, useEffect, useState} from "react";
-import {Box, Button, Card, CloseButton, Container, Dialog, Heading, Portal, SimpleGrid, Text} from "@chakra-ui/react";
+import {Box, Button, Card, CloseButton, Container, Dialog, Portal, SimpleGrid, Text} from "@chakra-ui/react";
 import type { Source } from "./supabase.ts";
 import { fetchSources } from "@/app/sources/supabase";
 import {AuthWrapper} from "@/components/auth-wrapper";
@@ -9,6 +9,7 @@ import NextLink from "next/link";
 import SourceForm from "@/app/sources/components/source-form.tsx";
 import FloatingPlusButton from "@/components/ui/floating-plus.tsx";
 import {useAuth} from "@/lib/auth-context.tsx";
+import StandardHeader from "@/components/standard-header.tsx";
 
 function SourcesPageContent() {
   const { player } = useAuth()
@@ -44,9 +45,7 @@ function SourcesPageContent() {
 
   return (
     <Container maxW="4xl">
-      <Heading as="h1" fontWeight="light" size='4xl' color="white" mb={4} mt={4}>
-        Sources
-      </Heading>
+      <StandardHeader text="Sources" is_admin={player.is_admin} />
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
         {sources.map((item, index) => (
           <Card.Root key={index} variant="elevated">
