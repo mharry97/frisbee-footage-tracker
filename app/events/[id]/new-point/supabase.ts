@@ -6,8 +6,7 @@ export type NewPoint = Pick<Point, "event_id" | "source_id" | "timestamp" | "off
 
 // Write point to Supabase
 export async function writePoint(pointData: NewPoint): Promise<Point[]> {
-  try {
-    // Insert and return the newly created row(s)
+   // Insert and return the newly created row(s)
     const { data: insertedData, error } = await supabase
       .from("points")
       .insert(pointData)
@@ -16,11 +15,7 @@ export async function writePoint(pointData: NewPoint): Promise<Point[]> {
     if (error || !insertedData) {
       throw error;
     }
-    return insertedData;
-  } catch (error) {
-    console.error("Error writing point:", error);
-    throw error;
-  }
+    return insertedData || error
 }
 
 // Write points players
@@ -28,7 +23,6 @@ export async function writePointPlayers(pointPlayersData: {
   point_id: string;
   player_id: string
 }[]): Promise<PointPlayer[]> {
-  try {
     // Insert and return the newly created row(s)
     const { data: insertedData, error } = await supabase
       .from("point_players")
@@ -38,9 +32,5 @@ export async function writePointPlayers(pointPlayersData: {
     if (error || !insertedData) {
       throw error;
     }
-    return insertedData;
-  } catch (error) {
-    console.error("Error writing point players:", error);
-    throw error;
-  }
+    return insertedData || []
 }

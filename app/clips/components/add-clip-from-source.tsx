@@ -33,20 +33,9 @@ export function AddSourceClipModal({ isOpen, onClose, playlistId }: AddSourceCli
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
         // Get all the required data
         const sourcesData = await fetchSources();
         setSources(sourcesData);
-
-      } catch (error: any) {
-        console.error("Error loading data:", error);
-        toast({
-          title: "Error loading data",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-      }
     }
     void fetchData();
   }, [toast]);
