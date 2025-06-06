@@ -49,6 +49,15 @@ export async function fetchTeamMapping(): Promise<BaseTeamInfo[]> {
   return data ?? [];
 }
 
+// Insert new team
+export async function addTeam(team_name: string) {
+  const { error } = await supabase
+    .from("teams")
+    .insert({ team_name });
+
+  if (error) throw error;
+}
+
 // Add new team to table
 export async function upsertTeam(teamName: string): Promise<Team> {
   const { data, error } = await supabase

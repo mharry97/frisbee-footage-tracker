@@ -28,6 +28,7 @@ import {getPlayerPointsPlayed, PointsByPlayer} from "@/app/teams/[team_id]/[play
 import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/teams/[team_id]/[player_id]/utils.ts";
 import {fetchAllPointsDetailed} from "@/app/points/supabase.ts";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
+import MainMenu from "@/components/main-menu.tsx";
 
 interface StatTileProps {
   title: string;
@@ -141,17 +142,6 @@ function HomepageContent() {
     );
   }
 
-  // Menu items
-  const menuItems: HorizontalMenuItem[] = [
-    { title: "Sources", href: "/sources", iconComponent: FiDatabase },
-    { title: "Events", href: "/events", iconComponent: FaRegCalendarAlt },
-    { title: "Playlists", href: "/playlists", iconComponent: TbPlaylistAdd },
-    { title: "Clips", href: "/clips", iconComponent: LuClapperboard },
-    { title: "Points", href: "/points", iconComponent: MdOutlineScoreboard },
-    { title: "Teams", href: "/teams", iconComponent: IoPeopleOutline },
-    ...(player.is_admin ? [{ title: "Admin", href: "/admin", iconComponent: MdOutlineAdminPanelSettings }] : []),
-  ];
-
   const turns = (playerStats?.drops ?? 0) + (playerStats?.throwaways ?? 0);
   const pointsPlayed = playerPoints.length
 
@@ -161,7 +151,7 @@ function HomepageContent() {
       <Heading as="h1" fontWeight="light" size='4xl' color="white" mb={4} mt={4}>
         Hello, {player.player_name}
       </Heading>
-      <HorizontalIconMenu menuItems={menuItems}></HorizontalIconMenu>
+      <MainMenu is_admin={player.is_admin} />
       <HStack mb={6}>
         <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
         <Text flexShrink="0" fontSize="2xl" >Player Overview</Text>

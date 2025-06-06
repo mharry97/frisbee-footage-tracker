@@ -1,9 +1,14 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useEffect, useState } from "react"
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react"
+import { supabase, type Player } from "@/lib/supabase"
 import type { User } from "@supabase/supabase-js"
-import { supabase, type Player } from "./supabase"
 import { useRouter } from "next/navigation"
 
 interface AuthContextType {
@@ -17,23 +22,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// Helper functions
 const usernameToEmail = (username: string) => `${username}@app.local`
 
-const getCurrentPlayerData = async (): Promise<Player | null> => {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return null
-  }
-
+async function fetchPlayer(userId: string): Promise<Player | null> {
   const { data, error } = await supabase
-      .from("players")
-      .select("player_id, player_name, team_id, is_admin, is_active, auth_user_id")
-      .eq("auth_user_id", user.id)
-      .single()
+    .from("players")
+    .select("player_id, player_name, team_id, is_admin, is_active, auth_user_id")
+    .eq("auth_user_id", userId)
+    .single()
 
   if (error) {
     console.error("Error fetching player data:", error)
@@ -43,68 +39,57 @@ const getCurrentPlayerData = async (): Promise<Player | null> => {
   return data as Player
 }
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [player, setPlayer] = useState<Player | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Add debugging to your auth context
-  const loadPlayerData = async () => {
-    console.log("Starting to load player data...")
-    try {
-      const playerData = await getCurrentPlayerData()
-      console.log("Player data loaded:", playerData)
-      setPlayer(playerData)
-    } catch (error) {
-      console.error("Error loading player data:", error)
+  const loadSession = async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    const currentUser = session?.user ?? null
+    setUser(currentUser)
+
+    if (currentUser) {
+      const player = await fetchPlayer(currentUser.id)
+      setPlayer(player)
+    } else {
       setPlayer(null)
-    } finally {
-      console.log("Setting loading to false")
-      setLoading(false)
     }
+
+    setLoading(false)
   }
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      if (session?.user) {
-        loadPlayerData()
-      } else {
-        setLoading(false)
-      }
-    })
+    loadSession()
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state change:", event, !!session)
+    const { subscription } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        const currentUser = session?.user ?? null
+        setUser(currentUser)
 
-      // Set user immediately (synchronous)
-      setUser(session?.user ?? null)
-
-      // Dispatch async work AFTER callback finishes
-      setTimeout(() => {
-        if (session?.user) {
-          loadPlayerData()
+        if (currentUser) {
+          const player = await fetchPlayer(currentUser.id)
+          setPlayer(player)
         } else {
           setPlayer(null)
-          setLoading(false)
         }
-      }, 0)
-    })
+
+        setLoading(false)
+      }
+    ).data
 
     return () => subscription.unsubscribe()
   }, [])
 
   const login = async (username: string, password: string) => {
     const email = usernameToEmail(username)
-
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
-
     if (error) throw error
   }
 
@@ -114,31 +99,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const changePassword = async (newPassword: string) => {
-    const { error } = await supabase.auth.updateUser({
-      password: newPassword,
-    })
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
     if (error) throw error
   }
 
   return (
-      <AuthContext.Provider
-          value={{
-            user,
-            player,
-            loading,
-            login,
-            logout,
-            changePassword,
-          }}
-      >
-        {children}
-      </AuthContext.Provider>
+    <AuthContext.Provider
+      value={{
+        user,
+        player,
+        loading,
+        login,
+        logout,
+        changePassword,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   )
 }
 
 export function useAuth() {
   const context = useContext(AuthContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
