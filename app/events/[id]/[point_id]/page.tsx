@@ -37,7 +37,7 @@ import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 import {useParams} from "next/navigation";
 
 
-export function PointPageContent() {
+function PointPageContent() {
   // Unwrap the promised params
   const { id, point_id } = useParams<{ id: string; point_id: string }>()
   const { player } = useAuth()

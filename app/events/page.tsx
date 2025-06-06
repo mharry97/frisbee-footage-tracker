@@ -7,7 +7,6 @@ import {
   LinkBox, Box, Text
 } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
-import Header from "@/components/header";
 import { fetchEvents, insertEvent } from "@/app/events/supabase";
 import { AddEventModal } from "@/app/events/components/add-event-modal";
 import { EventCardProps } from "@/app/events/components/event-card";
