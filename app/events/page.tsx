@@ -4,18 +4,20 @@ import {
   Container,
   Table,
   LinkOverlay,
-  LinkBox
+  LinkBox, Box, Text
 } from "@chakra-ui/react";
 import React, { useEffect, useState } from "react";
-import Header from "@/components/header";
 import { fetchEvents, insertEvent } from "@/app/events/supabase";
 import { AddEventModal } from "@/app/events/components/add-event-modal";
 import { EventCardProps } from "@/app/events/components/event-card";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import FloatingActionButton from "@/components/ui/plus-button";
 import {AuthWrapper} from "@/components/auth-wrapper";
+import {useAuth} from "@/lib/auth-context.tsx";
+import StandardHeader from "@/components/standard-header.tsx";
 
 function EventsPageContent() {
+  const { player } = useAuth();
   const [events, setEvents] = useState<EventCardProps[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -49,10 +51,18 @@ function EventsPageContent() {
     }
   };
 
+  if (!player || loading) {
+    return (
+      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
+        <Text color="white" fontSize="lg">Loading player data...</Text>
+      </Box>
+    )
+  }
+
   return (
     <>
       <Container maxW="4xl">
-        <Header title="Events" buttonText="Home" redirectUrl="/" />
+        <StandardHeader text="Events" is_admin={player.is_admin} />
         {loading ? (
           <LoadingSpinner text="Loading events..." />
         ) : (

@@ -3,7 +3,6 @@
 import React, {useState, useEffect, useCallback} from "react"
 import {
   Container,
-  Heading,
   Badge,
   HStack,
   Text,
@@ -22,6 +21,7 @@ import { useAuth } from "@/lib/auth-context"
 import FloatingActionButton from "@/components/ui/plus-button"
 import NewUserDetailsPortal from "@/app/admin/component/new-user-details"
 import EditUserDetailsPortal from "@/app/admin/component/edit-user-details"
+import StandardHeader from "@/components/standard-header.tsx";
 
 function PlayersPageContent() {
   const { player } = useAuth()
@@ -58,10 +58,7 @@ function PlayersPageContent() {
 
   return (
     <Container maxW="4xl">
-      <Heading as="h1" fontWeight="light" size="4xl" color="white" mb={4} mt={4}>
-        Admin
-      </Heading>
-
+      <StandardHeader text="Admin" is_admin={player.is_admin} />
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
         {players.map((item, index) => (
           <Card.Root key={index} variant="elevated">

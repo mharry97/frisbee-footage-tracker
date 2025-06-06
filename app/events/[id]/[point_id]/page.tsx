@@ -8,9 +8,8 @@ import {
   HStack,
   Image,
   Field,
-  NativeSelect,
+  NativeSelect, Box,
 } from "@chakra-ui/react";
-import Header from "@/components/header";
 import {
   fetchPointById,
   fetchOMainPlays,
@@ -22,7 +21,6 @@ import {
 import type {Event, Point, Player} from "@/lib/supabase";
 import { useToast } from "@chakra-ui/toast";
 import { getTeamName } from "@/lib/utils";
-import LoadingSpinner from "@/components/ui/loading-spinner";
 import FloatingClipButton from "@/components/ui/add-clip-button";
 import { fetchEvent } from "@/app/events/supabase";
 import { BaseTeamInfo, fetchTeamMapping } from "@/app/teams/supabase";
@@ -33,16 +31,16 @@ import {getOrCreatePlayerId} from "@/app/events/[id]/[point_id]/components/get-o
 import { AddClipModal } from "@/app/clips/components/add-clip-modal";
 import OnPageVideoLink from "@/components/on-page-video-link";
 import ThrowCounter from "@/components/throws-input";
-import {AuthWrapper} from "@/components/auth-wrapper";
+import StandardHeader from "@/components/standard-header.tsx";
+import {useAuth} from "@/lib/auth-context.tsx";
+import {AuthWrapper} from "@/components/auth-wrapper.tsx";
+import {useParams} from "next/navigation";
 
 
-export default function PointPage({
-                                    params,
-                                  }: {
-  params: Promise<{ id: string; point_id: string }>;
-}) {
+function PointPageContent() {
   // Unwrap the promised params
-  const { id, point_id } = React.use(params);
+  const { id, point_id } = useParams<{ id: string; point_id: string }>()
+  const { player } = useAuth()
   const [loading, setLoading] = useState(true);
   const [pointData, setPointData] = useState<Point[]>([]);
   const [eventData, setEventData] = useState<Event | null>(null);
@@ -78,7 +76,6 @@ export default function PointPage({
 
   useEffect(() => {
     async function fetchData() {
-      try {
         setLoading(true);
 
         // Get point details
@@ -117,27 +114,16 @@ export default function PointPage({
         setOffencePlayers(offencePlayers)
         const defencePlayers = await fetchPlayersForTeam(currentPoint.defence_team)
         setDefencePlayers(defencePlayers)
-
-      } catch (error: any) {
-        console.error("Error loading data:", error);
-        toast({
-          title: "Error loading data",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-        setLoading(false);
-      }
     }
     void fetchData();
   }, [id, point_id, toast]);
 
-  if (loading) {
+  if (!player || loading) {
     return (
-      <Container maxW="4xl" mt={20}>
-        <LoadingSpinner text="Loading point form..." />
-      </Container>
-    );
+      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
+        <Text color="white" fontSize="lg">Loading player data...</Text>
+      </Box>
+    )
   }
 
   // WRITE TO SUPABASE
@@ -324,9 +310,8 @@ export default function PointPage({
   };
 
   return (
-    <AuthWrapper>
       <Container maxW="4xl">
-        <Header title={eventName} buttonText="Event" redirectUrl={`/events/${id}`} />
+        <StandardHeader text={eventName} is_admin={player.is_admin} />
         <Text mt={4} fontSize="lg" color="gray.400">{`${offence_team_name} on O starting ${currentPoint.timestamp}`}</Text>
         <OnPageVideoLink url={currentPoint.timestamp_url}/>
         <>
@@ -525,8 +510,13 @@ export default function PointPage({
           baseUrl = {currentPoint.base_url}
         />
       </Container>
-    </AuthWrapper>
     );
 }
 
-
+export default function PointPage() {
+  return (
+    <AuthWrapper>
+      <PointPageContent />
+    </AuthWrapper>
+  )
+}
