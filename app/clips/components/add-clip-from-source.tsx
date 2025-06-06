@@ -10,7 +10,7 @@ import {
   NativeSelect
 } from "@chakra-ui/react";
 import { useToast } from "@chakra-ui/toast";
-import type {Source} from "@/lib/supabase";
+import {Source} from "@/app/sources/supabase";
 import {fetchSources} from "@/app/sources/supabase";
 import {upsertClip} from "@/app/clips/supabase";
 import {baseUrlToTimestampUrl} from "@/lib/utils";
@@ -134,7 +134,7 @@ export function AddSourceClipModal({ isOpen, onClose, playlistId }: AddSourceCli
                     onChange={(e) => setSource(e.currentTarget.value)}
                   >
                     {sources.map((s) => (
-                      <option key={s.id} value={s.url}>
+                      <option key={s.source_id} value={s.url}>
                         {s.title}
                       </option>
                     ))}

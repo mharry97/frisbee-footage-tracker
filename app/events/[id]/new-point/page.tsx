@@ -10,8 +10,8 @@ import {
   SimpleGrid,
 } from "@chakra-ui/react";
 import { Field } from "@chakra-ui/react";
-import { fetchSources } from "@/app/sources/supabase";
-import type { Source, Player } from "@/lib/supabase";
+import { fetchSources, Source } from "@/app/sources/supabase";
+import type { Player } from "@/lib/supabase";
 import { useToast } from "@chakra-ui/toast";
 import Header from "@/components/header";
 import LoadingSpinner from "@/components/ui/loading-spinner";
@@ -121,7 +121,7 @@ export default function EventPage({
   const handleAdd = async () => {
     try {
       // Find the source URL from the sources list based on the selected source id
-      const sourceUrl = sources.find((s) => s.id === source)?.url || "";
+      const sourceUrl = sources.find((s) => s.source_id === source)?.url || "";
       // Calculate the timestamp_url using the helper function
       const timestamp_url = getTimestampUrl(sourceUrl, timestamp);
 
@@ -192,7 +192,7 @@ export default function EventPage({
               onChange={(e) => setSource(e.currentTarget.value)}
             >
               {sources.map((s) => (
-                <option key={s.id} value={s.id}>
+                <option key={s.source_id} value={s.source_id}>
                   {s.title}
                 </option>
               ))}

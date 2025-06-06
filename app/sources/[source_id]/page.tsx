@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Container } from "@chakra-ui/react";
 import Header from "@/components/header";
-import { Source } from "@/lib/supabase"
+import { Source } from "@/app/sources/supabase"
 import { fetchSourceById } from "@/app/sources/supabase";
 import {AuthWrapper} from "@/components/auth-wrapper";
 
