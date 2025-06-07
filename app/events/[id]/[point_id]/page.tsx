@@ -18,7 +18,8 @@ import {
   fetchDInitPlays,
   type Play, fetchPossessionsForPoint,
 } from "@/app/events/[id]/[point_id]/supabase";
-import type {Event, Point, Player} from "@/lib/supabase";
+import type { Point, Player} from "@/lib/supabase";
+import type { Event } from "@/app/events/supabase";
 import { useToast } from "@chakra-ui/toast";
 import { getTeamName } from "@/lib/utils";
 import FloatingClipButton from "@/components/ui/add-clip-button";

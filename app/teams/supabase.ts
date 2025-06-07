@@ -20,7 +20,8 @@ export async function getHomeTeam(): Promise<string | null> {
 export async function fetchTeams(): Promise<Team[]> {
   const { data, error } = await supabase
     .from("teams")
-    .select("*");
+    .select("*")
+    .order("team_name", { ascending: true });
   if (error) throw error;
   return data ?? [];
 }

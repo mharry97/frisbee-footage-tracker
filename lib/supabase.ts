@@ -15,17 +15,6 @@ export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "", {
   },
 })
 
-export type Event = {
-  event_id: string
-  event_name: string
-  event_date: string
-  type: "Game" | "Training" | "Scrimmage"
-  team_1?: string
-  team_2?: string
-  team_1_id: string
-  team_2_id: string
-}
-
 export type Point = {
   point_id: string
   event_id: string

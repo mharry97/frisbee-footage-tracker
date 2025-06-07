@@ -1,106 +1,82 @@
 "use client"
-import NextLink from "next/link";
+
 import {
   Container,
-  Table,
-  LinkOverlay,
-  LinkBox, Box, Text
+  Box,
+  Text,
+  SimpleGrid,
+  Card, HStack,
 } from "@chakra-ui/react";
-import React, { useEffect, useState } from "react";
-import { fetchEvents, insertEvent } from "@/app/events/supabase";
-import { AddEventModal } from "@/app/events/components/add-event-modal";
-import { EventCardProps } from "@/app/events/components/event-card";
-import LoadingSpinner from "@/components/ui/loading-spinner";
-import FloatingActionButton from "@/components/ui/plus-button";
+import { fetchEvents } from "@/app/events/supabase";
 import {AuthWrapper} from "@/components/auth-wrapper";
 import {useAuth} from "@/lib/auth-context.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
+import {useQuery} from "@tanstack/react-query";
+import React from "react";
+import EventForm from "@/app/events/event-form.tsx";
 
 function EventsPageContent() {
-  const { player } = useAuth();
-  const [events, setEvents] = useState<EventCardProps[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { player } = useAuth()
 
-  useEffect(() => {
-    loadEvents();
-  }, []);
+  const { data: events, isLoading } = useQuery({
+    queryFn: () => fetchEvents(),
+    queryKey: ["events"]
+  })
 
-  const loadEvents = async () => {
-    setLoading(true);
-    const data = await fetchEvents();
-    setEvents(data);
-    setLoading(false);
-  };
 
-  const handleOpenModal = () => setIsModalOpen(true);
-  const handleCloseModal = () => setIsModalOpen(false);
-
-  const handleAddEvent = async (
-    title: string,
-    eventDate: string,
-    eventType: "Game" | "Training" | "Scrimmage",
-    team1: string,
-    team2: string
-  ) => {
-    try {
-      await insertEvent(title, eventDate, eventType, team1, team2);
-      await loadEvents();
-    } catch (error) {
-      console.error("Error adding event:", error);
-    }
-  };
-
-  if (!player || loading) {
+  if (!player || isLoading) {
     return (
       <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading player data...</Text>
+        <Text color="white" fontSize="lg">Loading event data...</Text>
       </Box>
+    );
+  }
+  if (!events) {
+    return (
+      <Container maxW="4xl">
+        <StandardHeader text="Events" is_admin={player.is_admin} />
+        <Text color="white" fontSize="lg">No events yet!</Text>
+      </Container>
     )
   }
 
   return (
-    <>
-      <Container maxW="4xl">
-        <StandardHeader text="Events" is_admin={player.is_admin} />
-        {loading ? (
-          <LoadingSpinner text="Loading events..." />
-        ) : (
-          <Table.Root
-            size="lg"
-            interactive
-          >
-            <Table.Header>
-              <Table.Row>
-                <Table.ColumnHeader>Event</Table.ColumnHeader>
-                <Table.ColumnHeader width="35%" textAlign="right">Date</Table.ColumnHeader>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {events.map((event) => (
-                <Table.Row key={event.event_id}>
-                  <Table.Cell>
-                    <LinkBox as="div">
-                      <LinkOverlay as={NextLink} href={`/events/${event.event_id}`}>
-                        {event.event_name}
-                      </LinkOverlay>
-                    </LinkBox>
-                  </Table.Cell>
-                  <Table.Cell width="35%" textAlign="right">{event.event_date}</Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table.Root>
-        )}
-      </Container>
-      <FloatingActionButton aria-label="Add Event" onClick={handleOpenModal} />
-      <AddEventModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
-        onAddEvent={handleAddEvent}
-      />
-    </>
-  );
+    <Container maxW="4xl">
+      <StandardHeader text="Events" is_admin={player.is_admin} />
+      <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
+        {events.map((item, index) => (
+          <Card.Root key={index} variant="elevated">
+            <Card.Header>
+              <Card.Title>{item.event_name}</Card.Title>
+              <Card.Description>{item.event_date}</Card.Description>
+            </Card.Header>
+            <Card.Body>
+              {item.type !== "Game" ? (<Text></Text>)
+              : item.team_1_scores + item.team_1_scores === 0 ? (
+                  <HStack>
+                    <Text>{item.team_1}</Text>
+                    <Text> Vs. </Text>
+                    <Text> {item.team_2}</Text>
+                  </HStack>
+                ) : (
+                  <HStack>
+                    <Text>{item.team_1}</Text>
+                    <Text> {item.team_1_scores}</Text>
+                    <Text> : </Text>
+                    <Text>{item.team_2_scores}</Text>
+                    <Text> {item.team_2}</Text>
+                  </HStack>
+                )}
+            </Card.Body>
+            <Card.Footer gap="2">
+              <EventForm mode="edit" currentData={item} />
+            </Card.Footer>
+          </Card.Root>
+        ))}
+      </SimpleGrid>
+      <EventForm mode="add" />
+    </Container>
+  )
 }
 
 export default function EventsPage() {
