@@ -1,7 +1,6 @@
 import {z} from 'zod'
 import {
   Button,
-  Container,
   Field,
   Input,
   VStack,
@@ -90,7 +89,7 @@ const SourceForm = ({ mode, currentSourceData }: PortalProps) => {
   }
 
   return(
-    <Container>
+    <>
       {mode === "add" ? <FloatingPlusButton onClick={onOpen} /> : <Button variant="solid" onClick={onOpen}>Edit</Button>}
       <Dialog.Root open={open} onOpenChange={(open) => (open ? onOpen() : onClose())}>
         <Portal>
@@ -140,7 +139,7 @@ const SourceForm = ({ mode, currentSourceData }: PortalProps) => {
           </Dialog.Positioner>
         </Portal>
       </Dialog.Root>
-    </Container>
+    </>
   )
 }
 
