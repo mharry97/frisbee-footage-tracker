@@ -1,45 +1,35 @@
 "use client";
 
-import React, {useCallback, useEffect, useState} from "react";
-import {Box, Button, Card, CloseButton, Container, Dialog, Portal, SimpleGrid, Text} from "@chakra-ui/react";
-import type { Source } from "./supabase.ts";
+import {Box, Button, Card, Container, SimpleGrid, Text} from "@chakra-ui/react";
 import { fetchSources } from "@/app/sources/supabase";
 import {AuthWrapper} from "@/components/auth-wrapper";
 import NextLink from "next/link";
 import SourceForm from "@/app/sources/components/source-form.tsx";
-import FloatingPlusButton from "@/components/ui/floating-plus.tsx";
 import {useAuth} from "@/lib/auth-context.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
+import {useQuery} from "@tanstack/react-query";
 
 function SourcesPageContent() {
   const { player } = useAuth()
-  const [sources, setSources] = useState<Source[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  const refreshSources = useCallback(async () => {
-    if (!player) return
-    setLoading(true)
-    try {
-      const data = await fetchSources();
-      setSources(data);
-    } catch (err) {
-      console.error("Error refreshing sources:", err)
-    } finally {
-      setLoading(false)
-    }
-  }, [player])
+  const { data: sources, isLoading } = useQuery({
+    queryFn: () => fetchSources(),
+    queryKey: ["sources"]
+  })
 
-  useEffect(() => {
-    (async () => {
-      await refreshSources()
-    })()
-  }, [refreshSources])
-
-  if (!player || loading) {
+  if (!player || isLoading) {
     return (
       <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
         <Text color="white" fontSize="lg">Loading player data...</Text>
       </Box>
+    )
+  }
+  if (!sources) {
+    return (
+      <Container maxW="4xl">
+        <StandardHeader text="Teams" is_admin={player.is_admin} />
+        <Text color="white" fontSize="lg">No sources yet!</Text>
+      </Container>
     )
   }
 
@@ -59,29 +49,7 @@ function SourcesPageContent() {
               </Card.Description>
             </Card.Body>
             <Card.Footer gap="2">
-              <Dialog.Root>
-                <Dialog.Trigger asChild>
-                  <Button variant="solid">Edit</Button>
-                </Dialog.Trigger>
-                <Portal>
-                  <Dialog.Backdrop />
-                  <Dialog.Positioner>
-                    <Dialog.Content>
-                      <Dialog.Header>Edit Source</Dialog.Header>
-                      <Dialog.Body>
-                        <SourceForm
-                          mode="edit"
-                          currentSourceData={item}
-                          onSuccess={refreshSources}
-                        />
-                      </Dialog.Body>
-                      <Dialog.CloseTrigger asChild>
-                        <CloseButton size="sm" />
-                      </Dialog.CloseTrigger>
-                    </Dialog.Content>
-                  </Dialog.Positioner>
-                </Portal>
-              </Dialog.Root>
+              <SourceForm mode="edit" />
               <NextLink href={item.url} passHref>
                 <Button variant="ghost">
                   View
@@ -91,25 +59,7 @@ function SourcesPageContent() {
           </Card.Root>
         ))}
       </SimpleGrid>
-      <Dialog.Root>
-        <Dialog.Trigger asChild>
-          <FloatingPlusButton />
-        </Dialog.Trigger>
-        <Portal>
-          <Dialog.Backdrop />
-          <Dialog.Positioner>
-            <Dialog.Content>
-              <Dialog.Header>Edit Source</Dialog.Header>
-              <Dialog.Body>
-                <SourceForm mode="add" onSuccess={refreshSources} />
-              </Dialog.Body>
-              <Dialog.CloseTrigger asChild>
-                <CloseButton size="sm" />
-              </Dialog.CloseTrigger>
-            </Dialog.Content>
-          </Dialog.Positioner>
-        </Portal>
-      </Dialog.Root>
+      <SourceForm mode="add" />
     </Container>
   );
 }

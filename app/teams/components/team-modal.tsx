@@ -1,4 +1,4 @@
-import {Button, CloseButton, Container, Dialog, Field, Input, Portal, Text, useDisclosure} from "@chakra-ui/react";
+import {Button, Container, Dialog, Field, HStack, Input, Portal, Text, useDisclosure} from "@chakra-ui/react";
 import React from "react";
 import FloatingPlusButton from "@/components/ui/floating-plus.tsx";
 import {SubmitHandler, useForm} from "react-hook-form";
@@ -50,10 +50,8 @@ export default function TeamModal() {
 
   return (
     <Container>
-      <Dialog.Root open={open} onOpenChange={(open) => (open ? onOpen() : onClose())}>
-        <Dialog.Trigger asChild>
-          <FloatingPlusButton />
-        </Dialog.Trigger>
+      <FloatingPlusButton onClick={onOpen} />
+      <Dialog.Root open={open} onOpenChange={(isOpen) => (isOpen ? onOpen() : onClose())}>
         <Portal>
           <Dialog.Backdrop />
           <Dialog.Positioner>
@@ -68,22 +66,23 @@ export default function TeamModal() {
                       <Field.ErrorText>{errors.team_name.message}</Field.ErrorText>
                     )}
                   </Field.Root>
-                  <Button type="submit" disabled={isSubmitting} mt={4}>
-                    Add Team
-                  </Button>
-                  {errors.root && (
-                    <Text color="red" mt={4}>{errors.root.message}</Text>
-                  )}
+                  <HStack justify="space-between">
+                    <Button type="submit" disabled={isSubmitting} mt={4}>
+                      Add Team
+                    </Button>
+                    {errors.root && (
+                      <Text color="red" mt={4}>{errors.root.message}</Text>
+                    )}
+                    <Button variant="ghost" onClick={onClose} mt={4}>
+                      Cancel
+                    </Button>
+                  </HStack>
                 </form>
               </Dialog.Body>
-              <Dialog.CloseTrigger asChild>
-                <CloseButton size="sm" />
-              </Dialog.CloseTrigger>
             </Dialog.Content>
           </Dialog.Positioner>
         </Portal>
       </Dialog.Root>
-
     </Container>
   )
 }
