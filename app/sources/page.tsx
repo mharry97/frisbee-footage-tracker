@@ -37,8 +37,8 @@ function SourcesPageContent() {
     <Container maxW="4xl">
       <StandardHeader text="Sources" is_admin={player.is_admin} />
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
-        {sources.map((item, index) => (
-          <Card.Root key={index} variant="elevated">
+        {sources.map((item) => (
+          <Card.Root key={item.source_id} variant="elevated">
             <Card.Header>
               <Card.Title>{item.title}</Card.Title>
               <Card.Description>{item.recorded_date}</Card.Description>
@@ -49,7 +49,7 @@ function SourcesPageContent() {
               </Card.Description>
             </Card.Body>
             <Card.Footer gap="2">
-              <SourceForm mode="edit" />
+              <SourceForm mode="edit" currentSourceData={item} />
               <NextLink href={item.url} passHref>
                 <Button variant="ghost">
                   View

@@ -124,7 +124,7 @@ const SourceForm = ({ mode, currentSourceData }: PortalProps) => {
                   </VStack>
                   <HStack justify="space-between">
                     <Button type="submit" disabled={isSubmitting} mt={4}>
-                      {mode === "add" ? "Add Source" : "Update Source"}
+                      {mode === "add" ? "Add" : "Update"}
                     </Button>
                     {errors.root && (
                       <Text color="red" mt={4}>{errors.root.message}</Text>
