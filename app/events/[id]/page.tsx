@@ -16,9 +16,9 @@ import {
 } from "@chakra-ui/react";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomTabs from "@/components/tabbed-page";
-import { fetchEvent } from "@/app/events/supabase";
+import { fetchEvent, type Event } from "@/app/events/supabase";
 import { fetchEventPoints } from "@/app/points/supabase";
-import type {Clip, Event, Point, Possession } from "@/lib/supabase";
+import type {Clip, Point, Possession } from "@/lib/supabase";
 import FloatingActionButton from "@/components/ui/plus-button";
 import {BaseTeamInfo, fetchTeamMapping} from "@/app/teams/supabase";
 import {fetchEventPossessions} from "@/app/possessions/supabase";

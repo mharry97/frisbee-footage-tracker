@@ -6,8 +6,6 @@ import {
   Text,
   VStack,
   HStack,
-  Link as ChakraLink,
-  Icon,
   Center,
   Separator,
   Card, Button, SimpleGrid, Dialog, Portal, CloseButton, Badge
@@ -16,18 +14,12 @@ import NextLink from 'next/link';
 import { AuthWrapper } from "@/components/auth-wrapper";
 import { useAuth } from "@/lib/auth-context.tsx";
 import {InfoTip} from "@/components/ui/toggle-tip.tsx";
-import { FaRegCalendarAlt } from "react-icons/fa";
-import { FiDatabase } from "react-icons/fi";
-import { TbPlaylistAdd } from "react-icons/tb";
-import { LuClapperboard } from "react-icons/lu";
-import { MdOutlineScoreboard } from "react-icons/md";
-import { MdOutlineAdminPanelSettings } from "react-icons/md";
-import { IoPeopleOutline } from "react-icons/io5";
 import React, {useEffect, useState} from "react";
 import {getPlayerPointsPlayed, PointsByPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
 import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/teams/[team_id]/[player_id]/utils.ts";
 import {fetchAllPointsDetailed} from "@/app/points/supabase.ts";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
+import MainMenu from "@/components/main-menu.tsx";
 
 interface StatTileProps {
   title: string;
@@ -54,55 +46,6 @@ function StatTile({ title, value, help }: StatTileProps) {
       </Box>
     </Center>
   )
-}
-
-interface HorizontalMenuItem {
-  title: string;
-  href: string;
-  iconComponent: React.ElementType;
-}
-
-function HorizontalIconMenu({ menuItems }: { menuItems: HorizontalMenuItem[] }) {
-  return (
-    <Box
-      overflowX="auto"
-      pb={2}
-      width="100%"
-    >
-      <HStack
-        gap={3}
-        px={2}
-      >
-        {menuItems.map((item) => (
-          <ChakraLink
-            key={item.href}
-            as={NextLink}
-            href={item.href}
-            _hover={{ textDecoration: 'none' }}
-            _focus={{ boxShadow: "none", outline: "none" }}
-            flexShrink={0}
-          >
-            <VStack
-              w="120px"
-              h="120px"
-              justifyContent="center"
-              alignItems="center"
-              gap={1}
-              bg="transparent"
-              _hover={{ bg: "whiteAlpha.100", rounded: "md" }}
-              transition="background-color 0.2s ease-in-out"
-              rounded="md"
-            >
-              <Icon as={item.iconComponent} boxSize="30px" color="white" />
-              <Text fontSize="xs" color="white" textAlign="center">
-                {item.title}
-              </Text>
-            </VStack>
-          </ChakraLink>
-        ))}
-      </HStack>
-    </Box>
-  );
 }
 
 function HomepageContent() {
@@ -141,17 +84,6 @@ function HomepageContent() {
     );
   }
 
-  // Menu items
-  const menuItems: HorizontalMenuItem[] = [
-    { title: "Sources", href: "/sources", iconComponent: FiDatabase },
-    { title: "Events", href: "/events", iconComponent: FaRegCalendarAlt },
-    { title: "Playlists", href: "/playlists", iconComponent: TbPlaylistAdd },
-    { title: "Clips", href: "/clips", iconComponent: LuClapperboard },
-    { title: "Points", href: "/points", iconComponent: MdOutlineScoreboard },
-    { title: "Teams", href: "/teams", iconComponent: IoPeopleOutline },
-    ...(player.is_admin ? [{ title: "Admin", href: "/admin", iconComponent: MdOutlineAdminPanelSettings }] : []),
-  ];
-
   const turns = (playerStats?.drops ?? 0) + (playerStats?.throwaways ?? 0);
   const pointsPlayed = playerPoints.length
 
@@ -161,7 +93,7 @@ function HomepageContent() {
       <Heading as="h1" fontWeight="light" size='4xl' color="white" mb={4} mt={4}>
         Hello, {player.player_name}
       </Heading>
-      <HorizontalIconMenu menuItems={menuItems}></HorizontalIconMenu>
+      <MainMenu is_admin={player.is_admin} />
       <HStack mb={6}>
         <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
         <Text flexShrink="0" fontSize="2xl" >Player Overview</Text>

@@ -30,10 +30,10 @@ const getCurrentPlayerData = async (): Promise<Player | null> => {
   }
 
   const { data, error } = await supabase
-      .from("players")
-      .select("player_id, player_name, team_id, is_admin, is_active, auth_user_id")
-      .eq("auth_user_id", user.id)
-      .single()
+    .from("players")
+    .select("player_id, player_name, team_id, is_admin, is_active, auth_user_id")
+    .eq("auth_user_id", user.id)
+    .single()
 
   if (error) {
     console.error("Error fetching player data:", error)
@@ -121,18 +121,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-      <AuthContext.Provider
-          value={{
-            user,
-            player,
-            loading,
-            login,
-            logout,
-            changePassword,
-          }}
-      >
-        {children}
-      </AuthContext.Provider>
+    <AuthContext.Provider
+      value={{
+        user,
+        player,
+        loading,
+        login,
+        logout,
+        changePassword,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
   )
 }
 

@@ -20,7 +20,8 @@ export async function getHomeTeam(): Promise<string | null> {
 export async function fetchTeams(): Promise<Team[]> {
   const { data, error } = await supabase
     .from("teams")
-    .select("*");
+    .select("*")
+    .order("team_name", { ascending: true });
   if (error) throw error;
   return data ?? [];
 }
@@ -47,6 +48,15 @@ export async function fetchTeamMapping(): Promise<BaseTeamInfo[]> {
 
   if (error) throw error;
   return data ?? [];
+}
+
+// Insert new team
+export async function addTeam(team_name: string) {
+  const { error } = await supabase
+    .from("teams")
+    .insert({ team_name });
+
+  if (error) throw error;
 }
 
 // Add new team to table

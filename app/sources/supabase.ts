@@ -33,3 +33,30 @@ export async function fetchSourceById(id: string): Promise<Source[]> {
 
     return data || ""
 }
+
+interface InsertSourceType {
+  title: string
+  url: string
+  recorded_date: string
+}
+// Insert new source
+export async function addSource(data : InsertSourceType) {
+  const { error } = await supabase
+    .from("sources")
+    .insert(data)
+   if (error) throw error;
+}
+
+// Upsert source
+interface UpsertSourceType {
+  title: string
+  url: string
+  recorded_date: string
+  source_id: string
+}
+export async function editSource(data: UpsertSourceType) {
+  const { error } = await supabase
+    .from("sources")
+    .upsert(data, { onConflict: "source_id" })
+  if (error) throw error;
+}

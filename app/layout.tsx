@@ -1,15 +1,15 @@
+"use client"
+
 import type React from "react"
-import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Provider } from "@/components/ui/provider"
 import { AuthProvider } from "@/lib/auth-context"
+import { QueryClientProvider } from '@tanstack/react-query'
+import { QueryClient } from "@tanstack/react-query";
+
+const queryClient = new QueryClient();
 
 const inter = Inter({ subsets: ["latin"] })
-
-export const metadata: Metadata = {
-  title: "Frisbee Footage Tracker",
-  description: "Track and analyze ultimate frisbee game footage",
-}
 
 export default function RootLayout({
                                      children,
@@ -18,13 +18,15 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-    <body className={inter.className}>
-    <Provider>
-      <AuthProvider>
-        {children}
-      </AuthProvider>
-    </Provider>
-    </body>
+      <body className={inter.className}>
+      <Provider>
+        <AuthProvider>
+          <QueryClientProvider client={queryClient}>
+            {children}
+          </QueryClientProvider>
+        </AuthProvider>
+      </Provider>
+      </body>
     </html>
   )
 }
