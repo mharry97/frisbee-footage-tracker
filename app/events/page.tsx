@@ -5,7 +5,7 @@ import {
   Box,
   Text,
   SimpleGrid,
-  Card, HStack,
+  Card, HStack, Button,
 } from "@chakra-ui/react";
 import { fetchEvents } from "@/app/events/supabase";
 import {AuthWrapper} from "@/components/auth-wrapper";
@@ -44,34 +44,44 @@ function EventsPageContent() {
     <Container maxW="4xl">
       <StandardHeader text="Events" is_admin={player.is_admin} />
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
-        {events.map((item, index) => (
-          <Card.Root key={index} variant="elevated">
-            <Card.Header>
-              <Card.Title>{item.event_name}</Card.Title>
-              <Card.Description>{item.event_date}</Card.Description>
-            </Card.Header>
-            <Card.Body>
-              {item.type !== "Game" ? (<Text></Text>)
-              : item.team_1_scores + item.team_1_scores === 0 ? (
-                  <HStack>
-                    <Text>{item.team_1}</Text>
-                    <Text> Vs. </Text>
-                    <Text> {item.team_2}</Text>
-                  </HStack>
-                ) : (
-                  <HStack>
-                    <Text>{item.team_1}</Text>
-                    <Text> {item.team_1_scores}</Text>
-                    <Text> : </Text>
-                    <Text>{item.team_2_scores}</Text>
-                    <Text> {item.team_2}</Text>
-                  </HStack>
-                )}
-            </Card.Body>
-            <Card.Footer gap="2">
-              <EventForm mode="edit" currentData={item} />
-            </Card.Footer>
-          </Card.Root>
+        {events.map((item) => (
+            <Card.Root
+              key={item.event_id}
+              variant={item.team_1_scores + item.team_2_scores > 0 ? "outline" : "elevated"}
+              borderColor={item.team_1_scores + item.team_2_scores > 0 ? "gray.400" : "transparent"}
+              borderWidth={item.team_1_scores + item.team_2_scores > 0 ? "1px" : "0px"}
+            >
+              <Card.Header>
+                <Card.Title>{item.event_name}</Card.Title>
+                <Card.Description>{item.event_date}</Card.Description>
+              </Card.Header>
+              <Card.Body>
+                {item.type !== "Game" ? (<Text></Text>)
+                : item.team_1_scores + item.team_1_scores === 0 ? (
+                    <HStack>
+                      <Text>{item.team_1}</Text>
+                      <Text> Vs. </Text>
+                      <Text> {item.team_2}</Text>
+                    </HStack>
+                  ) : (
+                    <HStack>
+                      <Text>{item.team_1}</Text>
+                      <Text> {item.team_1_scores}</Text>
+                      <Text> : </Text>
+                      <Text>{item.team_2_scores}</Text>
+                      <Text> {item.team_2}</Text>
+                    </HStack>
+                  )}
+              </Card.Body>
+              <Card.Footer gap="2">
+                <Button asChild variant="solid">
+                  <a href={`/events/${item.event_id}`}>
+                    View
+                  </a>
+                </Button>
+                <EventForm mode="edit" currentData={item} />
+              </Card.Footer>
+            </Card.Root>
         ))}
       </SimpleGrid>
       <EventForm mode="add" />

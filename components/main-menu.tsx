@@ -20,7 +20,11 @@ interface HorizontalMenuItem {
 
 function HorizontalIconMenu({ menuItems }: { menuItems: HorizontalMenuItem[] }) {
   return (
-    <Box overflowX="auto" pb={2} width="100%">
+    <Box
+      overflowX="auto"
+      pb={2}
+      width="100%"
+      scrollbar="hidden">
       <HStack gap={3} px={2}>
         {menuItems.map((item) => (
           <ChakraLink
