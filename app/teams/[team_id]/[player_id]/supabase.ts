@@ -76,7 +76,7 @@ export type PointsByPlayer = {
 
 export async function getPlayerPointsPlayed(player_id: string):  Promise<PointsByPlayer[]> {
   const { error, data } = await supabase
-    .from('view_player_point_detailed')
+    .from('view_player_point_detail')
     .select("*")
     .eq("player_id", player_id)
 
