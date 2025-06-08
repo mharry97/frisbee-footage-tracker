@@ -99,10 +99,6 @@ function EventPageContent() {
     value: team.Breaks,
   }));
 
-  const teamIdToName = Object.fromEntries(
-    teamMapping.map((t) => [t.team_id, t.team_name])
-  );
-
   // Possessions
   const sequenceData = sequenceStats(possessions, teamMapping);
 
