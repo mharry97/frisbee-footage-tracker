@@ -42,7 +42,7 @@ export async function fetchAllPoints(): Promise<Point[]> {
 // Fetch all possessions specific point
 export async function fetchDetailPoint(point_id: string): Promise<PointDetailed[]> {
   const { data, error } = await supabase
-    .from("all_points_view")
+    .from("view_point_detail")
     .select("*")
     .eq("point_id", point_id)
     .order("possession_number", { ascending: true });
@@ -54,7 +54,7 @@ export async function fetchDetailPoint(point_id: string): Promise<PointDetailed[
 //Fetch all possessions
 export async function fetchAllPointsDetailed(): Promise<PointDetailed[]> {
     const { data, error } = await supabase
-      .from("all_points_view")
+      .from("view_point_detail")
       .select("*")
       .order("event_date", { ascending: false });
 
