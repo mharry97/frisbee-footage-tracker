@@ -3,7 +3,7 @@ import {TeamPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
 
 export async function getHomeTeamPlayerInfo(team_id: string): Promise<TeamPlayer[]> {
   const { data, error } = await supabase
-    .from("view_player_info")
+    .from("view_player_detail")
     .select("*")
     .eq("team_id", team_id)
     .order("player_name", { ascending: true})
