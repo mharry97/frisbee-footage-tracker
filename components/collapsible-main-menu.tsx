@@ -1,6 +1,6 @@
 import MainMenu from "@/components/main-menu"
 import React from "react";
-import {Collapsible, HStack, Separator} from "@chakra-ui/react";
+import {Box, Collapsible, HStack, Separator} from "@chakra-ui/react";
 import { FaAngleDown } from "react-icons/fa";
 
 interface CollapsibleMainMenuProps {
@@ -12,10 +12,12 @@ export default function CollapsibleMainMenu({is_admin}: CollapsibleMainMenuProps
     <>
       <Collapsible.Root>
         <Collapsible.Trigger paddingY="3">
-          <HStack>
-            Menu
-            <FaAngleDown />
-          </HStack>
+          <Box _hover={{ bg: "gray.800", borderColor: "gray.400" }} borderRadius="md" _focus={{ borderColor: "gray.400" }}>
+            <HStack p={2}>
+              Menu
+              <FaAngleDown />
+            </HStack>
+          </Box>
         </Collapsible.Trigger>
         <Collapsible.Content>
           <MainMenu is_admin={is_admin} />

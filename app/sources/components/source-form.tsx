@@ -90,7 +90,7 @@ const SourceForm = ({ mode, currentSourceData }: PortalProps) => {
 
   return(
     <>
-      {mode === "add" ? <FloatingPlusButton onClick={onOpen} /> : <Button variant="solid" onClick={onOpen}>Edit</Button>}
+      {mode === "add" ? <FloatingPlusButton onClick={onOpen} /> : <Button variant="ghost" onClick={onOpen}>Edit</Button>}
       <Dialog.Root open={open} onOpenChange={(open) => (open ? onOpen() : onClose())}>
         <Portal>
           <Dialog.Backdrop />

@@ -49,12 +49,12 @@ function SourcesPageContent() {
               </Card.Description>
             </Card.Body>
             <Card.Footer gap="2">
-              <SourceForm mode="edit" currentSourceData={item} />
               <NextLink href={item.url} passHref>
-                <Button variant="ghost">
+                <Button variant="solid">
                   View
                 </Button>
               </NextLink>
+              <SourceForm mode="edit" currentSourceData={item} />
             </Card.Footer>
           </Card.Root>
         ))}

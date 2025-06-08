@@ -140,7 +140,7 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
 
   return(
     <>
-      {mode === "add" ? <FloatingPlusButton onClick={handleOpenPortal} /> : <Button variant="solid" onClick={handleOpenPortal}>Edit</Button>}
+      {mode === "add" ? <FloatingPlusButton onClick={handleOpenPortal} /> : <Button variant="ghost" onClick={handleOpenPortal}>Edit</Button>}
       <Dialog.Root open={open} onOpenChange={(open) => (open ? onOpen() : onClose())}>
         <Portal>
           <Dialog.Backdrop />
