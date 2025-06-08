@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase"
-import type { Point, PointPlayer } from "@/lib/supabase"
+import type {  PointPlayer } from "@/lib/supabase"
+import { type Point } from "@/app/points/supabase"
 
 
 export type NewPoint = Pick<Point, "event_id" | "source_id" | "timestamp" | "offence_team" | "defence_team">;

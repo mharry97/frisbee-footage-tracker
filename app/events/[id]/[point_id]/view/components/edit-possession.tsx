@@ -11,7 +11,7 @@ import {
   Text,
 } from "@chakra-ui/react";
 import CustomDropdownInput from "@/app/events/[id]/[point_id]/components/custom-dropdown-with-add";
-import type { PointDetailed } from "@/lib/supabase";
+import type { PossessionDetailed } from "@/app/possessions/supabase";
 import {
   fetchDInitPlays,
   fetchDMainPlays,
@@ -24,9 +24,9 @@ import ThrowCounter from "@/components/throws-input";
 type ListItem = { play: string };
 
 type EditPossessionDialogProps = {
-  possession: PointDetailed;
+  possession: PossessionDetailed;
   onClose: () => void;
-  onUpdate: (updated: Partial<PointDetailed>) => void;
+  onUpdate: (updated: Partial<PossessionDetailed>) => void;
   outcome: string;
   offence_player_list: Player[];
   defence_player_list: Player[];

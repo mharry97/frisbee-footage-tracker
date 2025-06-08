@@ -1,19 +1,4 @@
-export function formatDate(dateString: string) {
-  const date = new Date(dateString)
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  }).format(date)
-}
-
-/**
- * Determines the footage provider (YouTube, Google Drive, Veo, or other)
- * based on the given URL string.
- *
- * @param url - The footage URL
- * @returns 'youtube' | 'google_drive' | 'veo' | 'other'
- */
+// Determin footage provider from URL
 export function getFootageProvider(
   url: string
 ): "youtube" | "google_drive" | "veo" | "other" {
@@ -48,7 +33,6 @@ export function getFootageProvider(
 
 export function convertTimestampToSeconds(timestamp: string): number {
   const parts = timestamp.split(":").map(Number);
-
   if (parts.length === 3) {
     // hh:mm:ss (normal)
     const [hours, minutes, seconds] = parts;
@@ -60,7 +44,6 @@ export function convertTimestampToSeconds(timestamp: string): number {
   } else if (parts.length === 1 && !isNaN(parts[0])) {
     return parts[0]; // already seconds
   }
-
   return 0;
 }
 

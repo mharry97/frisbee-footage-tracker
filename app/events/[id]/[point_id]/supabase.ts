@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase"
-import type { Point, Possession } from "@/lib/supabase"
+import { type Point } from "@/app/points/supabase"
+import type { Possession } from "@/lib/supabase"
 
 // Fetch point info
 export async function fetchPointById(pointId: string): Promise<Point[]> {

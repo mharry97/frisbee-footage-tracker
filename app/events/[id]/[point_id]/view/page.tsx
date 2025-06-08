@@ -12,8 +12,8 @@ import {
   Dialog,
   CloseButton, Box
 } from "@chakra-ui/react";
-import { fetchDetailPoint } from "@/app/points/supabase";
-import type {Player, PointDetailed} from "@/lib/supabase";
+import { fetchPointPossessions, PossessionDetailed } from "@/app/possessions/supabase";
+import type { Player } from "@/lib/supabase";
 import OnPageVideoLink from "@/components/on-page-video-link";
 import PointOverview from "@/app/events/[id]/[point_id]/view/components/point-overview";
 import PossessionSection from "@/app/events/[id]/[point_id]/view/components/possession-section";
@@ -29,7 +29,7 @@ import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 function PointViewContent() {
   const { id, point_id } = useParams<{ id: string; point_id: string }>()
   const { player } = useAuth()
-  const [point, setPoint] = useState<PointDetailed[]>([]);
+  const [point, setPoint] = useState<PossessionDetailed[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [offencePlayers, setOffencePlayers] = useState<Player[]>([]);
@@ -43,7 +43,7 @@ function PointViewContent() {
 
     const load = async () => {
       setLoading(true);
-      const data = await fetchDetailPoint(point_id);
+      const data = await fetchPointPossessions(point_id);
       setPoint(data);
       setLoading(false);
     };
@@ -109,12 +109,12 @@ function PointViewContent() {
 
   const refreshData = async () => {
     setLoading(true);
-    const data = await fetchDetailPoint(point_id);
+    const data = await fetchPointPossessions(point_id);
     setPoint(data);
     setLoading(false);
   };
 
-  const handleUpdate = async (updated: Partial<PointDetailed>) => {
+  const handleUpdate = async (updated: Partial<PossessionDetailed>) => {
     try {
       const { point_id, possession_number } = possession;
       if (!point_id || possession_number == null) return;

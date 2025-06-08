@@ -3,8 +3,7 @@
 import React, {useEffect, useState} from "react";
 import {Box, Container, LinkBox, LinkOverlay, Table, Text} from "@chakra-ui/react";
 import NextLink from "next/link";
-import {fetchAllPoints} from "@/app/points/supabase";
-import type {Point} from "@/lib/supabase";
+import {fetchAllPoints, type PointDetailed} from "@/app/points/supabase";
 import {BaseTeamInfo, fetchTeamMapping} from "@/app/teams/supabase";
 import {AuthWrapper} from "@/components/auth-wrapper";
 import {useAuth} from "@/lib/auth-context.tsx";
@@ -14,7 +13,7 @@ import StandardHeader from "@/components/standard-header.tsx";
 function EventsPageContent() {
   const { player } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [points, setPoints] = useState<Point[]>([]);
+  const [points, setPoints] = useState<PointDetailed[]>([]);
   const [teamMapping, setTeamMapping] = useState<BaseTeamInfo[]>([]);
 
   // Fetch data needed for page

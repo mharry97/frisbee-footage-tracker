@@ -1,5 +1,6 @@
 import { type Player, supabase } from "@/lib/supabase";
 import { getHomeTeam } from "@/app/teams/supabase";
+import {PointDetailed} from "@/app/points/supabase.ts";
 
 export type TeamPlayer = {
   player_id: string
@@ -58,27 +59,16 @@ export async function fetchPlayersForTeam(teamId: string): Promise<Player[]> {
 
 
 // Get the number of points played by each player
-export type PointsByPlayer = {
-  point_id: string;
-  player_id: string;
-  player_name: string;
-  event_name: string;
-  event_id: string;
-  event_date: string;
-  timestamp: string;
-  timestamp_url: string;
-  point_offence_team: string;
-  point_offence_team_name: string;
-  point_defence_team: string;
-  point_defence_team_name: string;
-  point_outcome: string;
-}
+export type PointsByPlayer = PointDetailed & { player_id: string }
 
 export async function getPlayerPointsPlayed(player_id: string):  Promise<PointsByPlayer[]> {
   const { error, data } = await supabase
     .from('view_player_point_detail')
     .select("*")
     .eq("player_id", player_id)
+    .order("event_date", { ascending: false })
+    .order("event_name", { ascending: true })
+    .order("timestamp_seconds", { ascending: false });
 
   if (error) throw error;
   return data ?? [];

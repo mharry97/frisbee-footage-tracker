@@ -16,7 +16,7 @@ interface CustomTabsProps {
 
 const CustomTabs: React.FC<CustomTabsProps> = ({ defaultValue, tabs }) => {
   return (
-    <Tabs.Root defaultValue={defaultValue} variant="outline" colorPalette="yellow">
+    <Tabs.Root defaultValue={defaultValue} variant="line" colorPalette="yellow">
       <Tabs.List>
         {tabs.map((tab) => (
           <Tabs.Trigger key={tab.value} value={tab.value}>
