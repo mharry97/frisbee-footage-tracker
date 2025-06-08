@@ -5,7 +5,7 @@ export type Event = {
   event_id: string
   event_name: string
   event_date: string
-  type: "Game" | "Training" | "Scrimmage"
+  type: "Game" | "Training"
   team_1_id: string
   team_2_id: string
 }
@@ -14,7 +14,7 @@ export type EventDetail = {
   event_id: string
   event_name: string
   event_date: string
-  type: "Game" | "Training" | "Scrimmage"
+  type: "Game" | "Training"
   team_1_id: string
   team_1: string
   team_1_scores: number
@@ -28,7 +28,7 @@ export type EventDetail = {
 export async function fetchEvents(): Promise<EventDetail[]> {
   try {
     const { data } = await supabase
-      .from("view_events_detail")
+      .from("view_event_detail")
       .select("*")
       .order("event_date", { ascending: false });
 
@@ -56,11 +56,11 @@ export async function fetchEvent(event_id: string): Promise<Event | null> {
 }
 
 type AddEvent = {
-  event_name:     string,
-  event_date:      string,
-  type:      'Game' | 'Training' | 'Scrimmage',
-  team_1_id?:  string,
-  team_2_id?:  string
+  event_name: string,
+  event_date: string,
+  type: 'Game' | 'Training',
+  team_1_id?: string,
+  team_2_id?: string
 }
 
 // Insert event
@@ -75,13 +75,12 @@ export async function addEvent(data: AddEvent): Promise<void> {
     team_1_id = data.team_1_id ?? null
     team_2_id = data.team_2_id ?? null
 
-  } else if (data.type === 'Scrimmage') {
-    // For scrimmages, look up the home team
+  } else if (data.type === 'Training') {
+    // For training, make both teams home team
     const homeId = await getHomeTeam()
     team_1_id = homeId
     team_2_id = homeId
   }
-  // If training leave teams as null
 
   const { error } = await supabase
     .from('events')

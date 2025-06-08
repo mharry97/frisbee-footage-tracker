@@ -270,34 +270,14 @@ function EventPageContent() {
     </>
   )
 
-  const ActivitiesContent = () => (
-    <FloatingActionButton aria-label="Add Activity" />
-  );
-
   const ClipsContent = () => (
     <>
       <ClipGrid clips={clipData}></ClipGrid>
     </>
   );
 
-  // Determine if this event is a scrimmage
-  const isTraining = eventData?.type === "Training";
-
-  // Set up the tabs array based on the event type
-  const tabs = isTraining
-    ? [
-      {
-        value: "activities",
-        label: "activities",
-        content: <ActivitiesContent />,
-      },
-      {
-        value: "clips",
-        label: "clips",
-        content: <ClipsContent />,
-      },
-    ]
-    : [
+  // Set up the tabs available
+  const tabs = [
       {
         value: "overview",
         label: "Overview",
@@ -315,9 +295,6 @@ function EventPageContent() {
       },
     ];
 
-  // Determine the default tab
-  const defaultTab = isTraining ? "activities" : "overview";
-
   if (!player || loading) {
     return (
       <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
@@ -330,9 +307,9 @@ function EventPageContent() {
     <Container maxW="4xl">
       <StandardHeader text={eventData ? eventData.event_name : ""} is_admin={player.is_admin} />
       {loading ? (
-        <LoadingSpinner text="loading..." />
+        <LoadingSpinner text="Loading..." />
       ) : (
-        <CustomTabs defaultValue={defaultTab} tabs={tabs} />
+        <CustomTabs defaultValue="overview" tabs={tabs} />
       )}
     </Container>
   );

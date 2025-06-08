@@ -24,7 +24,7 @@ interface PortalProps {
   currentData?: EventDetail;
   onSuccess?: () => void;
 }
-const game_types = z.enum(["Game", "Training", "Scrimmage"])
+const game_types = z.enum(["Game", "Training"])
 
 const schema = z.object({
   event_name: z.string(),
@@ -49,7 +49,7 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
   }, [state.value])
 
   const typeCollection = createListCollection({
-    items: ["Game", "Training", "Scrimmage"],
+    items: ["Game", "Training"],
     itemToString: (item) => item,
     itemToValue: (item) => item,
   })
@@ -174,7 +174,7 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
                             </Select.Control>
                             <Select.Positioner>
                               <Select.Content>
-                                {["Game", "Training", "Scrimmage"].map((item) => (
+                                {["Game", "Training"].map((item) => (
                                   <Select.Item item={item} key={item}>
                                     {item}
                                     <Select.ItemIndicator />

@@ -36,7 +36,7 @@ export async function fetchHomePlayers(): Promise<Player[]> {
 // Fetch team player mappings
 export async function fetchPlayerTeamMapping(): Promise<TeamPlayer[]> {
   const { data, error } = await supabase
-    .from("view_player_info")
+    .from("view_player_detail")
     .select("*")
 
   if (error) throw error;
@@ -76,7 +76,7 @@ export type PointsByPlayer = {
 
 export async function getPlayerPointsPlayed(player_id: string):  Promise<PointsByPlayer[]> {
   const { error, data } = await supabase
-    .from('point_players_exp')
+    .from('view_player_point_detailed')
     .select("*")
     .eq("player_id", player_id)
 
