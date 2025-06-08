@@ -5,9 +5,10 @@ import { FaAngleDown } from "react-icons/fa";
 
 interface CollapsibleMainMenuProps {
   is_admin: boolean;
+  is_home?: boolean;
 }
 
-export default function CollapsibleMainMenu({is_admin}: CollapsibleMainMenuProps) {
+export default function CollapsibleMainMenu({is_admin, is_home}: CollapsibleMainMenuProps) {
   return (
     <>
       <Collapsible.Root>
@@ -20,7 +21,7 @@ export default function CollapsibleMainMenu({is_admin}: CollapsibleMainMenuProps
           </Box>
         </Collapsible.Trigger>
         <Collapsible.Content>
-          <MainMenu is_admin={is_admin} />
+          <MainMenu is_admin={is_admin} is_home={is_home} />
         </Collapsible.Content>
       </Collapsible.Root>
       <Separator mb={4} />

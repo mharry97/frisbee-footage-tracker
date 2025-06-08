@@ -186,13 +186,13 @@ function EventPageContent() {
             </Card.Body>
             <Card.Footer gap="2">
               <NextLink href={`/events/${item.event_id}/${item.point_id}/view`} passHref>
-                <Button variant="solid">
+                <Button variant="solid" colorPalette="gray">
                   Details
                 </Button>
               </NextLink>
-              <Dialog.Root size="full">
+              <Dialog.Root size="xl">
                 <Dialog.Trigger asChild>
-                  <Button variant="ghost">Quick View</Button>
+                  <Button variant="ghost" colorPalette="gray">Quick View</Button>
                 </Dialog.Trigger>
                 <Portal>
                   <Dialog.Backdrop />

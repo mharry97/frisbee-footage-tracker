@@ -6,11 +6,11 @@ import { getFootageProvider } from "@/lib/utils";
 import {AspectRatio, Center, Container, Link, Text} from "@chakra-ui/react";
 import { getVeoVideoUrl } from "@/app/sources/actions";
 
-type TurnoverFormProps = {
+type VideoProps = {
   url: string;
 };
 
-export default function OnPageVideoLink({ url }: TurnoverFormProps) {
+export default function OnPageVideoLink({ url }: VideoProps) {
   const [veoVideoUrl, setVeoVideoUrl] = useState<string | null>(null);
   const [veoLoading, setVeoLoading] = useState(false);
 

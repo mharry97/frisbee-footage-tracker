@@ -7,9 +7,11 @@ import { TbPlaylistAdd } from "react-icons/tb";
 import { LuClapperboard } from "react-icons/lu";
 import { MdOutlineAdminPanelSettings, MdOutlineScoreboard } from "react-icons/md";
 import { IoPeopleOutline } from "react-icons/io5";
+import { IoHomeOutline } from "react-icons/io5";
 
 interface MainMenuProps {
   is_admin: boolean;
+  is_home?: boolean;
 }
 
 interface HorizontalMenuItem {
@@ -58,8 +60,11 @@ function HorizontalIconMenu({ menuItems }: { menuItems: HorizontalMenuItem[] }) 
   );
 }
 
-export default function MainMenu({ is_admin }: MainMenuProps) {
+export default function MainMenu({ is_admin, is_home }: MainMenuProps) {
   const menuItems: HorizontalMenuItem[] = [
+    ...(!is_home
+      ? [{ title: "Home", href: "/", iconComponent: IoHomeOutline }]
+      : []),
     { title: "Sources", href: "/sources", iconComponent: FiDatabase },
     { title: "Events", href: "/events", iconComponent: FaRegCalendarAlt },
     { title: "Playlists", href: "/playlists", iconComponent: TbPlaylistAdd },

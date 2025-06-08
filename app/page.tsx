@@ -93,7 +93,7 @@ function HomepageContent() {
       <Heading as="h1" fontWeight="light" size='4xl' color="white" mb={4} mt={4}>
         Hello, {player.player_name}
       </Heading>
-      <MainMenu is_admin={player.is_admin} />
+      <MainMenu is_admin={player.is_admin} is_home />
       <HStack mb={6}>
         <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
         <Text flexShrink="0" fontSize="2xl" >Player Overview</Text>
@@ -161,7 +161,7 @@ function HomepageContent() {
                   Details
                 </Button>
               </NextLink>
-              <Dialog.Root size="full">
+              <Dialog.Root size="xl">
                 <Dialog.Trigger asChild>
                   <Button variant="ghost">Quick View</Button>
                 </Dialog.Trigger>
