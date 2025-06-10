@@ -30,7 +30,7 @@ interface PortalProps {
 const schema = z.object({
   source_id: z.string().array(),
   timestamp: z.string(),
-  offence_team: z.string().array(),
+  offence_team: z.string().array().min(1, { message: "Please select an offence team." }),
   offence_team_players: z.string().array().max(7, { message: "You can select a maximum of 7 offence players." }),
   defence_team_players: z.string().array().max(7, { message: "You can select a maximum of 7 defence players." }),
 });
@@ -130,13 +130,18 @@ const PointForm = ({ event_id }: PortalProps) => {
   }
 
   const onSubmit: SubmitHandler<PointData> = async (data) => {
-    const defence_team = "" // Need to calculate this
+    if (!defenceTeamData?.team_id) {
+      setError("root", {
+        message: "Please select an offence team to determine the defence team.",
+      });
+      return;
+    }
     const payload = {
       ...data,
       source_id: data.source_id[0],
       offence_team: data.offence_team[0],
       event_id,
-      defence_team
+      defence_team: defenceTeamData.team_id
     };
     try {
       await addPoint(payload)
@@ -336,7 +341,7 @@ const PointForm = ({ event_id }: PortalProps) => {
                                   <Select.Item item={player} key={player.player_id}>
                                     <Stack gap={0}>
                                       <Text>{player.player_name}</Text>
-                                      <Text color="fg.muted" fontSize="xs">{player.number ? "#" : ""}{player.number}</Text>
+                                      <Text color="fg.muted" fontSize="xs">{player.number ? "#" : ""}{player.number}{player.is_active ? "Active" : "Inactive"}</Text>
                                     </Stack>
                                     <Select.ItemIndicator />
                                   </Select.Item>

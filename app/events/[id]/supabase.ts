@@ -1,8 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { Player } from "@/app/players/supabase"
-import {TeamDetailed} from "@/app/teams/supabase.ts";
 
-type CollectionPlayerDetailed = Omit<Player, "notes"|"is_active"|"is_admin"|"is_editor"|"username"> & {
+type CollectionPlayerDetailed = Omit<Player, "notes"|"is_admin"|"is_editor"|"username"> & {
   team_id: string,
   team_name: string,
 }
