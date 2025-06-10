@@ -16,8 +16,7 @@ import { fetchSources, Source } from "@/app/sources/supabase";
 import type { Player } from "@/lib/supabase";
 import { useToast } from "@chakra-ui/toast";
 import { fetchEvent } from "@/app/events/supabase";
-import { fetchBaseTeamInfo } from "@/app/teams/supabase";
-import type { BaseTeamInfo } from "@/app/teams/supabase";
+import { fetchTeam, TeamDetailed } from "@/app/teams/supabase";
 import { fetchHomePlayers } from "@/app/teams/[team_id]/[player_id]/supabase";
 import { writePoint, writePointPlayers } from "./supabase";
 import {useParams, useRouter} from "next/navigation";
@@ -53,7 +52,7 @@ function EventPageContent() {
   const [timestamp, setTimestamp] = useState("");
   const [homePlayers, setHomePlayers] = useState<Player[]>([]);
   const [offenceTeam, setOffenceTeam] = useState("");
-  const [teamData, setTeamData] = useState<BaseTeamInfo[]>([]);
+  const [teamData, setTeamData] = useState<TeamDetailed[]>([]);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>(Array(7).fill(""));
 
   const toast = useToast();
@@ -69,9 +68,9 @@ function EventPageContent() {
         const eventData = await fetchEvent(id);
         if (eventData) {
           // Fetch team info for both teams and combine them
-          const team1Data = await fetchBaseTeamInfo(eventData.team_1_id);
-          const team2Data = await fetchBaseTeamInfo(eventData.team_2_id);
-          const teams: BaseTeamInfo[] = [];
+          const team1Data = await fetchTeam(eventData.team_1_id);
+          const team2Data = await fetchTeam(eventData.team_2_id);
+          const teams: TeamDetailed[] = [];
           if (team1Data) teams.push(team1Data);
           if (team2Data) teams.push(team2Data);
           setTeamData(teams);

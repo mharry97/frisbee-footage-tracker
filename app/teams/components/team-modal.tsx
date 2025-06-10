@@ -33,7 +33,7 @@ export default function TeamModal() {
 
   const onSubmit: SubmitHandler<TeamData> = async (data) => {
     try {
-      await addTeamMutation(data.team_name);
+      await addTeamMutation(data);
     } catch (error) {
       if (error instanceof Error) {
         setError("root", {

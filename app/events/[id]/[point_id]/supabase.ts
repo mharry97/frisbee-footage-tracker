@@ -1,11 +1,11 @@
 import { supabase } from "@/lib/supabase"
-import { type Point } from "@/app/points/supabase"
+import {type Point, PointDetailed} from "@/app/points/supabase"
 import type { Possession } from "@/lib/supabase"
 
 // Fetch point info
-export async function fetchPointById(pointId: string): Promise<Point[]> {
+export async function fetchPointById(pointId: string): Promise<PointDetailed[]> {
   try {
-    const { data } = await supabase.from("points").select("*").eq("point_id", pointId)
+    const { data } = await supabase.from("view_point_detail").select("*").eq("point_id", pointId)
 
     console.log(pointId)
     return data || []

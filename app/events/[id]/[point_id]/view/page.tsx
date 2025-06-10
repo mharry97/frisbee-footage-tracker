@@ -25,6 +25,7 @@ import {useParams} from "next/navigation";
 import {useAuth} from "@/lib/auth-context.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
 import {AuthWrapper} from "@/components/auth-wrapper.tsx";
+import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
 
 function PointViewContent() {
   const { id, point_id } = useParams<{ id: string; point_id: string }>()
@@ -242,7 +243,7 @@ function PointViewContent() {
         scorer={scorer}
       />
 
-      <OnPageVideoLink url={point[0].timestamp_url!} />
+      <OnPageVideoLink url={baseUrlToTimestampUrl(point[0].base_url, point[0].timestamp)} />
 
       {/* Navigation controls */}
       <HStack justify="space-between" mt={5}>

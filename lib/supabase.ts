@@ -20,13 +20,6 @@ export type PointPlayer = {
   point_id: string
 }
 
-export type Team = {
-  team_id: string
-  team_name: string
-  created_at: string
-  is_home_team: boolean
-}
-
 // export type Activity = {
 //   activity_id: string
 //   created_at: string
@@ -73,8 +66,8 @@ export type Clip = {
   description: string
   event_id: string | null
   is_public: boolean
+  base_url: string
   timestamp: string
-  timestamp_url: string
 }
 
 export type Playlist = {

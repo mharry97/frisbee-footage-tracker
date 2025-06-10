@@ -11,6 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { Clip } from "@/lib/supabase";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
+import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
 type ClipCardProps = { clip: Clip };
 
 function ClipCard({ clip }: ClipCardProps) {
@@ -38,7 +39,7 @@ function ClipCard({ clip }: ClipCardProps) {
                   <Dialog.Title>{clip.title}</Dialog.Title>
                 </Dialog.Header>
                 <Dialog.Body>
-                  <OnPageVideoLink url={clip.timestamp_url} />
+                  <OnPageVideoLink url={baseUrlToTimestampUrl(clip.base_url, clip.timestamp)} />
                 </Dialog.Body>
                 <Dialog.CloseTrigger asChild>
                   <CloseButton size="sm" />

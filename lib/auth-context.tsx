@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.log("Starting to load player data...")
     try {
       const playerData = await getCurrentPlayerData()
-      console.log("Player data loaded:", playerData)
+      // console.log("Player data loaded:", playerData)
       setPlayer(playerData)
     } catch (error) {
       console.error("Error loading player data:", error)

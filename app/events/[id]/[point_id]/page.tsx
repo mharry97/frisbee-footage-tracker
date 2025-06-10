@@ -19,13 +19,13 @@ import {
   type Play, fetchPossessionsForPoint,
 } from "@/app/events/[id]/[point_id]/supabase";
 import type { Player} from "@/lib/supabase";
-import type { Point } from "@/app/points/supabase"
+import type { PointDetailed } from "@/app/points/supabase"
 import type { Event } from "@/app/events/supabase";
 import { useToast } from "@chakra-ui/toast";
-import { getTeamName } from "@/lib/utils";
+import {baseUrlToTimestampUrl, getTeamName} from "@/lib/utils";
 import FloatingClipButton from "@/components/ui/add-clip-button";
 import { fetchEvent } from "@/app/events/supabase";
-import { BaseTeamInfo, fetchTeamMapping } from "@/app/teams/supabase";
+import { TeamDetailed, fetchTeamMapping } from "@/app/teams/supabase";
 import CustomDropdownInput from "@/app/events/[id]/[point_id]/components/custom-dropdown-with-add";
 import {fetchPlayersForTeam} from "@/app/teams/[team_id]/[player_id]/supabase";
 import { writePossession} from "@/app/events/[id]/[point_id]/supabase";
@@ -44,9 +44,9 @@ function PointPageContent() {
   const { id, point_id } = useParams<{ id: string; point_id: string }>()
   const { player } = useAuth()
   const [loading, setLoading] = useState(true);
-  const [pointData, setPointData] = useState<Point[]>([]);
+  const [pointData, setPointData] = useState<PointDetailed[]>([]);
   const [eventData, setEventData] = useState<Event | null>(null);
-  const [teamMapping, setTeamMapping] = useState<BaseTeamInfo[]>([]);
+  const [teamMapping, setTeamMapping] = useState<TeamDetailed[]>([]);
   const [dMainPlays, setDMainPlays] = useState<Play[]>([]);
   const [oMainPlays, setOMainPlays] = useState<Play[]>([]);
   const [dInitPlays, setDInitPlays] = useState<Play[]>([]);
@@ -315,7 +315,7 @@ function PointPageContent() {
       <Container maxW="4xl">
         <StandardHeader text={eventName} is_admin={player.is_admin} />
         <Text mt={4} fontSize="lg" color="gray.400">{`${offence_team_name} on O starting ${currentPoint.timestamp}`}</Text>
-        <OnPageVideoLink url={currentPoint.timestamp_url}/>
+        <OnPageVideoLink url={baseUrlToTimestampUrl(currentPoint.base_url, currentPoint.timestamp)}/>
         <>
           {/* Display dynamic Possession count and current offence team */}
           <Text textStyle="3xl" mb={4} mt={4}>{`Possession #${possessionCount}`}</Text>

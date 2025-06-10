@@ -10,10 +10,27 @@ export type Source = {
   created_by: string
 }
 
+type SourceDetailed = Source & {
+  points: number
+}
+
+type InsertSourceType = {
+  title: string
+  url: string
+  recorded_date: string
+}
+
+// Upsert source
+type UpsertSourceType = InsertSourceType & {
+  source_id: string
+}
+
+// READING
+
 // Fetch all sources from Supabase
-export async function fetchSources(): Promise<Source[]> {
+export async function fetchSources(): Promise<SourceDetailed[]> {
     const { data, error } = await supabase
-      .from("sources")
+      .from("view_source_detail")
       .select("*")
       .order("recorded_date", { ascending: false })
       .order("title", { ascending: true });
@@ -34,11 +51,8 @@ export async function fetchSourceById(id: string): Promise<Source[]> {
     return data || ""
 }
 
-interface InsertSourceType {
-  title: string
-  url: string
-  recorded_date: string
-}
+// WRITING
+
 // Insert new source
 export async function addSource(data : InsertSourceType) {
   const { error } = await supabase
@@ -47,13 +61,6 @@ export async function addSource(data : InsertSourceType) {
    if (error) throw error;
 }
 
-// Upsert source
-interface UpsertSourceType {
-  title: string
-  url: string
-  recorded_date: string
-  source_id: string
-}
 export async function editSource(data: UpsertSourceType) {
   const { error } = await supabase
     .from("sources")

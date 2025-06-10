@@ -15,7 +15,6 @@ export type PointDetailed = {
   defence_team_name: string
   point_outcome: string
   base_url: string
-  timestamp_url: string
   possession_number: number
   offence_team_players: string[]
   defence_team_players: string[]
@@ -33,8 +32,6 @@ export type Point = {
   defence_team: string
   source_id: string
   created_at: string
-  base_url: string
-  timestamp_url: string
   offence_team_players: string[]
   defence_team_players: string[]
 }
@@ -83,7 +80,7 @@ export async function fetchPlayerPoints(player_id: string): Promise<PlayerPoint[
 //WRITING
 
 // Insert new point
-type AddPoint = Omit<Point, "point_id">;
+type AddPoint = Omit<Point, "point_id"|"created_at">;
 export async function addPoint(data: AddPoint): Promise<void> {
   const { error } = await supabase
     .from("points")

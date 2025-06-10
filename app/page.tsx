@@ -20,6 +20,7 @@ import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/teams/[team_id]/
 import { fetchAllPossessions } from "@/app/possessions/supabase.ts";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
 import MainMenu from "@/components/main-menu.tsx";
+import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
 
 interface StatTileProps {
   title: string;
@@ -170,7 +171,7 @@ function HomepageContent() {
                   <Dialog.Positioner>
                     <Dialog.Content>
                       <Dialog.Body>
-                        <OnPageVideoLink url={item.timestamp_url} />
+                        <OnPageVideoLink url={baseUrlToTimestampUrl(item.base_url, item.timestamp)} />
                       </Dialog.Body>
                       <Dialog.CloseTrigger asChild>
                         <CloseButton size="sm" />

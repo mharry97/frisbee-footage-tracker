@@ -9,16 +9,15 @@ import {
   SimpleGrid,
   Separator,
   Box,
-  Grid, Text, Card, Badge, Button, Dialog, Portal, CloseButton,
-} from "@chakra-ui/react";
+  Grid, Text, Card, Badge, Button, Dialog, Portal, CloseButton, HStack } from "@chakra-ui/react";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomTabs from "@/components/tabbed-page";
 import { fetchEvent, type Event } from "@/app/events/supabase";
 import { fetchEventPoints, PointDetailed } from "@/app/points/supabase";
 import type {Clip, Possession} from "@/lib/supabase";
-import {BaseTeamInfo, fetchTeamMapping} from "@/app/teams/supabase";
+import {TeamDetailed, fetchTeamMapping} from "@/app/teams/supabase";
 import {fetchEventPossessions} from "@/app/possessions/supabase";
-import {convertTimestampToSeconds} from "@/lib/utils";
+import {baseUrlToTimestampUrl, convertTimestampToSeconds} from "@/lib/utils";
 import {fetchPlayerTeamMapping} from "@/app/teams/[team_id]/[player_id]/supabase";
 import {GenericTableItem, MyDynamicTable, myPieChart, myStackedBarChart} from "@/app/stats/charts";
 import {playerStats, SequenceStat, sequenceStats, teamStats} from "@/app/stats/utils";
@@ -30,6 +29,7 @@ import {useAuth} from "@/lib/auth-context.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
 import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
+import PointForm from "@/app/events/[id]/components/new-point-form.tsx";
 
 function EventPageContent() {
   // Unwrap the promised params
@@ -39,7 +39,7 @@ function EventPageContent() {
   const [points, setPoints] = useState<PointDetailed[]>([]);
   const [possessions, setPossessions] = useState<Possession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [teamMapping, setTeamMapping] = useState<BaseTeamInfo[]>([]);
+  const [teamMapping, setTeamMapping] = useState<TeamDetailed[]>([]);
   const [playerTeamMapping, setPlayerTeamMapping] = useState<TeamPlayer[]>([]);
   const [clipData, setClipData] = useState<Clip[]>([]);
 
@@ -165,53 +165,76 @@ function EventPageContent() {
     );
 
     return (
-      <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
-        {sortedPoints.map((item, index) => (
-          <Card.Root key={index} variant="elevated">
-            <Card.Header>
-              <Card.Title>{item.event_name}</Card.Title>
-              <Card.Description>{item.timestamp}</Card.Description>
-              <Text>
-                Offence Team: {item.offence_team_name}
-              </Text>
-            </Card.Header>
-            <Card.Body>
-              <Card.Description>
-                {item.point_outcome === "break" ? (
-                  <Badge colorPalette="red">Break</Badge>
-                ) : (
-                  <Badge colorPalette="green">Hold</Badge>
-                )}
-              </Card.Description>
-            </Card.Body>
-            <Card.Footer gap="2">
-              <NextLink href={`/events/${item.event_id}/${item.point_id}/view`} passHref>
-                <Button variant="solid" colorPalette="gray">
-                  Details
-                </Button>
-              </NextLink>
-              <Dialog.Root size="xl">
-                <Dialog.Trigger asChild>
-                  <Button variant="ghost" colorPalette="gray">Quick View</Button>
-                </Dialog.Trigger>
-                <Portal>
-                  <Dialog.Backdrop />
-                  <Dialog.Positioner>
-                    <Dialog.Content>
-                      <Dialog.Body>
-                        <OnPageVideoLink url={item.timestamp_url} />
-                      </Dialog.Body>
-                      <Dialog.CloseTrigger asChild>
-                        <CloseButton size="sm" />
-                      </Dialog.CloseTrigger>
-                    </Dialog.Content>
-                  </Dialog.Positioner>
-                </Portal>
-              </Dialog.Root>
-            </Card.Footer>
-          </Card.Root>
-        ))}
-      </SimpleGrid>
+      <>
+        <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
+          {sortedPoints.map((item, index) => (
+            <Card.Root key={index} variant="elevated">
+              <Card.Header>
+                <Card.Title>
+                  <HStack justify="space-between">
+                    <Text>Offence: {item.offence_team_name}</Text>
+                    {item.point_outcome === "break" ? (
+                      <Badge colorPalette="red">Break</Badge>
+                    ) : item.point_outcome === "hold" ? (
+                      <Badge colorPalette="green">Hold</Badge>
+                    ) : (
+                      <></>
+                    )}
+                  </HStack>
+                </Card.Title>
+                <Card.Description>
+                  {item.timestamp}
+                </Card.Description>
+              </Card.Header>
+              {item.point_outcome === "unknown" ? (
+                <Card.Body>
+                  <Card.Description>
+                    Point has not been fully statted.
+                  </Card.Description>
+                </Card.Body>
+              ) : (
+                <Card.Body>
+                  <Text>
+                    Assist: {item.assist_player_name || "Unknown"}
+                  </Text>
+                  <Text>
+                    Score: {item.score_player_name || "Unknown"}
+                  </Text>
+                  <Card.Description mt={2}>
+                    {item.possession_number - 1}{item.possession_number === 2 ? " Turn" : " Turns"}
+                  </Card.Description>
+                </Card.Body>
+              )}
+              <Card.Footer gap="2">
+                <NextLink href={`/events/${item.event_id}/${item.point_id}/view`} passHref>
+                  <Button variant="solid" colorPalette="gray">
+                    Details
+                  </Button>
+                </NextLink>
+                <Dialog.Root size="xl">
+                  <Dialog.Trigger asChild>
+                    <Button variant="ghost" colorPalette="gray">Quick View</Button>
+                  </Dialog.Trigger>
+                  <Portal>
+                    <Dialog.Backdrop />
+                    <Dialog.Positioner>
+                      <Dialog.Content>
+                        <Dialog.Body>
+                          <OnPageVideoLink url={baseUrlToTimestampUrl(item.base_url, item.timestamp)} />
+                        </Dialog.Body>
+                        <Dialog.CloseTrigger asChild>
+                          <CloseButton size="sm" />
+                        </Dialog.CloseTrigger>
+                      </Dialog.Content>
+                    </Dialog.Positioner>
+                  </Portal>
+                </Dialog.Root>
+              </Card.Footer>
+            </Card.Root>
+          ))}
+        </SimpleGrid>
+        <PointForm event_id={id} />
+      </>
     );
   };
 

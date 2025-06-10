@@ -14,13 +14,12 @@ export type PossessionDetailed = {
   turn_receive_zone: number | null
   turnover_reason: string | null
   score_method: string | null
-  offence_team: string | null
-  offence_team_name: string | null
-  defence_team: string | null
-  defence_team_name: string | null
-  possession_number: number | null
+  offence_team: string
+  offence_team_name: string
+  defence_team: string
+  defence_team_name: string
+  possession_number: number
   is_score: boolean
-  timestamp_url: string | null
   point_offence_team: string | null
   point_offence_team_name: string | null
   point_defence_team: string | null
@@ -35,8 +34,9 @@ export type PossessionDetailed = {
   turn_intended_receiver_name: string | null
   d_player: string | null
   d_player_name: string | null
-  timestamp: string | null
-  event_date: string | null
+  timestamp: string
+  base_url: string
+  event_date: string
 }
 
 // Fetch basic info for all possessions from Supabase for a given event_id
