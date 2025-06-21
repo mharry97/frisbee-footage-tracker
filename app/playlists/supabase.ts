@@ -1,4 +1,4 @@
-import {Clip, PointPlayer, supabase} from "@/lib/supabase"
+import { supabase} from "@/lib/supabase"
 import type { Playlist, PlaylistClip } from "@/lib/supabase"
 
 
@@ -11,12 +11,11 @@ export type PlaylistWithCreator = Omit<Playlist, 'creator'> & {
   creator: { player_name: string };
 };
 export async function fetchPlaylists(): Promise<PlaylistWithCreator[]> {
-  try {
     const { data, error } = await supabase
       .from("playlists")
       .select(`
         *,
-        creator:players (
+        created_by:players (
           player_name
         )
       `)
@@ -24,10 +23,6 @@ export async function fetchPlaylists(): Promise<PlaylistWithCreator[]> {
 
     if (error) throw error;
     return data ?? [];
-  } catch (error) {
-    console.error("Error fetching playlists:", error);
-    return [];
-  }
 }
 
 export async function fetchPlaylist(id: string): Promise<Playlist | null> {

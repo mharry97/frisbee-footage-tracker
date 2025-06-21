@@ -22,6 +22,7 @@ export type PointDetailed = {
   score_player: string
   assist_player_name: string
   score_player_name: string
+  possessions_statted: number
 }
 
 export type Point = {
@@ -36,6 +37,14 @@ export type Point = {
   defence_team_players: string[]
 }
 
+export type PointPlayers = {
+  point_id: string
+  offence_team_players: string[]
+  defence_team_players: string[]
+}
+
+type AddPoint = Omit<Point, "point_id"|"created_at"|"offence_team_players"|"defence_team_players">;
+
 // READING
 
 // Fetch all points
@@ -48,6 +57,18 @@ export async function fetchAllPoints(): Promise<PointDetailed[]> {
 
   if (error) throw error;
   return data ?? [];
+}
+
+// Fetch specific point info
+export async function fetchPoint(point:string): Promise<PointDetailed> {
+  const { data, error } = await supabase
+    .from("view_point_detail")
+    .select("*")
+    .eq("point_id", point)
+    .single()
+
+  if (error) throw error;
+  return data;
 }
 
 //Fetch all points for event
@@ -80,13 +101,15 @@ export async function fetchPlayerPoints(player_id: string): Promise<PlayerPoint[
 //WRITING
 
 // Insert new point
-type AddPoint = Omit<Point, "point_id"|"created_at">;
-export async function addPoint(data: AddPoint): Promise<void> {
-  const { error } = await supabase
+export async function addPoint(input: AddPoint): Promise<string> {
+  const { data, error } = await supabase
     .from("points")
-    .insert(data)
+    .insert(input)
+    .select("point_id")
+    .single()
 
   if (error) throw error;
+  return data.point_id || ""
 }
 
 // Update point
@@ -95,6 +118,19 @@ export async function editPoint(data: Point): Promise<void> {
     .from("points")
     .upsert(data)
     .eq("event_id", data.event_id);
+
+  if (error) throw error;
+}
+
+//Update players in a point
+export async function updatePointPlayers(data: PointPlayers): Promise<void> {
+  const { error } = await supabase
+    .from("points")
+    .update({
+      offence_team_players: data.offence_team_players,
+      defence_team_players: data.defence_team_players
+    })
+    .eq("point_id", data.point_id)
 
   if (error) throw error;
 }

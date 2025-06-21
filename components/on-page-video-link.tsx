@@ -63,7 +63,7 @@ export default function OnPageVideoLink({ url }: VideoProps) {
     if (veoVideoUrl) {
       return (
         <Container>
-          <AspectRatio ratio={16 / 9} w="full" maxW="4xl" mx="auto">
+          <AspectRatio ratio={16 / 9} w="full" maxW="4xl" mx="auto" mb={4} mt={4}>
             <video
               src={veoVideoUrl}
               controls

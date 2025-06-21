@@ -133,9 +133,9 @@ function HomepageContent() {
         />
       </Box>
       <HStack mb={6}>
-        <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
+        <Separator flex="1" size="sm"></Separator>
         <Text flexShrink="0" fontSize="xl" >Your Points</Text>
-        <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
+        <Separator flex="1" size="sm"></Separator>
       </HStack>
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
         {playerPoints.map((item) => (

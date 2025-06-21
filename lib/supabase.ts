@@ -40,15 +40,15 @@ export type Player = {
 
 export type Possession = {
   point_id: string
-  offence_init: string
-  defence_init: string
-  offence_main: string
-  defence_main: string
+  offence_init: string | null
+  defence_init: string | null
+  offence_main: string | null
+  defence_main: string | null
   throws: number
-  turn_throw_zone: number
-  turn_receive_zone: number
-  turnover_reason: string
-  score_method: string
+  turn_throw_zone: number | null
+  turn_receive_zone: number | null
+  turnover_reason: string | null
+  score_method: string | null
   score_player: string | null
   assist_player: string | null
   offence_team: string
@@ -58,16 +58,6 @@ export type Possession = {
   d_player: string | null
   possession_number: number
   is_score: boolean
-}
-
-export type Clip = {
-  clip_id: string
-  title: string
-  description: string
-  event_id: string | null
-  is_public: boolean
-  base_url: string
-  timestamp: string
 }
 
 export type Playlist = {

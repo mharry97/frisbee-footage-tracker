@@ -13,7 +13,7 @@ import { useToast } from "@chakra-ui/toast";
 import {Source} from "@/app/sources/supabase";
 import {fetchSources} from "@/app/sources/supabase";
 import {upsertClip} from "@/app/clips/supabase";
-import {baseUrlToTimestampUrl} from "@/lib/utils";
+import {baseUrlToTimestampUrl, convertTimestampToSeconds} from "@/lib/utils";
 import {upsertPlaylistClip} from "@/app/playlists/supabase";
 
 interface AddSourceClipModalProps {
@@ -63,7 +63,8 @@ export function AddSourceClipModal({ isOpen, onClose, playlistId }: AddSourceCli
         timestamp,
         description,
         is_public: true,
-        timestamp_url: baseUrlToTimestampUrl(source, timestamp)
+        base_url: baseUrlToTimestampUrl(source, timestamp),
+        timestamp_seconds: convertTimestampToSeconds(timestamp)
       });
 
       await upsertPlaylistClip({

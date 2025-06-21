@@ -14,15 +14,14 @@ import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomTabs from "@/components/tabbed-page";
 import { fetchEvent, type Event } from "@/app/events/supabase";
 import { fetchEventPoints, PointDetailed } from "@/app/points/supabase";
-import type {Clip, Possession} from "@/lib/supabase";
-import {TeamDetailed, fetchTeamMapping} from "@/app/teams/supabase";
+import type {Possession} from "@/lib/supabase";
+import {TeamDetailed, fetchTeamMapping } from "@/app/teams/supabase";
 import {fetchEventPossessions} from "@/app/possessions/supabase";
 import {baseUrlToTimestampUrl, convertTimestampToSeconds} from "@/lib/utils";
 import {fetchPlayerTeamMapping} from "@/app/teams/[team_id]/[player_id]/supabase";
 import {GenericTableItem, MyDynamicTable, myPieChart, myStackedBarChart} from "@/app/stats/charts";
 import {playerStats, SequenceStat, sequenceStats, teamStats} from "@/app/stats/utils";
-import {fetchEventClips} from "@/app/clips/supabase";
-import {ClipGrid} from "@/app/clips/components/clip-grid";
+import { fetchClips } from "@/app/clips/supabase";
 import {TeamPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
 import {useParams} from "next/navigation";
 import {useAuth} from "@/lib/auth-context.tsx";
@@ -30,6 +29,7 @@ import StandardHeader from "@/components/standard-header.tsx";
 import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
 import PointForm from "@/app/events/[id]/components/new-point-form.tsx";
+import {useQuery} from "@tanstack/react-query";
 
 function EventPageContent() {
   // Unwrap the promised params
@@ -41,7 +41,11 @@ function EventPageContent() {
   const [loading, setLoading] = useState(true);
   const [teamMapping, setTeamMapping] = useState<TeamDetailed[]>([]);
   const [playerTeamMapping, setPlayerTeamMapping] = useState<TeamPlayer[]>([]);
-  const [clipData, setClipData] = useState<Clip[]>([]);
+
+  const { data: clips, isLoading } = useQuery({
+    queryFn: () => fetchClips(),
+    queryKey: ["clips"]
+  })
 
 
   // Fetch data needed for page
@@ -67,10 +71,6 @@ function EventPageContent() {
       // Fetch team id/name mapping table
       const teamMapping = await fetchTeamMapping();
       setTeamMapping(teamMapping);
-
-      // Get all clips
-      const clipData = await fetchEventClips(id);
-      setClipData(clipData)
 
       // Fetch player/team mapping table
       const playerTeamMapping = await fetchPlayerTeamMapping();
@@ -308,7 +308,27 @@ function EventPageContent() {
 
   const ClipsContent = () => (
     <>
-      <ClipGrid clips={clipData}></ClipGrid>
+      {!clips ? (
+        <Text color="white" fontSize="lg">No teams yet!</Text>
+      ) : (
+        <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
+          {clips.map((item) => (
+            <Card.Root key={item.clip_id} variant="elevated">
+              <Card.Header>
+                <Card.Title>{item.title}</Card.Title>
+              </Card.Header>
+              <Card.Body>
+                <Card.Description>
+                  {item.description}
+                </Card.Description>
+              </Card.Body>
+              <Card.Footer gap="2">
+                Hello
+              </Card.Footer>
+            </Card.Root>
+          ))}
+        </SimpleGrid>
+      )}
     </>
   );
 
@@ -331,7 +351,7 @@ function EventPageContent() {
       },
     ];
 
-  if (!player || loading) {
+  if (!player || loading || isLoading) {
     return (
       <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
         <Text color="white" fontSize="lg">Loading player data...</Text>

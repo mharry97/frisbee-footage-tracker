@@ -87,6 +87,8 @@ export async function deletePossession(point_id: string, possession_number: numb
   }
 }
 
+// WRITING
+
 export async function updatePossession(point_id: string, possession_number: number, data: Partial<PossessionDetailed>) {
   const { error } = await supabase
     .from("possessions")
@@ -97,3 +99,14 @@ export async function updatePossession(point_id: string, possession_number: numb
     throw new Error(`Failed to update possession: ${error.message}`);
   }
 }
+
+// Write possession to Supabase
+export async function addPossession(possessionData: Possession): Promise<void> {
+    const { error } = await supabase
+      .from("possessions")
+      .insert(possessionData)
+
+    if (error) throw error;
+}
+
+
