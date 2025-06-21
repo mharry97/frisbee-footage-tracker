@@ -16,20 +16,19 @@ import {
   Center, Button
 } from "@chakra-ui/react";
 import StandardHeader from "@/components/standard-header.tsx";
-import {useParams} from "next/navigation";
-import {fetchPoint, updatePointPlayers} from "@/app/points/supabase.ts";
-import { Strategy } from "@/app/strategies/supabase"
+import {useParams, useRouter} from "next/navigation";
+import { updatePointPlayers} from "@/app/points/supabase.ts";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
 import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {addPossession, fetchPointPossessions} from "@/app/possessions/supabase.ts";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
+import {addPossession } from "@/app/possessions/supabase.ts";
 import {Controller, SubmitHandler, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {isValid, z} from "zod";
-import {getPlayersForTeam, PlayerDetailed} from "@/app/players/supabase.ts";
-import {fetchStrategiesByType} from "@/app/strategies/supabase.ts";
+import { PlayerDetailed } from "@/app/players/supabase.ts";
 import {AsyncDropdown} from "@/components/async-dropdown.tsx";
 import ThrowCounter from "@/components/throws-input.tsx";
+import { usePointFormData, usePointFormCollections } from "@/app/hooks/usePointFormData.ts";
 
 const outcomeOptions = ["Turnover", "Score"] as const
 const turnoverReasons = ["Drop", "Throw Away", "Block", "Stallout"] as const
@@ -66,7 +65,8 @@ type AddPossession = z.infer<typeof schema>;
 
 function PossessionPageContent() {
   const {player} = useAuth()
-  const { point_id } = useParams<{ event_id: string, point_id: string }>();
+  const router = useRouter();
+  const { id, point_id } = useParams<{ id: string, point_id: string }>();
   const queryClient = useQueryClient()
   const {
     handleSubmit,
@@ -78,80 +78,23 @@ function PossessionPageContent() {
     formState: {errors, isSubmitting}} = useForm<AddPossession>({
     resolver:zodResolver(schema),
   })
+  const { data, isLoading, error } = usePointFormData(point_id);
 
-
-  const {
-    data,
-    isLoading,
-  } = useQuery({
-    queryKey: ['pointPageData', point_id],
-    queryFn: async () => {
-      const pointData = await fetchPoint(point_id);
-      if (!pointData) {
-        throw new Error("Point not found.");
-      }
-      const [
-        possessionsData,
-        offencePlayers,
-        defencePlayers,
-        dInitStrats,
-        oInitStrats,
-        dMainStrats,
-        oMainStrats
-      ] = await Promise.all([
-        fetchPointPossessions(point_id),
-        getPlayersForTeam(pointData.offence_team),
-        getPlayersForTeam(pointData.defence_team),
-        fetchStrategiesByType("defence_initiation"),
-        fetchStrategiesByType("offence_initiation"),
-        fetchStrategiesByType("defence_main"),
-        fetchStrategiesByType("offence_main"),
-      ]);
-      return {
-        point: pointData,
-        possessions: possessionsData,
-        dropdownLists: {
-          offencePlayers,
-          defencePlayers,
-          dInitStrats,
-          oInitStrats,
-          dMainStrats,
-          oMainStrats,
-        },
-      };
-    },
-    enabled: !!point_id,
-  });
+  if (error) throw error;
 
   const { point, possessions, dropdownLists } = data || {
     point: null,
     possessions: [],
     dropdownLists: {},
   };
+  const collections = usePointFormCollections(data);
 
   const possessionNumber = useMemo(() => {
     return (possessions?.length ?? 0) + 1;
   }, [possessions]);
 
-  const offenceCollection = useMemo(() => {
-    return createListCollection({
-      items: dropdownLists?.offencePlayers ?? [],
-      itemToString: (player) => player.player_name,
-      itemToValue: (player) => player.player_id,
-    })
-  }, [dropdownLists])
-  const selectedOffencePlayerIds = watch("offence_team_players");
-
-
-
-  const defenceCollection = useMemo(() => {
-    return createListCollection({
-      items: dropdownLists?.defencePlayers ?? [],
-      itemToString: (player) => player.player_name,
-      itemToValue: (player) => player.player_id,
-    })
-  }, [dropdownLists])
   const selectedDefencePlayerIds = watch("defence_team_players");
+  const selectedOffencePlayerIds = watch("offence_team_players");
 
   const availableOnDefenceCollection = useMemo(() => {
     const allDefencePlayers = dropdownLists?.defencePlayers ?? [];
@@ -191,6 +134,7 @@ function PossessionPageContent() {
     });
   }, [selectedOffencePlayerIds, dropdownLists?.offencePlayers]);
 
+
   const { activeOffenceCollection, activeDefenceCollection } = useMemo(() => {
     const isPointDefenceTeamOnOffence = possessionNumber % 2 === 0;
 
@@ -208,52 +152,7 @@ function PossessionPageContent() {
     }
   }, [possessionNumber, availableOnOffenceCollection, availableOnDefenceCollection]);
 
-  const stratCollections = useMemo(() => {
-    const createStrategyCollection = (strats: Strategy[]) => {
-      return createListCollection({
-        items: strats,
-        itemToString: (strat) => strat.strategy,
-        itemToValue: (strat) => strat.strategy_id,
-      });
-    };
-
-    return {
-      dInitCollection: createStrategyCollection(dropdownLists?.dInitStrats ?? []),
-      oInitCollection: createStrategyCollection(dropdownLists?.oInitStrats ?? []),
-      dMainCollection: createStrategyCollection(dropdownLists?.dMainStrats ?? []),
-      oMainCollection: createStrategyCollection(dropdownLists?.oMainStrats ?? []),
-    };
-  }, [dropdownLists]);
-
-  const typeCollection = createListCollection({
-    items: [...outcomeOptions],
-    itemToString: (item) => item,
-    itemToValue: (item) => item,
-  })
-
-  const reasonCollection = createListCollection({
-    items: [...turnoverReasons],
-    itemToString: (item) => item,
-    itemToValue: (item) => item,
-  })
-
-  const methodCollection = createListCollection({
-    items: [...scoreMethods],
-    itemToString: (item) => item,
-    itemToValue: (item) => item,
-  })
-
   const watchedOutcome = watch("possession_outcome");
-
-  const zoneCollection = useMemo(() => {
-    const zones = Array.from({ length: 12 }, (_, i) => i + 1);
-
-    return createListCollection({
-      items: zones,
-      itemToValue: (zoneNumber) => String(zoneNumber),
-      itemToString: (zoneNumber) => `Zone ${zoneNumber}`,
-    });
-  }, []);
 
 
   const { mutateAsync: addPossessionMutation } = useMutation({
@@ -303,12 +202,11 @@ function PossessionPageContent() {
     if (!point || !possessions) {
       return (
         <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-          <Text color="white" fontSize="lg">Loading point data...</Text>
+          <Text color="white" fontSize="lg">No point data found</Text>
         </Box>
       )
     }
 
-// This function will be wrapped by React Hook Form's handleSubmit
   const onSubmit: SubmitHandler<AddPossession> = async (formData) => {
     if (!point) return;
 
@@ -351,6 +249,9 @@ function PossessionPageContent() {
       };
 
       await addPossessionMutation(possessionPayload);
+      if (isScore) {
+        router.push(`/events/${id}`);
+      }
     } catch (error) {
       console.error("Submission failed", error);
       setError("root", {
@@ -375,7 +276,7 @@ function PossessionPageContent() {
           control={control}
           label="Offence Players"
           placeholder="Select players on offence"
-          collection={offenceCollection}
+          collection={collections.offenceCollection}
           isLoading={isLoading}
           multiple={true}
           itemToKey={(item) => item.player_id}
@@ -391,7 +292,7 @@ function PossessionPageContent() {
           control={control}
           label="Defence Players"
           placeholder="Select players on defence"
-          collection={defenceCollection}
+          collection={collections.defenceCollection}
           isLoading={isLoading}
           multiple={true}
           itemToKey={(item) => item.player_id}
@@ -414,7 +315,7 @@ function PossessionPageContent() {
             control={control}
             label="Defence Initiation"
             placeholder="Select defence initiation"
-            collection={stratCollections.dInitCollection}
+            collection={collections.stratCollections.dInitCollection}
             isLoading={isLoading}
             itemToKey={(item) => item.strategy_id}
             renderItem={(item) => (
@@ -431,7 +332,7 @@ function PossessionPageContent() {
             control={control}
             label="Defence Main"
             placeholder="Select defence main play"
-            collection={stratCollections.dMainCollection}
+            collection={collections.stratCollections.dMainCollection}
             isLoading={isLoading}
             itemToKey={(item) => item.strategy_id}
             renderItem={(item) => (
@@ -450,7 +351,7 @@ function PossessionPageContent() {
             control={control}
             label="Offence Initiation"
             placeholder="Select offence initiation"
-            collection={stratCollections.oInitCollection}
+            collection={collections.stratCollections.oInitCollection}
             isLoading={isLoading}
             itemToKey={(item) => item.strategy_id}
             renderItem={(item) => (
@@ -467,7 +368,7 @@ function PossessionPageContent() {
             control={control}
             label="Offence Main"
             placeholder="Select offence main play"
-            collection={stratCollections.oMainCollection}
+            collection={collections.stratCollections.oMainCollection}
             isLoading={isLoading}
             itemToKey={(item) => item.strategy_id}
             renderItem={(item) => (
@@ -499,7 +400,7 @@ function PossessionPageContent() {
           control={control}
           label="Possession Outcome"
           placeholder="Select possession outcome"
-          collection={typeCollection}
+          collection={collections.typeCollection}
           isLoading={isLoading}
           itemToKey={(item) => item}
           renderItem={(item) => item}
@@ -523,7 +424,7 @@ function PossessionPageContent() {
                 control={control}
                 label="Thrown From"
                 placeholder="Select throw zone"
-                collection={zoneCollection}
+                collection={collections.zoneCollection}
                 isLoading={isLoading}
                 itemToKey={(zoneNumber) => zoneNumber}
                 renderItem={(zoneNumber) => `Zone ${zoneNumber}`}
@@ -533,7 +434,7 @@ function PossessionPageContent() {
                 control={control}
                 label="Intended Receive Zone"
                 placeholder="Select receive zone"
-                collection={zoneCollection}
+                collection={collections.zoneCollection}
                 isLoading={isLoading}
                 itemToKey={(zoneNumber) => zoneNumber}
                 renderItem={(zoneNumber) => `Zone ${zoneNumber}`}
@@ -578,7 +479,7 @@ function PossessionPageContent() {
                 control={control}
                 label="Turnover Reason"
                 placeholder="Select reason"
-                collection={reasonCollection}
+                collection={collections.reasonCollection}
                 isLoading={isLoading}
                 itemToKey={(item) => item}
                 renderItem={(item) => item}
@@ -647,7 +548,7 @@ function PossessionPageContent() {
               control={control}
               label="Score Method"
               placeholder="Select score method"
-              collection={methodCollection}
+              collection={collections.methodCollection}
               isLoading={isLoading}
               itemToKey={(item) => item}
               renderItem={(item) => item}
@@ -655,9 +556,6 @@ function PossessionPageContent() {
             <HStack mb={8} mt={8}>
               <Button type="submit" disabled={!isValid || isSubmitting}>
                 Add Point
-              </Button>
-              <Button type="submit" disabled={!isValid || isSubmitting}>
-                Add & Create New Point
               </Button>
             </HStack>
           </>

@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React from "react";
 import {
   Dialog,
   Button,
@@ -11,75 +11,30 @@ import {
   Text,
 } from "@chakra-ui/react";
 import CustomDropdownInput from "@/app/events/[id]/[point_id]/components/custom-dropdown-with-add";
-import type { PossessionDetailed } from "@/app/possessions/supabase";
-import {
-  fetchDInitPlays,
-  fetchDMainPlays,
-  fetchOInitPlays,
-  fetchOMainPlays
-} from "@/app/events/[id]/[point_id]/supabase";
-import type { Player } from "@/lib/supabase";
 import ThrowCounter from "@/components/throws-input";
-
-type ListItem = { play: string };
+import {usePointFormCollections, usePointFormData} from "@/app/hooks/usePointFormData.ts";
 
 type EditPossessionDialogProps = {
-  possession: PossessionDetailed;
+  possessionNumber: string;
   onClose: () => void;
-  onUpdate: (updated: Partial<PossessionDetailed>) => void;
-  outcome: string;
-  offence_player_list: Player[];
-  defence_player_list: Player[];
+  pointId: string;
 };
 
 export default function EditPossessionDialog({
-                                               possession,
+                                               possessionNumber,
                                                onClose,
-                                               onUpdate,
-                                               outcome,
-                                               offence_player_list,
-                                               defence_player_list,
+                                               pointId,
                                              }: EditPossessionDialogProps) {
-  const [dInitPlay, setDInitPlay] = useState(possession.defence_init || "");
-  const [oInitPlay, setOInitPlay] = useState(possession.offence_init || "");
-  const [dMainPlay, setDMainPlay] = useState(possession.defence_main || "");
-  const [oMainPlay, setOMainPlay] = useState(possession.offence_main || "");
-  const [numThrows, setNumThrows] = useState(String(possession.throws ?? "0"));
-  const [defenceInitList, setDInitList] = useState<ListItem[]>([]);
-  const [defenceMainList, setDMainList] = useState<ListItem[]>([]);
-  const [offenceInitList, setOInitList] = useState<ListItem[]>([]);
-  const [offenceMainList, setOMainList] = useState<ListItem[]>([]);
+  const { data, isLoading, error } = usePointFormData(pointId);
 
-  const [thrownTo, setThrownTo] = useState<number | null>(possession.turn_receive_zone ?? null);
-  const [thrownFrom, setThrownFrom] = useState<number | null>(possession.turn_throw_zone ?? null);
-  const [turnoverThrower, setTurnoverThrower] = useState(possession.turn_thrower ?? "");
-  const [turnoverReceiver, setTurnoverReceiver] = useState(possession.turn_intended_receiver ?? "");
-  const [turnoverReason, setTurnoverReason] = useState(possession.turnover_reason ?? "");
-  const [dPlayer, setDPlayer] = useState(possession.d_player ?? "");
+  if (error) throw error;
 
-  const [scorePlayer, setScorePlayer] = useState(possession.score_player ?? "");
-  const [assistPlayer, setAssistPlayer] = useState(possession.assist_player ?? "");
-  const [scoreMethod, setScoreMethod] = useState(possession.score_method ?? "");
-
-  useEffect(() => {
-    async function fetchOptions() {
-      const [dInit, dMain, oInit, oMain] = await Promise.all([
-        fetchDInitPlays(),
-        fetchDMainPlays(),
-        fetchOInitPlays(),
-        fetchOMainPlays(),
-      ]);
-
-      setDInitList(dInit);
-      setDMainList(dMain);
-      setOInitList(oInit);
-      setOMainList(oMain);
-    }
-
-    void fetchOptions();
-  }, []);
-
-  const clean = (value: string | undefined | null) => (value === "" ? null : value);
+  const { point, possessions, dropdownLists } = data || {
+    point: null,
+    possessions: [],
+    dropdownLists: {},
+  };
+  const collections = usePointFormCollections(data);
 
   const handleSubmit = () => {
     onUpdate({

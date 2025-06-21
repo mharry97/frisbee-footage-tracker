@@ -9,6 +9,10 @@ export type PossessionDetailed = {
   defence_init: string | null
   offence_main: string | null
   defence_main: string | null
+  offence_init_name: string | null
+  defence_init_name: string | null
+  offence_main_name: string | null
+  defence_main_name: string | null
   throws: number | null
   turn_throw_zone: number | null
   turn_receive_zone: number | null

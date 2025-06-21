@@ -2,9 +2,7 @@ import { supabase} from "@/lib/supabase"
 import type { Playlist, PlaylistClip } from "@/lib/supabase"
 
 
-// I think in terms of having the correct playlists showing up and updating properly across both public and private we need:
-// Write every time someone clicks add log it to playlist_clips
-// Then when populating, take the most recent log for each, destructure it and use
+export type AddPlaylist = Omit<Playlist, "created_at" | "created_by" | "playlist_id">
 
 // Fetch all public playlists from Supabase
 export type PlaylistWithCreator = Omit<Playlist, 'creator'> & {
@@ -13,13 +11,8 @@ export type PlaylistWithCreator = Omit<Playlist, 'creator'> & {
 export async function fetchPlaylists(): Promise<PlaylistWithCreator[]> {
     const { data, error } = await supabase
       .from("playlists")
-      .select(`
-        *,
-        created_by:players (
-          player_name
-        )
-      `)
-      .order("title");
+      .select("*")
+      .order("created_at");
 
     if (error) throw error;
     return data ?? [];
@@ -36,16 +29,11 @@ export async function fetchPlaylist(id: string): Promise<Playlist | null> {
   return data;
 }
 
-export type NewPlaylist = Omit<Playlist, "playlist_id">;
-export async function addPlaylist(playlist: NewPlaylist): Promise<NewPlaylist[]> {
+
+export async function addPlaylist(playlist: AddPlaylist): Promise<Playlist[]> {
   const { data, error } = await supabase
     .from("playlists")
-    .insert([{
-      title: playlist.title,
-      description: playlist.description,
-      is_public: playlist.is_public,
-      creator: playlist.creator,
-    }])
+    .insert(playlist)
     .select();
 
   if (error) throw error;

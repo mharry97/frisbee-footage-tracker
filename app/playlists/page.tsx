@@ -64,7 +64,7 @@ function PlaylistsPageContent() {
                     </LinkOverlay>
                   </LinkBox>
                 </Table.Cell>
-                <Table.Cell width="35%" textAlign="right">{playlist.creator.player_name}</Table.Cell>
+                <Table.Cell width="35%" textAlign="right">{playlist.created_by}</Table.Cell>
               </Table.Row>
             ))}
           </Table.Body>

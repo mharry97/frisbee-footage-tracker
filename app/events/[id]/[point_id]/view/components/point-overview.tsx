@@ -18,7 +18,7 @@ export default function PointOverview({
 
   return (
     <Container maxW="4xl" py={8} px={0}>
-      <Box bg="gray.950" p={4} rounded="md" w="full">
+      <Box w="full">
         {last_possession_type === "Turnover" ? (
           <Text color="gray.400">
             No scoring possession has been added yet. Currently {possessions} possessions have been recorded.

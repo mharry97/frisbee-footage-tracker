@@ -65,7 +65,8 @@ export type Playlist = {
   title: string
   description: string
   is_public: boolean
-  creator: string | null
+  created_by: string
+  created_at: string
 }
 
 export type PlaylistClip = {

@@ -6,7 +6,8 @@ import {
   Container, Separator,
   Text
 } from "@chakra-ui/react";
-import type {Clip, Playlist} from "@/lib/supabase";
+import type { Playlist } from "@/lib/supabase";
+import { Clip } from "@/app/clips/supabase.ts"
 import { fetchPlaylistClips } from "@/app/clips/supabase";
 import {ClipGrid} from "@/app/clips/components/clip-grid";
 import {fetchPlaylist} from "@/app/playlists/supabase";

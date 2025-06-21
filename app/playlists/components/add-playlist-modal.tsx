@@ -41,7 +41,6 @@ export function AddPlaylistModal({ isOpen, onClose }: AddClipModalProps) {
         title,
         description,
         is_public: true,
-        creator: '5e75ce13-baa6-46ed-92f4-1f1cd8e195bf'
       });
 
       onClose();

@@ -37,7 +37,7 @@ export default function OnPageVideoLink({ url }: VideoProps) {
   // Handle YouTube and Google Drive (existing logic)
   if (provider === "google_drive" || provider === "youtube") {
     return (
-      <AspectRatio ratio={16 / 9} w="full" maxW="4xl" mx="auto">
+      <AspectRatio ratio={16 / 9} w="full" maxW="4xl" mx="auto" mt={4}>
         <iframe
           src={url}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
