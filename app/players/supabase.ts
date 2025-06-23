@@ -1,4 +1,5 @@
 import {supabase} from "@/lib/supabase.ts";
+import {ascending} from "d3-array";
 
 export type Player = {
   player_id: string;
@@ -25,6 +26,20 @@ export async function getPlayersForTeam(team_id: string): Promise<PlayerDetailed
     .from("view_player_detail")
     .select("*")
     .eq("team_id", team_id)
+    .order("team_name", {ascending: true})
+    .order("player_name", {ascending: true})
+
+  if (error) throw error;
+  return data || []
+}
+
+// Fetch all players
+export async function fetchPlayers(): Promise<PlayerDetailed[]> {
+  const { data, error } = await supabase
+    .from("view_player_detail")
+    .select("*")
+    .order("team_name", {ascending: true})
+    .order("player_name", {ascending: true})
 
   if (error) throw error;
   return data || []

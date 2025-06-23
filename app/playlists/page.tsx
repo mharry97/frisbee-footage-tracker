@@ -49,17 +49,17 @@ function PlaylistsPageContent() {
             <Card.Root key={item.playlist_id} variant="elevated">
               <Card.Header>
                 <Card.Title>{item.title}</Card.Title>
-              </Card.Header>
-              <Card.Body>
-                <Card.Description mb={2}>
-                  {item.description}
-                </Card.Description>
                 <Card.Description>
                   Created by {item.created_by_name} on {new Intl.DateTimeFormat('en-GB', {
                   day: '2-digit',
                   month: '2-digit',
                   year: 'numeric'
                 }).format(new Date(item.created_at))}
+                </Card.Description>
+              </Card.Header>
+              <Card.Body>
+                <Card.Description mb={2}>
+                  {item.description}
                 </Card.Description>
               </Card.Body>
               <Card.Footer gap="2">

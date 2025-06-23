@@ -32,11 +32,12 @@ interface AddClipModalProps {
   eventId?: string;
   playerId: string;
   sourceId?: string;
+  playlists?: string[];
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose }: AddClipModalProps) {
+export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose, playlists }: AddClipModalProps) {
   // console.log(sourceId);
   const {
     control,
@@ -50,7 +51,7 @@ export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose }: A
       source: [sourceId],
       timestamp: "",
       description: "",
-      playlists: [],
+      playlists: playlists,
       is_public: true
     },
   });

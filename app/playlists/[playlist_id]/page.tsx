@@ -101,6 +101,7 @@ function PointPageContent() {
         isOpen={open}
         onClose={onClose}
         playerId={player.player_id}
+        playlists={[playlist_id]}
       />
     </Container>
   );

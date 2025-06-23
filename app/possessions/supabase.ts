@@ -1,4 +1,5 @@
 import {Possession, supabase} from "@/lib/supabase";
+import {PlayerDetailed} from "@/app/players/supabase.ts";
 
 export type PossessionDetailed = {
   possession_id: string
@@ -71,13 +72,78 @@ export async function fetchPointPossessions(point_id: string): Promise<Possessio
   return data ?? [];
 }
 
-//Fetch all possessions
-export async function fetchAllPossessions(): Promise<PossessionDetailed[]> {
+// Fetch all possessions
+export async function fetchAllPossessions(): Promise<PlayerDetailed[]> {
   const { data, error } = await supabase
     .from("view_possession_detail")
     .select("*")
     .order("event_date", { ascending: false })
     .order("timestamp_seconds", { ascending: false });
+
+  if (error) throw error;
+  return data || []
+}
+
+//Fetch all possessions
+interface PossessionFilters {
+  offenceTeamId?: string;
+  defenceTeamId?: string;
+  outcome?: 'Score' | 'Turnover';
+  playerId?: string;
+  defenceInit?: string;
+  defenceMain?: string;
+  offenceInit?: string;
+  offenceMain?: string;
+  possessionNumber?: number;
+}
+export async function fetchFilteredPossessions(filters: PossessionFilters = {}): Promise<PossessionDetailed[]> {
+  let query = supabase
+    .from("view_possession_detail")
+    .select("*")
+    .order("event_date", { ascending: false })
+    .order("timestamp_seconds", { ascending: false });
+
+  // All applied filters
+  if (filters.offenceTeamId && filters.offenceTeamId.length > 0) {
+    query = query.eq('offence_team', filters.offenceTeamId[0]);
+  }
+
+  if (filters.defenceTeamId && filters.defenceTeamId.length > 0) {
+    query = query.eq('defence_team', filters.defenceTeamId[0]);
+  }
+
+  if (filters.outcome && filters.outcome.length > 0) {
+    const isScore = filters.outcome[0] === 'Score';
+    query = query.eq('is_score', isScore);
+  }
+
+  if (filters.playerId && filters.playerId.length > 0) {
+    const offenceFilter = `offence_team_players.cs.{${filters.playerId[0]}}`;
+    const defenceFilter = `defence_team_players.cs.{${filters.playerId[0]}}`;
+    query = query.or(`${offenceFilter},${defenceFilter}`);
+  }
+
+  if (filters.defenceInit && filters.defenceInit.length > 0) {
+    query = query.eq('defence_init', filters.defenceInit[0]);
+  }
+
+  if (filters.defenceMain && filters.defenceMain.length > 0) {
+    query = query.eq('defence_main', filters.defenceMain[0]);
+  }
+
+  if (filters.offenceInit && filters.offenceInit.length > 0) {
+    query = query.eq('offence_init', filters.offenceInit[0]);
+  }
+
+  if (filters.offenceMain && filters.offenceMain.length > 0) {
+    query = query.eq('offence_main', filters.offenceMain[0]);
+  }
+
+  if (filters.possessionNumber) {
+    query = query.eq('possession_number', filters.possessionNumber);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return data ?? [];

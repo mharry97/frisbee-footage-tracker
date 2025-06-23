@@ -69,7 +69,7 @@ export default function MainMenu({ is_admin, is_home }: MainMenuProps) {
     { title: "Events", href: "/events", iconComponent: FaRegCalendarAlt },
     { title: "Playlists", href: "/playlists", iconComponent: TbPlaylistAdd },
     { title: "Clips", href: "/clips", iconComponent: LuClapperboard },
-    { title: "Points", href: "/points", iconComponent: MdOutlineScoreboard },
+    { title: "Possessions", href: "/possessions", iconComponent: MdOutlineScoreboard },
     { title: "Teams", href: "/teams", iconComponent: IoPeopleOutline },
     ...(is_admin
       ? [{ title: "Admin", href: "/admin", iconComponent: MdOutlineAdminPanelSettings }]

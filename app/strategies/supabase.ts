@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase"
+import {PlayerDetailed} from "@/app/players/supabase.ts";
 
 // TYPES
 
@@ -18,6 +19,18 @@ export async function fetchStrategiesByType(type: string): Promise<Strategy[]> {
     .from("strategies")
     .select("*")
     .eq("play_type", type)
+    .order("strategy_type", {ascending: true})
+    .order("strategy", {ascending: true})
+
+  if (error) throw error;
+  return data || []
+}
+
+// Get all strategies
+export async function fetchStrategies(): Promise<Strategy[]> {
+  const { data, error } = await supabase
+    .from("strategies")
+    .select("*")
     .order("strategy_type", {ascending: true})
     .order("strategy", {ascending: true})
 
