@@ -241,14 +241,11 @@ function PointViewContent() {
             <Dialog.Trigger asChild>
               <Button onClick={editDisclosure.onOpen}>Edit</Button>
             </Dialog.Trigger>
-            {/*<EditPossessionDialog*/}
-            {/*  possession={possession}*/}
-            {/*  onClose={editDisclosure.onClose}*/}
-            {/*  onUpdate={handleUpdate}*/}
-            {/*  outcome={possessionOutcome}*/}
-            {/*  offence_player_list={offencePlayers}*/}
-            {/*  defence_player_list={defencePlayers}*/}
-            {/*/>*/}
+            <EditPossessionDialog
+              onClose={editDisclosure.onClose}
+              possessionNumber = {currentIndex + 1}
+              pointId = {point.point_id}
+            />
           </Dialog.Root>
           <Button colorPalette = "green" onClick={() => router.push(`/events/${id}/${point_id}`)}>Add Next Possession</Button>
           <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
@@ -266,14 +263,11 @@ function PointViewContent() {
             <Dialog.Trigger asChild>
               <Button onClick={editDisclosure.onOpen}>Edit</Button>
             </Dialog.Trigger>
-            {/*<EditPossessionDialog*/}
-            {/*  possession={possession}*/}
-            {/*  onClose={editDisclosure.onClose}*/}
-            {/*  onUpdate={handleUpdate}*/}
-            {/*  outcome={possessionOutcome}*/}
-            {/*  offence_player_list={offencePlayers}*/}
-            {/*  defence_player_list={defencePlayers}*/}
-            {/*/>*/}
+            <EditPossessionDialog
+              onClose={editDisclosure.onClose}
+              possessionNumber = {currentIndex + 1}
+              pointId = {point.point_id}
+            />
           </Dialog.Root>
           <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
             <Dialog.Trigger asChild>
@@ -290,14 +284,11 @@ function PointViewContent() {
             <Dialog.Trigger asChild>
               <Button onClick={editDisclosure.onOpen}>Edit</Button>
             </Dialog.Trigger>
-            {/*<EditPossessionDialog*/}
-            {/*  possession={possession}*/}
-            {/*  onClose={editDisclosure.onClose}*/}
-            {/*  onUpdate={handleUpdate}*/}
-            {/*  outcome={possessionOutcome}*/}
-            {/*  offence_player_list={offencePlayers}*/}
-            {/*  defence_player_list={defencePlayers}*/}
-            {/*/>*/}
+            <EditPossessionDialog
+              onClose={editDisclosure.onClose}
+              possessionNumber = {currentIndex + 1}
+              pointId = {point.point_id}
+            />
           </Dialog.Root>
         </HStack>
       )}

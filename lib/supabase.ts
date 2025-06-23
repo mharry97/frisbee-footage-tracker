@@ -40,6 +40,7 @@ export type Player = {
 
 export type Possession = {
   point_id: string
+  possession_id: string
   offence_init: string | null
   defence_init: string | null
   offence_main: string | null

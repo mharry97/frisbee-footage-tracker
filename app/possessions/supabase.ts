@@ -43,6 +43,10 @@ export type PossessionDetailed = {
   event_date: string
 }
 
+export type NewPossession = Omit<Possession, 'possession_id'>
+
+
+
 // Fetch basic info for all possessions from Supabase for a given event_id
 export async function fetchEventPossessions(event_id: string): Promise<Possession[]> {
   const { data, error } = await supabase
@@ -93,19 +97,8 @@ export async function deletePossession(point_id: string, possession_number: numb
 
 // WRITING
 
-export async function updatePossession(point_id: string, possession_number: number, data: Partial<PossessionDetailed>) {
-  const { error } = await supabase
-    .from("possessions")
-    .update(data)
-    .match({ point_id, possession_number });
-
-  if (error) {
-    throw new Error(`Failed to update possession: ${error.message}`);
-  }
-}
-
 // Write possession to Supabase
-export async function addPossession(possessionData: Possession): Promise<void> {
+export async function addPossession(possessionData: NewPossession): Promise<void> {
     const { error } = await supabase
       .from("possessions")
       .insert(possessionData)
