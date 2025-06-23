@@ -31,7 +31,7 @@ type AddClip = z.infer<typeof schema>
 interface AddClipModalProps {
   eventId?: string;
   playerId: string;
-  sourceId: string;
+  sourceId?: string;
   isOpen: boolean;
   onClose: () => void;
 }

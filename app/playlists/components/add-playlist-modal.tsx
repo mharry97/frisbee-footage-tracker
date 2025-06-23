@@ -49,13 +49,13 @@ export function AddPlaylistModal({ isOpen, onClose }: AddPlaylistModalProps) {
 
   const onSubmit = async (formData: AddPlaylist) => {
     try {
-      const clipPayload = {
+      const playlistPayload = {
         title: formData.title,
         description: formData.description,
         is_public: formData.is_public,
       };
 
-      await addPlaylistMutation(clipPayload);
+      await addPlaylistMutation(playlistPayload);
       await queryClient.invalidateQueries({ queryKey: ["playlists"] });
       onClose();
     } catch (err) {
@@ -111,7 +111,7 @@ export function AddPlaylistModal({ isOpen, onClose }: AddPlaylistModalProps) {
                       >
                         <Checkbox.HiddenInput />
                         <Checkbox.Control />
-                        <Checkbox.Label>Public Clip?</Checkbox.Label>
+                        <Checkbox.Label>Public Playlist?</Checkbox.Label>
                       </Checkbox.Root>
                     </Field.Root>
                   )}

@@ -1,56 +1,47 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
-  Box,
-  Container, Separator,
-  Text
+  Box, Button, Card, CloseButton,
+  Container, Dialog, Portal, Separator, SimpleGrid,
+  Text, useDisclosure
 } from "@chakra-ui/react";
-import type { Playlist } from "@/lib/supabase";
-import { Clip } from "@/app/clips/supabase.ts"
 import { fetchPlaylistClips } from "@/app/clips/supabase";
-import {ClipGrid} from "@/app/clips/components/clip-grid";
 import {fetchPlaylist} from "@/app/playlists/supabase";
-import {AddSourceClipModal} from "@/app/clips/components/add-clip-from-source";
 import FloatingClipButton from "@/components/ui/add-clip-button";
 import {useParams} from "next/navigation";
 import {useAuth} from "@/lib/auth-context.tsx";
 import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
+import {useQuery} from "@tanstack/react-query";
+import OnPageVideoLink from "@/components/on-page-video-link.tsx";
+import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
+import {AddClipModal} from "@/app/clips/components/add-clip-modal.tsx";
 
 
 
 function PointPageContent() {
-  // Unwrap the promised params
   const { playlist_id } = useParams<{ playlist_id: string }>();
   const { player } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [clips, setClips] = useState<Clip[]>([]);
-  const [playlistData, setPlaylistData] = useState<Playlist | null>(null);
-  const [isClipModalOpen, setIsClipModalOpen] = useState(false);
+  const { open, onOpen, onClose } = useDisclosure();
 
-  // Fetch data needed for page
-  useEffect(() => {
-    if (!playlist_id) return;
+  // Fetch playlist info
+  const { data: playlist, isLoading: isPlaylistLoading } = useQuery({
+    queryKey: ['playlist', playlist_id],
+    queryFn: () => fetchPlaylist(playlist_id),
+    enabled: !!playlist_id,
+  });
 
-    (async () => {
-      try {
-        const clips = await fetchPlaylistClips(playlist_id);
-        setClips(clips);
+  // Fetch clips
+  const { data: clips, isLoading:isClipLoading } = useQuery({
+    queryKey: ["clips", playlist_id, player?.player_id],
+    queryFn: () => fetchPlaylistClips(playlist_id, player!.player_id),
+    enabled: !!playlist_id && !!player,
+  });
 
-        const playlistData = await fetchPlaylist(playlist_id);
-        setPlaylistData(playlistData);
+  const isLoading = isClipLoading || isPlaylistLoading;
 
-
-      } catch (err) {
-        console.error("Failed to fetch data:", err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [playlist_id]);
-
-  if (!player || loading) {
+  if (!player || isLoading) {
     return (
       <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
         <Text color="white" fontSize="lg">Loading player data...</Text>
@@ -58,17 +49,58 @@ function PointPageContent() {
     )
   }
 
+  if (!clips) {
+    return (
+      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
+        <Text color="white" fontSize="lg">No clips on this playlist yet.</Text>
+      </Box>
+    )
+  }
+
   return (
     <Container maxW="4xl">
-      <StandardHeader text={playlistData?.title || ""} is_admin={player.is_admin} />
-      <Text textStyle="xl" mb={4} mt ={4}>{playlistData?.description}</Text>
+      <StandardHeader text={playlist?.title || ""} is_admin={player.is_admin} />
+      <Text textStyle="xl" mb={4} mt ={4}>{playlist?.description}</Text>
       <Separator />
-      <ClipGrid clips={clips}></ClipGrid>
-      <FloatingClipButton onClick={() => setIsClipModalOpen(true)} />
-      <AddSourceClipModal
-        isOpen={isClipModalOpen}
-        onClose={() => setIsClipModalOpen(false)}
-        playlistId={playlist_id}
+      <SimpleGrid columns={{base: 1, md: 2}} gap={8} mb={8}>
+        {clips.map((item) => (
+          <Card.Root key={item.clip_id} variant="elevated">
+            <Card.Header>
+              <Card.Title>{item.title}</Card.Title>
+            </Card.Header>
+            <Card.Body>
+              <Card.Description>
+                {item.description}
+              </Card.Description>
+            </Card.Body>
+            <Card.Footer gap="2">
+              <Dialog.Root size="xl">
+                <Dialog.Trigger asChild>
+                  <Button colorPalette='gray'>View Clip</Button>
+                </Dialog.Trigger>
+                <Portal>
+                  <Dialog.Backdrop/>
+                  <Dialog.Positioner>
+                    <Dialog.Content>
+                      <Dialog.Body>
+                        <OnPageVideoLink url={baseUrlToTimestampUrl(item.url, item.timestamp)}/>
+                      </Dialog.Body>
+                      <Dialog.CloseTrigger asChild>
+                        <CloseButton size="sm"/>
+                      </Dialog.CloseTrigger>
+                    </Dialog.Content>
+                  </Dialog.Positioner>
+                </Portal>
+              </Dialog.Root>
+            </Card.Footer>
+          </Card.Root>
+        ))}
+      </SimpleGrid>
+      <FloatingClipButton onClick={onOpen} />
+      <AddClipModal
+        isOpen={open}
+        onClose={onClose}
+        playerId={player.player_id}
       />
     </Container>
   );

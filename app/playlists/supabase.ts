@@ -40,9 +40,9 @@ export async function fetchVisiblePlaylists(playerId: string): Promise<PlaylistD
   return data ?? [];
 }
 
-export async function fetchPlaylist(id: string): Promise<Playlist | null> {
+export async function fetchPlaylist(id: string): Promise<PlaylistDetailed | null> {
   const { data, error } = await supabase
-    .from("playlists")
+    .from("view_playlist_detail")
     .select("*")
     .eq("playlist_id", id)
     .single();

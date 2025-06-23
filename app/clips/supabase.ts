@@ -60,7 +60,7 @@ export async function upsertClip(payload: NewClip): Promise<Clip> {
   return data || []
 }
 
-// Fetch most recent info for all events from Supabase for a given event_id
+// Fetch all clips visible to a player for a given event_id
 export async function fetchEventClips(event_id: string, player_id: string): Promise<ClipDetail[]> {
   try {
     const { data } = await supabase
@@ -77,25 +77,20 @@ export async function fetchEventClips(event_id: string, player_id: string): Prom
   }
 }
 
-// Fetches all playlist clips
-export async function fetchPlaylistClips(
-  playlistId: string,
-  limit?: number,
-): Promise<Clip[]> {
-  const q = supabase
-    .from("playlist_clips")
-    .select(`clips:clip_id ( * )`)
-    .eq("playlist_id", playlistId)
-    .order("created_at", {
-      ascending: false,
-      foreignTable: "clips",
-    });
+// Fetch all clips visible to a player for a given playlist_id
+export async function fetchPlaylistClips(playlist_id: string, player_id: string): Promise<ClipDetail[]> {
+  try {
+    const { data } = await supabase
+      .from("view_clip_detail")
+      .select('*')
+      .or(`is_public.eq.true, created_by.eq.${player_id}`)
+      .containedBy("playlists", playlist_id)
+      .order("created_at", {ascending: false});
 
-  if (limit) q.limit(limit);
-
-  const { data, error } = await q;
-  if (error) throw error;
-
-  return (data ?? []).flatMap((row) => row.clips as Clip[]);
+    return (data || []);
+  } catch (error) {
+    console.error("Error fetching clips:", error);
+    return [];
+  }
 }
 
