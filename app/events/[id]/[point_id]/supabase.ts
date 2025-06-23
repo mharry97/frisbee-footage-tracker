@@ -1,10 +1,10 @@
 import { supabase } from "@/lib/supabase"
-import type { Point, Possession } from "@/lib/supabase"
+import { PointDetailed } from "@/app/points/supabase"
 
 // Fetch point info
-export async function fetchPointById(pointId: string): Promise<Point[]> {
+export async function fetchPointById(pointId: string): Promise<PointDetailed[]> {
   try {
-    const { data } = await supabase.from("points").select("*").eq("point_id", pointId)
+    const { data } = await supabase.from("view_point_detail").select("*").eq("point_id", pointId)
 
     console.log(pointId)
     return data || []
@@ -79,21 +79,6 @@ export async function fetchOMainPlays(): Promise<Play[]> {
   } catch (error) {
     console.error("Error fetching plays:", error)
     return []
-  }
-}
-
-// Write possession to Supabase
-export async function writePossession(possessionData: Possession): Promise<Point[]> {
-  try {
-    const { data } = await supabase
-      .from("possessions")
-      .insert([possessionData])
-      .select();
-
-    return data as Point[];
-  } catch (err) {
-    console.error("writePossession error:", err);
-    return [];
   }
 }
 

@@ -6,11 +6,11 @@ import { getFootageProvider } from "@/lib/utils";
 import {AspectRatio, Center, Container, Link, Text} from "@chakra-ui/react";
 import { getVeoVideoUrl } from "@/app/sources/actions";
 
-type TurnoverFormProps = {
+type VideoProps = {
   url: string;
 };
 
-export default function OnPageVideoLink({ url }: TurnoverFormProps) {
+export default function OnPageVideoLink({ url }: VideoProps) {
   const [veoVideoUrl, setVeoVideoUrl] = useState<string | null>(null);
   const [veoLoading, setVeoLoading] = useState(false);
 
@@ -37,7 +37,7 @@ export default function OnPageVideoLink({ url }: TurnoverFormProps) {
   // Handle YouTube and Google Drive (existing logic)
   if (provider === "google_drive" || provider === "youtube") {
     return (
-      <AspectRatio ratio={16 / 9} w="full" maxW="4xl" mx="auto">
+      <AspectRatio ratio={16 / 9} w="full" maxW="4xl" mx="auto" mt={4}>
         <iframe
           src={url}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -63,7 +63,7 @@ export default function OnPageVideoLink({ url }: TurnoverFormProps) {
     if (veoVideoUrl) {
       return (
         <Container>
-          <AspectRatio ratio={16 / 9} w="full" maxW="4xl" mx="auto">
+          <AspectRatio ratio={16 / 9} w="full" maxW="4xl" mx="auto" mb={4} mt={4}>
             <video
               src={veoVideoUrl}
               controls

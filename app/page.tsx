@@ -17,9 +17,10 @@ import {InfoTip} from "@/components/ui/toggle-tip.tsx";
 import React, {useEffect, useState} from "react";
 import {getPlayerPointsPlayed, PointsByPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
 import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/teams/[team_id]/[player_id]/utils.ts";
-import {fetchAllPointsDetailed} from "@/app/points/supabase.ts";
+import { fetchAllPossessions } from "@/app/possessions/supabase.ts";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
 import MainMenu from "@/components/main-menu.tsx";
+import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
 
 interface StatTileProps {
   title: string;
@@ -62,7 +63,7 @@ function HomepageContent() {
         const points = await getPlayerPointsPlayed(player.player_id);
         setPlayerPoints(points);
 
-        const allPoints = await fetchAllPointsDetailed();
+        const allPoints = await fetchAllPossessions();
         const allStats = getPlayerStatsFromPossessions(allPoints);
 
         const currentPlayerStats = allStats[String(player.player_id)] ?? null;
@@ -93,7 +94,7 @@ function HomepageContent() {
       <Heading as="h1" fontWeight="light" size='4xl' color="white" mb={4} mt={4}>
         Hello, {player.player_name}
       </Heading>
-      <MainMenu is_admin={player.is_admin} />
+      <MainMenu is_admin={player.is_admin} is_home />
       <HStack mb={6}>
         <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
         <Text flexShrink="0" fontSize="2xl" >Player Overview</Text>
@@ -132,18 +133,18 @@ function HomepageContent() {
         />
       </Box>
       <HStack mb={6}>
-        <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
+        <Separator flex="1" size="sm"></Separator>
         <Text flexShrink="0" fontSize="xl" >Your Points</Text>
-        <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
+        <Separator flex="1" size="sm"></Separator>
       </HStack>
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
-        {playerPoints.map((item, index) => (
-          <Card.Root key={index} variant="elevated">
+        {playerPoints.map((item) => (
+          <Card.Root key={item.point_id} variant="elevated">
             <Card.Header>
               <Card.Title>{item.event_name}</Card.Title>
               <Card.Description>{item.timestamp}</Card.Description>
               <Text>
-                Offence Team: {item.point_offence_team_name}
+                Offence Team: {item.offence_team_name}
               </Text>
             </Card.Header>
             <Card.Body>
@@ -161,7 +162,7 @@ function HomepageContent() {
                   Details
                 </Button>
               </NextLink>
-              <Dialog.Root size="full">
+              <Dialog.Root size="xl">
                 <Dialog.Trigger asChild>
                   <Button variant="ghost">Quick View</Button>
                 </Dialog.Trigger>
@@ -170,7 +171,7 @@ function HomepageContent() {
                   <Dialog.Positioner>
                     <Dialog.Content>
                       <Dialog.Body>
-                        <OnPageVideoLink url={item.timestamp_url} />
+                        <OnPageVideoLink url={baseUrlToTimestampUrl(item.base_url, item.timestamp)} />
                       </Dialog.Body>
                       <Dialog.CloseTrigger asChild>
                         <CloseButton size="sm" />

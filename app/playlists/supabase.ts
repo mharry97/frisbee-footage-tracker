@@ -1,38 +1,48 @@
-import {Clip, PointPlayer, supabase} from "@/lib/supabase"
+import { supabase} from "@/lib/supabase"
 import type { Playlist, PlaylistClip } from "@/lib/supabase"
 
+export type PlaylistDetailed = {
+  playlist_id: string
+  created_at: string
+  created_by: string
+  created_by_name: string
+  title: string
+  description: string
+  is_public: boolean
+  clips: string[]
+}
 
-// I think in terms of having the correct playlists showing up and updating properly across both public and private we need:
-// Write every time someone clicks add log it to playlist_clips
-// Then when populating, take the most recent log for each, destructure it and use
+
+export type AddPlaylist = Omit<Playlist, "created_at" | "created_by" | "playlist_id">
 
 // Fetch all public playlists from Supabase
 export type PlaylistWithCreator = Omit<Playlist, 'creator'> & {
   creator: { player_name: string };
 };
 export async function fetchPlaylists(): Promise<PlaylistWithCreator[]> {
-  try {
     const { data, error } = await supabase
       .from("playlists")
-      .select(`
-        *,
-        creator:players (
-          player_name
-        )
-      `)
-      .order("title");
+      .select("*")
+      .order("created_at");
 
     if (error) throw error;
     return data ?? [];
-  } catch (error) {
-    console.error("Error fetching playlists:", error);
-    return [];
-  }
 }
 
-export async function fetchPlaylist(id: string): Promise<Playlist | null> {
+export async function fetchVisiblePlaylists(playerId: string): Promise<PlaylistDetailed[]> {
   const { data, error } = await supabase
-    .from("playlists")
+    .from("view_playlist_detail")
+    .select("*")
+    .or(`is_public.eq.true, created_by.eq.${playerId}`)
+    .order("created_at", {ascending: false});
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function fetchPlaylist(id: string): Promise<PlaylistDetailed | null> {
+  const { data, error } = await supabase
+    .from("view_playlist_detail")
     .select("*")
     .eq("playlist_id", id)
     .single();
@@ -41,20 +51,13 @@ export async function fetchPlaylist(id: string): Promise<Playlist | null> {
   return data;
 }
 
-export type NewPlaylist = Omit<Playlist, "playlist_id">;
-export async function addPlaylist(playlist: NewPlaylist): Promise<NewPlaylist[]> {
-  const { data, error } = await supabase
+
+export async function addPlaylist(playlist: AddPlaylist): Promise<void> {
+  const { error } = await supabase
     .from("playlists")
-    .insert([{
-      title: playlist.title,
-      description: playlist.description,
-      is_public: playlist.is_public,
-      creator: playlist.creator,
-    }])
-    .select();
+    .insert(playlist)
 
   if (error) throw error;
-  return data ?? [];
 }
 
 // Fetch all user playlists from Supabase

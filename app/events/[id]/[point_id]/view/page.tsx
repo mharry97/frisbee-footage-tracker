@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import {
   Container,
   Text,
@@ -12,77 +12,111 @@ import {
   Dialog,
   CloseButton, Box
 } from "@chakra-ui/react";
-import { fetchDetailPoint } from "@/app/points/supabase";
-import type {Player, PointDetailed} from "@/lib/supabase";
+import { fetchPointPossessions } from "@/app/possessions/supabase";
 import OnPageVideoLink from "@/components/on-page-video-link";
 import PointOverview from "@/app/events/[id]/[point_id]/view/components/point-overview";
 import PossessionSection from "@/app/events/[id]/[point_id]/view/components/possession-section";
 import { FaLongArrowAltLeft, FaLongArrowAltRight } from "react-icons/fa";
-import {deletePossession, updatePossession} from "@/app/possessions/supabase";
+import { deletePossession } from "@/app/possessions/supabase";
 import EditPossessionDialog from "@/app/events/[id]/[point_id]/view/components/edit-possession";
-import {fetchPlayersForTeam} from "@/app/teams/[team_id]/[player_id]/supabase";
-import {useParams} from "next/navigation";
+import {useParams, useRouter} from "next/navigation";
 import {useAuth} from "@/lib/auth-context.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
 import {AuthWrapper} from "@/components/auth-wrapper.tsx";
+import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+import {fetchPoint} from "@/app/points/supabase.ts";
+import FloatingClipButton from "@/components/ui/add-clip-button.tsx";
+import {AddClipModal} from "@/app/clips/components/add-clip-modal.tsx";
 
 function PointViewContent() {
   const { id, point_id } = useParams<{ id: string; point_id: string }>()
+  const queryClient = useQueryClient()
+  const router = useRouter();
   const { player } = useAuth()
-  const [point, setPoint] = useState<PointDetailed[]>([]);
-  const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [offencePlayers, setOffencePlayers] = useState<Player[]>([]);
-  const [defencePlayers, setDefencePlayers] = useState<Player[]>([]);
+  const { open, onOpen, onClose } = useDisclosure();
 
   const editDisclosure = useDisclosure();
   const deleteDisclosure = useDisclosure();
 
-  useEffect(() => {
-    if (!point_id) return;
-
-    const load = async () => {
-      setLoading(true);
-      const data = await fetchDetailPoint(point_id);
-      setPoint(data);
-      setLoading(false);
-    };
-
-    void load();
-  }, [point_id]);
-
-  useEffect(() => {
-    async function loadPlayers() {
-      if (!point || point.length === 0 || currentIndex >= point.length) return;
-
-      const possession = point[currentIndex];
-      if (!possession) return;
-
-      const offence = await fetchPlayersForTeam(possession.offence_team || "");
-      const defence = await fetchPlayersForTeam(possession.defence_team || "");
-      setOffencePlayers(offence);
-      setDefencePlayers(defence);
+  const { data: possessionPageData, isLoading } = useQuery({
+    queryKey: ["possessions"],
+    queryFn: async () => {
+      const pointData = await fetchPoint(point_id)
+      if (!pointData) {
+        throw new Error("Point not found.");
+      }
+      const possessionsData = await fetchPointPossessions(point_id)
+      return {
+        point: pointData,
+        possessions: possessionsData
+      }
     }
+  })
 
-    void loadPlayers();
-  }, [point, currentIndex]);
+  const { point, possessions } = possessionPageData || {
+    point: null,
+    possessions: [],
+  };
 
-  if (!player || loading) {
+  interface DeletePossessionVars {
+    possessionNumber: number;
+    pointId: string;
+  }
+
+  const { mutate: deletePossessionMutation, isPending: isDeleting } = useMutation({
+    mutationFn: (variables: DeletePossessionVars) =>
+      deletePossession(variables.pointId, variables.possessionNumber),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["possessions"] });
+      deleteDisclosure.onClose();
+    },
+    onError: (error) => {
+      console.error("Failed to delete possession:", error);
+    }
+  });
+
+  const handleDeleteConfirm = () => {
+    if (!point) return;
+
+    deletePossessionMutation({
+      possessionNumber: currentIndex + 1,
+      pointId: point.point_id,
+    });
+  };
+
+  useEffect(() => {
+    if (possessions && currentIndex >= possessions.length) {
+      setCurrentIndex(Math.max(0, possessions.length - 1));
+    }
+  }, [possessions, currentIndex]);
+
+
+  if (!player || isLoading) {
     return (
       <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
         <Text color="white" fontSize="lg">Loading player data...</Text>
       </Box>
     )
   }
+  if (!point ) {
+    return (
+      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
+        <Text color="white" fontSize="lg">No point data found</Text>
+      </Box>
+    )
+  }
 
-  if (point.length === 0) {
+  if (possessions.length === 0) {
     return (
           <Container maxW="4xl" py={8}>
             <StandardHeader text="Point Info" is_admin={player.is_admin} />
             <Text mt={8} color="white">
-              {loading ? "Loading point data" : "No data found for this point yet."}
+              {isLoading ? "Loading point data" : "No data found for this point yet."}
             </Text>
-            {!loading && (
+            {!isLoading && (
               <Button
                 colorPalette="green"
                 mt={6}
@@ -95,10 +129,10 @@ function PointViewContent() {
     );
   }
 
-  const last = point[point.length - 1];
-  const possession = point[currentIndex];
+  const last = possessions[possessions.length - 1];
+  const possession = possessions[currentIndex];
   const currentPossession = currentIndex+1;
-  const possessionCount = point.length;
+  const possessionCount = possessions.length;
   const scorer = last.score_player_name || "Unknown";
   const possessionOutcome = possession.is_score ? "Score" : "Turnover";
   const lastOutcome = last.is_score ? "Score" : "Turnover";
@@ -107,48 +141,6 @@ function PointViewContent() {
       ? "Hold"
       : "Break";
 
-  const refreshData = async () => {
-    setLoading(true);
-    const data = await fetchDetailPoint(point_id);
-    setPoint(data);
-    setLoading(false);
-  };
-
-  const handleUpdate = async (updated: Partial<PointDetailed>) => {
-    try {
-      const { point_id, possession_number } = possession;
-      if (!point_id || possession_number == null) return;
-
-      await updatePossession(point_id, possession_number, updated);
-      await refreshData();
-      editDisclosure.onClose();
-    } catch (err) {
-      console.error("Failed to update possession", err);
-    }
-  };
-
-  // Test function for checking output
-
-  // const handleUpdate = (updated: Partial<PointDetailed>) => {
-  //   const possessionNumber = point[currentIndex]?.possession_number;
-  //   const pointId = point[currentIndex]?.point_id;
-  //
-  //   if (!possessionNumber || !pointId) {
-  //     console.warn("Missing possession number or point ID");
-  //     return;
-  //   }
-  //
-  //   const payload = {
-  //     point_id: pointId,
-  //     possession_number: possessionNumber,
-  //     ...updated,
-  //   };
-  //
-  //   console.log("Supabase update payload:", payload);
-  //
-  //   editDisclosure.onClose();
-  // };
-
   const overview = {
     offence_team: possession.offence_team_name || "Unknown",
     throws: possession.throws || 0,
@@ -156,10 +148,10 @@ function PointViewContent() {
   };
 
   const plays = {
-    o_init: possession.offence_init || "None",
-    o_main: possession.offence_main || "None",
-    d_init: possession.defence_init || "None",
-    d_main: possession.defence_main || "None",
+    o_init: possession.offence_init_name || "None",
+    o_main: possession.offence_main_name || "None",
+    d_init: possession.defence_init_name || "None",
+    d_main: possession.defence_main_name || "None",
   };
 
   const turnover = {
@@ -180,24 +172,7 @@ function PointViewContent() {
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => Math.min(prev + 1, point.length - 1));
-  };
-
-  const handleDelete = async () => {
-    try {
-      if (possession.possession_number == null) {
-        console.warn("Possession number is missing");
-        return;
-      }
-      await deletePossession(possession.point_id, possession.possession_number);
-      setPoint((prev) =>
-        prev.filter((p) => !(p.point_id === possession.point_id && p.possession_number === possession.possession_number))
-      );
-      setCurrentIndex((prev) => Math.max(prev - 1, 0)); // go back if on last possession
-      deleteDisclosure.onClose();
-    } catch (error) {
-      console.log(error);
-    }
+    setCurrentIndex((prev) => Math.min(prev + 1, possessions.length - 1));
   };
 
   const DeleteConfirm = (
@@ -215,7 +190,9 @@ function PointViewContent() {
 
           <Dialog.Footer display="flex" justifyContent="space-between">
             <Button onClick={deleteDisclosure.onClose}>Cancel</Button>
-            <Button colorPalette="red" onClick={handleDelete}>
+            <Button colorPalette="red"
+                    onClick={handleDeleteConfirm}
+                    loading={isDeleting}>
               Confirm Delete
             </Button>
           </Dialog.Footer>
@@ -230,9 +207,9 @@ function PointViewContent() {
 
   return (
     <Container maxW="4xl" py={8}>
-      <StandardHeader text={point[0].event_name} is_admin={player.is_admin} />
+      <StandardHeader text={point.event_name} is_admin={player.is_admin} />
       <Text mt={4} fontSize="lg" color="gray.400">
-        {`Offence: ${point[0].point_offence_team_name}`}
+        {`Offence: ${point.offence_team_name}`}
       </Text>
 
       <PointOverview
@@ -242,7 +219,7 @@ function PointViewContent() {
         scorer={scorer}
       />
 
-      <OnPageVideoLink url={point[0].timestamp_url!} />
+      <OnPageVideoLink url={baseUrlToTimestampUrl(point.base_url, point.timestamp)} />
 
       {/* Navigation controls */}
       <HStack justify="space-between" mt={5}>
@@ -250,9 +227,9 @@ function PointViewContent() {
           <FaLongArrowAltLeft />
         </IconButton>
         <Text textAlign="center">
-          Possession {currentIndex + 1} of {point.length}
+          Possession {currentIndex + 1} of {possessions.length}
         </Text>
-        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handleNext} disabled={currentIndex === point.length - 1}>
+        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handleNext} disabled={currentIndex === possessions.length - 1}>
           <FaLongArrowAltRight />
         </IconButton>
       </HStack>
@@ -268,15 +245,12 @@ function PointViewContent() {
               <Button onClick={editDisclosure.onOpen}>Edit</Button>
             </Dialog.Trigger>
             <EditPossessionDialog
-              possession={possession}
               onClose={editDisclosure.onClose}
-              onUpdate={handleUpdate}
-              outcome={possessionOutcome}
-              offence_player_list={offencePlayers}
-              defence_player_list={defencePlayers}
+              possessionNumber = {currentIndex + 1}
+              pointId = {point.point_id}
             />
           </Dialog.Root>
-          <Button colorPalette = "green" onClick={() => window.location.href = `/events/${id}/${point_id}`}>Add Next Possession</Button>
+          <Button colorPalette = "green" onClick={() => router.push(`/events/${id}/${point_id}`)}>Add Next Possession</Button>
           <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
             <Dialog.Trigger asChild>
               <Button colorPalette="red" onClick={deleteDisclosure.onOpen}>
@@ -293,12 +267,9 @@ function PointViewContent() {
               <Button onClick={editDisclosure.onOpen}>Edit</Button>
             </Dialog.Trigger>
             <EditPossessionDialog
-              possession={possession}
               onClose={editDisclosure.onClose}
-              onUpdate={handleUpdate}
-              outcome={possessionOutcome}
-              offence_player_list={offencePlayers}
-              defence_player_list={defencePlayers}
+              possessionNumber = {currentIndex + 1}
+              pointId = {point.point_id}
             />
           </Dialog.Root>
           <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
@@ -317,16 +288,21 @@ function PointViewContent() {
               <Button onClick={editDisclosure.onOpen}>Edit</Button>
             </Dialog.Trigger>
             <EditPossessionDialog
-              possession={possession}
               onClose={editDisclosure.onClose}
-              onUpdate={handleUpdate}
-              outcome={possessionOutcome}
-              offence_player_list={offencePlayers}
-              defence_player_list={defencePlayers}
+              possessionNumber = {currentIndex + 1}
+              pointId = {point.point_id}
             />
           </Dialog.Root>
         </HStack>
       )}
+      <FloatingClipButton onClick={onOpen} />
+      <AddClipModal
+        isOpen={open}
+        onClose={onClose}
+        eventId={id}
+        sourceId = {point.source_id}
+        playerId={player.player_id}
+      />
     </Container>
   );
 }

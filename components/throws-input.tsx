@@ -3,19 +3,17 @@ import { LuMinus, LuPlus } from "react-icons/lu";
 import React from "react";
 
 type ThrowCounterProps = {
-  value: string;
-  onChange: (value: string) => void;
+  value: number;
+  onChange: (value: number) => void;
 };
 
-export default function ThrowCounter({ value, onChange }: ThrowCounterProps) {
+export default function ThrowCounter({ value = 0, onChange }: ThrowCounterProps) {
   const increment = () => {
-    const next = parseInt(value || "0", 10) + 1;
-    onChange(next.toString());
+    onChange(value + 1);
   };
 
   const decrement = () => {
-    const next = Math.max(0, parseInt(value || "0", 10) - 1);
-    onChange(next.toString());
+    onChange(Math.max(0, value - 1));
   };
 
   return (

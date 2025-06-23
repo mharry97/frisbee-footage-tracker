@@ -1,4 +1,4 @@
-import { PointDetailed } from "@/lib/supabase.ts";
+import { PossessionDetailed } from "@/app/possessions/supabase";
 
 const THROWAWAY_REASONS = ["Throw Away", "Stallout", "Hand/Foot Block"];
 const DROP_REASONS = ["Drop"];
@@ -13,7 +13,7 @@ export interface PlayerStats {
   plusMinus: number;
 }
 
-export function getPlayerStatsFromPossessions(data: PointDetailed[]): Record<string, PlayerStats> {
+export function getPlayerStatsFromPossessions(data: PossessionDetailed[]): Record<string, PlayerStats> {
   const statsMap: Record<string, PlayerStats> = {};
 
   for (const point of data) {

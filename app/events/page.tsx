@@ -13,7 +13,7 @@ import {useAuth} from "@/lib/auth-context.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
 import {useQuery} from "@tanstack/react-query";
 import React from "react";
-import EventForm from "@/app/events/event-form.tsx";
+import EventForm from "@/app/events/components/event-form.tsx";
 
 function EventsPageContent() {
   const { player } = useAuth()

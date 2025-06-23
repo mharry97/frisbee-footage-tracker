@@ -1,106 +1,193 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo} from "react";
 import {
   Dialog,
   Button,
   CloseButton,
   Portal,
   VStack,
-  Field,
-  NativeSelect,
   Image,
-  Text,
+  Text, Stack, Center, createListCollection,
 } from "@chakra-ui/react";
-import CustomDropdownInput from "@/app/events/[id]/[point_id]/components/custom-dropdown-with-add";
-import type { PointDetailed } from "@/lib/supabase";
-import {
-  fetchDInitPlays,
-  fetchDMainPlays,
-  fetchOInitPlays,
-  fetchOMainPlays
-} from "@/app/events/[id]/[point_id]/supabase";
-import type { Player } from "@/lib/supabase";
 import ThrowCounter from "@/components/throws-input";
-
-type ListItem = { play: string };
+import {usePointFormCollections, usePointFormData} from "@/app/hooks/usePointFormData.ts";
+import {AsyncDropdown} from "@/components/async-dropdown.tsx";
+import {Controller, useForm} from "react-hook-form";
+import { EditPossession, editSchema} from "@/app/possessions/possessions.schema.ts";
+import {zodResolver} from "@hookform/resolvers/zod";
+import { ScoreMethods, TurnoverReasons } from "@/app/possessions/possessions.schema.ts";
+import {useEditPossessionSubmit} from "@/app/hooks/usePermissionSubmit.ts";
+import {PlayerDetailed} from "@/app/players/supabase.ts";
 
 type EditPossessionDialogProps = {
-  possession: PointDetailed;
+  possessionNumber: number;
   onClose: () => void;
-  onUpdate: (updated: Partial<PointDetailed>) => void;
-  outcome: string;
-  offence_player_list: Player[];
-  defence_player_list: Player[];
+  pointId: string;
 };
 
 export default function EditPossessionDialog({
-                                               possession,
+                                               possessionNumber,
                                                onClose,
-                                               onUpdate,
-                                               outcome,
-                                               offence_player_list,
-                                               defence_player_list,
+                                               pointId,
                                              }: EditPossessionDialogProps) {
-  const [dInitPlay, setDInitPlay] = useState(possession.defence_init || "");
-  const [oInitPlay, setOInitPlay] = useState(possession.offence_init || "");
-  const [dMainPlay, setDMainPlay] = useState(possession.defence_main || "");
-  const [oMainPlay, setOMainPlay] = useState(possession.offence_main || "");
-  const [numThrows, setNumThrows] = useState(String(possession.throws ?? "0"));
-  const [defenceInitList, setDInitList] = useState<ListItem[]>([]);
-  const [defenceMainList, setDMainList] = useState<ListItem[]>([]);
-  const [offenceInitList, setOInitList] = useState<ListItem[]>([]);
-  const [offenceMainList, setOMainList] = useState<ListItem[]>([]);
+  const { data, isLoading, error } = usePointFormData(pointId);
 
-  const [thrownTo, setThrownTo] = useState<number | null>(possession.turn_receive_zone ?? null);
-  const [thrownFrom, setThrownFrom] = useState<number | null>(possession.turn_throw_zone ?? null);
-  const [turnoverThrower, setTurnoverThrower] = useState(possession.turn_thrower ?? "");
-  const [turnoverReceiver, setTurnoverReceiver] = useState(possession.turn_intended_receiver ?? "");
-  const [turnoverReason, setTurnoverReason] = useState(possession.turnover_reason ?? "");
-  const [dPlayer, setDPlayer] = useState(possession.d_player ?? "");
+  if (error) throw error;
 
-  const [scorePlayer, setScorePlayer] = useState(possession.score_player ?? "");
-  const [assistPlayer, setAssistPlayer] = useState(possession.assist_player ?? "");
-  const [scoreMethod, setScoreMethod] = useState(possession.score_method ?? "");
+  const { point, possessions, dropdownLists } = data || {
+    point: null,
+    possessions: [],
+    dropdownLists: {},
+  };
+  const collections = usePointFormCollections(data);
 
+  // Get specific possession info
+  const possessionToEdit = useMemo(() => {
+    return possessions.find(p => p.possession_number === possessionNumber);
+  }, [possessions, possessionNumber]);
+
+  const {
+    control,
+    handleSubmit,
+    watch,
+    reset,
+    formState: { isSubmitting: isFormSubmitting, errors, isValid }
+  } = useForm<EditPossession>({
+    resolver: zodResolver(editSchema),
+    defaultValues: {
+      // For dropdowns, wrap the single value in an array
+      offence_team_players: point?.offence_team_players ?? [],
+      defence_team_players: point?.defence_team_players ?? [],
+      defence_init: possessionToEdit?.defence_init ? [possessionToEdit.defence_init] : [],
+      defence_main: possessionToEdit?.defence_main ? [possessionToEdit.defence_main] : [],
+      offence_init: possessionToEdit?.offence_init ? [possessionToEdit.offence_init] : [],
+      offence_main: possessionToEdit?.offence_main ? [possessionToEdit.offence_main] : [],
+      throws: possessionToEdit?.throws ?? 0,
+      turn_throw_zone: possessionToEdit?.turn_throw_zone ? [String(possessionToEdit.turn_throw_zone)] : [],
+      turn_receive_zone: possessionToEdit?.turn_receive_zone ? [String(possessionToEdit.turn_receive_zone)] : [],
+      turn_thrower: possessionToEdit?.turn_thrower ? [possessionToEdit.turn_thrower] : [],
+      turn_intended_receiver: possessionToEdit?.turn_intended_receiver ? [possessionToEdit.turn_intended_receiver] : [],
+      turnover_reason: possessionToEdit?.turnover_reason ? [possessionToEdit.turnover_reason as TurnoverReasons] : [],
+      d_player: possessionToEdit?.d_player ? [possessionToEdit.d_player] : [],
+      assist_player: possessionToEdit?.assist_player ? [possessionToEdit.assist_player] : [],
+      score_player: possessionToEdit?.score_player ? [possessionToEdit.score_player] : [],
+      score_method: possessionToEdit?.score_method ? [possessionToEdit.score_method as ScoreMethods] : [],
+    },
+  });
+
+  // Need this so default data will change when leaving and reopening modal
   useEffect(() => {
-    async function fetchOptions() {
-      const [dInit, dMain, oInit, oMain] = await Promise.all([
-        fetchDInitPlays(),
-        fetchDMainPlays(),
-        fetchOInitPlays(),
-        fetchOMainPlays(),
-      ]);
-
-      setDInitList(dInit);
-      setDMainList(dMain);
-      setOInitList(oInit);
-      setOMainList(oMain);
+    if (possessionToEdit) {
+      // `reset` updates the entire form's values to match the new object
+      reset({
+        // Use the exact same logic here as in your original defaultValues
+        offence_team_players: point?.offence_team_players ?? [],
+        defence_team_players: point?.defence_team_players ?? [],
+        defence_init: possessionToEdit.defence_init ? [possessionToEdit.defence_init] : [],
+        defence_main: possessionToEdit.defence_main ? [possessionToEdit.defence_main] : [],
+        offence_init: possessionToEdit.offence_init ? [possessionToEdit.offence_init] : [],
+        offence_main: possessionToEdit.offence_main ? [possessionToEdit.offence_main] : [],
+        throws: possessionToEdit.throws ?? 0,
+        turn_throw_zone: possessionToEdit.turn_throw_zone ? [String(possessionToEdit.turn_throw_zone)] : [],
+        turn_receive_zone: possessionToEdit.turn_receive_zone ? [String(possessionToEdit.turn_receive_zone)] : [],
+        turn_thrower: possessionToEdit.turn_thrower ? [possessionToEdit.turn_thrower] : [],
+        turn_intended_receiver: possessionToEdit.turn_intended_receiver ? [possessionToEdit.turn_intended_receiver] : [],
+        turnover_reason: possessionToEdit.turnover_reason ? [possessionToEdit.turnover_reason as TurnoverReasons] : [],
+        d_player: possessionToEdit.d_player ? [possessionToEdit.d_player] : [],
+        assist_player: possessionToEdit.assist_player ? [possessionToEdit.assist_player] : [],
+        score_player: possessionToEdit.score_player ? [possessionToEdit.score_player] : [],
+        score_method: possessionToEdit.score_method ? [possessionToEdit.score_method as ScoreMethods] : [],
+      });
     }
+  }, [possessionToEdit, reset, point]);
 
-    void fetchOptions();
-  }, []);
+  const { submitEdit, isSubmitting: isMutationSubmitting } = useEditPossessionSubmit({
+    onSuccess: onClose
+  });
 
-  const clean = (value: string | undefined | null) => (value === "" ? null : value);
+  const isSubmitting = isFormSubmitting || isMutationSubmitting;
 
-  const handleSubmit = () => {
-    onUpdate({
-      defence_init: dInitPlay,
-      offence_init: oInitPlay,
-      defence_main: dMainPlay,
-      offence_main: oMainPlay,
-      throws: Number(numThrows),
-      is_score: possession.is_score,
-      turn_thrower: clean(turnoverThrower),
-      turn_throw_zone: thrownFrom,
-      turn_receive_zone: thrownTo,
-      turn_intended_receiver: clean(turnoverReceiver),
-      turnover_reason: turnoverReason,
-      d_player: clean(dPlayer),
-      score_player: clean(scorePlayer),
-      assist_player: clean(assistPlayer),
-      score_method: scoreMethod,
-    });
+  const onSubmit = (formData: EditPossession) => {
+    console.log("Submitting!")
+    if (!possessionToEdit) return;
+    const transformedData = {
+      ...formData,
+    };
+    submitEdit(transformedData, possessionToEdit);
   };
 
+  const selectedDefencePlayerIds = watch("defence_team_players");
+  const selectedOffencePlayerIds = watch("offence_team_players");
+
+  const availableOnDefenceCollection = useMemo(() => {
+    const allDefencePlayers = dropdownLists?.defencePlayers ?? [];
+    const selectedIds = new Set(selectedDefencePlayerIds ?? []);
+
+    if (selectedIds.size === 0) {
+      return createListCollection<PlayerDetailed>({ items: [] });
+    }
+
+    const availablePlayers = allDefencePlayers.filter((player) =>
+      selectedIds.has(player.player_id)
+    );
+
+    return createListCollection({
+      items: availablePlayers,
+      itemToString: (player) => player.player_name,
+      itemToValue: (player) => player.player_id,
+    });
+  }, [selectedDefencePlayerIds, dropdownLists?.defencePlayers]);
+
+  const availableOnOffenceCollection = useMemo(() => {
+    const allOffencePlayers = dropdownLists?.offencePlayers ?? [];
+    const selectedIds = new Set(selectedOffencePlayerIds ?? []);
+
+    if (selectedIds.size === 0) {
+      return createListCollection<PlayerDetailed>({ items: [] });
+    }
+
+    const availablePlayers = allOffencePlayers.filter((player) =>
+      selectedIds.has(player.player_id)
+    );
+
+    return createListCollection({
+      items: availablePlayers,
+      itemToString: (player) => player.player_name,
+      itemToValue: (player) => player.player_id,
+    });
+  }, [selectedOffencePlayerIds, dropdownLists?.offencePlayers]);
+
+
+  const { activeOffenceCollection, activeDefenceCollection } = useMemo(() => {
+    const isPointDefenceTeamOnOffence = possessionNumber % 2 === 0;
+
+    if (isPointDefenceTeamOnOffence) {
+      return {
+        activeOffenceCollection: availableOnDefenceCollection,
+        activeDefenceCollection: availableOnOffenceCollection,
+      };
+    } else {
+      return {
+        activeOffenceCollection: availableOnOffenceCollection,
+        activeDefenceCollection: availableOnDefenceCollection,
+      };
+    }
+  }, [possessionNumber, availableOnOffenceCollection, availableOnDefenceCollection]);
+
+  if (isLoading) return <p>Loading...</p>;
+  if (error) return <p>Error loading data.</p>;
+  if (!possessionToEdit) return <p>Possession not found.</p>;
+
+  console.log("Form Errors:", errors);
+
+  // Testing form
+  // const formValues = watch();
+  // console.log('Form Debug:', {
+  //   isValid,
+  //   isDirty,
+  //   errors,
+  //   formValues,
+  //   isSubmitting
+  // });
   return (
     <Portal>
       <Dialog.Backdrop />
@@ -111,161 +198,261 @@ export default function EditPossessionDialog({
           </Dialog.Header>
           <Dialog.Body>
             <VStack gap={4}>
-              <CustomDropdownInput
-                label="Defence Initiation"
-                placeholder="e.g. Flex"
-                value={dInitPlay}
-                onChange={setDInitPlay}
-                options={defenceInitList.map((p) => ({ value: p.play, label: p.play }))}
-                customOptionValue="+ Add Strategy"
-              />
-              <CustomDropdownInput
-                label="Offence Initiation"
-                placeholder="e.g. Slash"
-                value={oInitPlay}
-                onChange={setOInitPlay}
-                options={offenceInitList.map((p) => ({ value: p.play, label: p.play }))}
-              />
-              <CustomDropdownInput
-                label="Defence Main Play"
-                placeholder="e.g. Flick"
-                value={dMainPlay}
-                onChange={setDMainPlay}
-                options={defenceMainList.map((p) => ({ value: p.play, label: p.play }))}
-              />
-              <CustomDropdownInput
-                label="Offence Main Play"
-                placeholder="e.g. Vertical Stack"
-                value={oMainPlay}
-                onChange={setOMainPlay}
-                options={offenceMainList.map((p) => ({ value: p.play, label: p.play }))}
-              />
-              <ThrowCounter value={numThrows} onChange={setNumThrows} />
-
-              {outcome === "Turnover" ? (
-                <>
-                  <Text mt={2} textStyle = "lg">Turnover Info</Text>
-                  <Image src="/pitch-zoned.png" mb={4} alt="Pitch Zoned"/>
-                  <Field.Root mb={4}>
-                    <Field.Label>Thrown From</Field.Label>
-                    <NativeSelect.Root>
-                      <NativeSelect.Field
-                        placeholder="Select Zone"
-                        value={thrownFrom ?? ""}
-                        onChange={(e) => {setThrownFrom(Number(e.currentTarget.value));
-                        }}
-                      >
-                        {Array.from({ length: 12 }, (_, i) => {
-                          const val = (i + 1).toString();
-                          return (
-                            <option key={val} value={val}>
-                              {`Zone ${val}`}
-                            </option>
-                          );
-                        })}
-                      </NativeSelect.Field>
-                      <NativeSelect.Indicator />
-                    </NativeSelect.Root>
-                  </Field.Root>
-                  <Field.Root mb={4}>
-                    <Field.Label>Intended Catch Zone</Field.Label>
-                    <NativeSelect.Root>
-                      <NativeSelect.Field
-                        placeholder="Select Zone"
-                        value={thrownTo ?? ""}
-                        onChange={(e) => {setThrownTo(Number(e.currentTarget.value));
-                        }}
-                      >
-                        {Array.from({ length: 12 }, (_, i) => {
-                          const val = (i + 1).toString();
-                          return (
-                            <option key={val} value={val}>
-                              {`Zone ${val}`}
-                            </option>
-                          );
-                        })}
-                      </NativeSelect.Field>
-                      <NativeSelect.Indicator />
-                    </NativeSelect.Root>
-                  </Field.Root>
-                  <CustomDropdownInput
-                    label="Turnover Thrower"
-                    placeholder="Player Name"
-                    value={turnoverThrower}
-                    onChange={setTurnoverThrower}
-                    options={offence_player_list.map((p) => ({ value: p.player_id, label: p.player_name }))}
-                  />
-                  <CustomDropdownInput
-                    label="Turnover Intended Receiver"
-                    placeholder="Player Name"
-                    value={turnoverReceiver}
-                    onChange={setTurnoverReceiver}
-                    options={offence_player_list.map((p) => ({ value: p.player_id, label: p.player_name }))}
-                  />
-                  <Field.Root mb={4}>
-                    <Field.Label>Turnover Reason</Field.Label>
-                    <NativeSelect.Root>
-                      <NativeSelect.Field
-                        placeholder="Select reason"
-                        value={turnoverReason}
-                        onChange={(e) => setTurnoverReason(e.currentTarget.value)}
-                      >
-                        <option value="Drop">Drop</option>
-                        <option value="Stallout">Stallout</option>
-                        <option value="Hand/Foot Block">Hand/Foot Block</option>
-                        <option value="Block">Block</option>
-                        <option value="Forced Error">Forced Error</option>
-                        <option value="Throw Away">Throw Away</option>
-                      </NativeSelect.Field>
-                      <NativeSelect.Indicator />
-                    </NativeSelect.Root>
-                  </Field.Root>
-                  <CustomDropdownInput
-                    label="D Player (if applicable)"
-                    placeholder="Player Name"
-                    value={dPlayer}
-                    onChange={setDPlayer}
-                    options={defence_player_list.map((p) => ({ value: p.player_id, label: p.player_name }))}
-                  />
-                </>
-              ) : (
-                <>
-                  <Text mt={2} textStyle = "lg" fontWeight="bold" >Score Info</Text>
-                  <CustomDropdownInput
-                    label="Assist Thrower"
-                    placeholder="Player Name"
-                    value={assistPlayer}
-                    onChange={setAssistPlayer}
-                    options={offence_player_list.map((p) => ({ value: p.player_id, label: p.player_name }))}
-                  />
-                  <CustomDropdownInput
-                    label="Scorer"
-                    placeholder="Player Name"
-                    value={scorePlayer}
-                    onChange={setScorePlayer}
-                    options={offence_player_list.map((p) => ({ value: p.player_id, label: p.player_name }))}
-                  />
-                  <Field.Root mb={4}>
-                    <Field.Label>Score Method</Field.Label>
-                    <NativeSelect.Root>
-                      <NativeSelect.Field
-                        placeholder="Select method"
-                        value={scoreMethod}
-                        onChange={(e) => setScoreMethod(e.currentTarget.value)}
-                      >
-                        <option value="Flow">Flow</option>
-                        <option value="Endzone Set">Endzone Set</option>
-                        <option value="Deep Shot">Deep Shot</option>
-                      </NativeSelect.Field>
-                      <NativeSelect.Indicator />
-                    </NativeSelect.Root>
-                  </Field.Root>
-                </>
-              )}
+              <form id="edit-possession-form" onSubmit={handleSubmit(onSubmit)}>
+                <Text textStyle="xl" mb={4}>Players</Text>
+                <AsyncDropdown
+                  name="offence_team_players"
+                  control={control}
+                  label="Offence Players"
+                  placeholder="Select players on offence"
+                  collection={collections.offenceCollection}
+                  isLoading={isLoading}
+                  multiple={true}
+                  itemToKey={(item) => item.player_id}
+                  renderItem={(item) => (
+                    <Stack gap={0}>
+                      <Text>{item.player_name}</Text>
+                      <Text textStyle="xs" color="fg.muted">{item.number ? "#"+item.number+" - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
+                    </Stack>
+                  )}
+                />
+                <AsyncDropdown
+                  name="defence_team_players"
+                  control={control}
+                  label="Defence Players"
+                  placeholder="Select players on defence"
+                  collection={collections.defenceCollection}
+                  isLoading={isLoading}
+                  multiple={true}
+                  itemToKey={(item) => item.player_id}
+                  renderItem={(item) => (
+                    <Stack gap={0}>
+                      <Text>{item.player_name}</Text>
+                      <Text textStyle="xs" color="fg.muted">{item.number ? "#"+item.number+" - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
+                    </Stack>
+                  )}
+                />
+                <Text textStyle="xl" mb={4}>Plays</Text>
+                <AsyncDropdown
+                  name="defence_init"
+                  control={control}
+                  label="Defence Initiation"
+                  placeholder="Select defence initiation"
+                  collection={collections.stratCollections.dInitCollection}
+                  isLoading={isLoading}
+                  itemToKey={(item) => item.strategy_id}
+                  renderItem={(item) => (
+                    <Stack gap={0}>
+                      <Text>{item.strategy}</Text>
+                      <Text color="fg.muted" fontSize="xs">
+                        {item.strategy_type}
+                      </Text>
+                    </Stack>
+                  )}
+                />
+                <AsyncDropdown
+                  name="defence_main"
+                  control={control}
+                  label="Defence Main"
+                  placeholder="Select defence main play"
+                  collection={collections.stratCollections.dMainCollection}
+                  isLoading={isLoading}
+                  itemToKey={(item) => item.strategy_id}
+                  renderItem={(item) => (
+                    <Stack gap={0}>
+                      <Text>{item.strategy}</Text>
+                      <Text color="fg.muted" fontSize="xs">
+                        {item.strategy_type}
+                      </Text>
+                    </Stack>
+                  )}
+                />
+                <AsyncDropdown
+                  name="offence_init"
+                  control={control}
+                  label="Offence Initiation"
+                  placeholder="Select offence initiation"
+                  collection={collections.stratCollections.oInitCollection}
+                  isLoading={isLoading}
+                  itemToKey={(item) => item.strategy_id}
+                  renderItem={(item) => (
+                    <Stack gap={0}>
+                      <Text>{item.strategy}</Text>
+                      <Text color="fg.muted" fontSize="xs">
+                        {item.strategy_type}
+                      </Text>
+                    </Stack>
+                  )}
+                />
+                <AsyncDropdown
+                  name="offence_main"
+                  control={control}
+                  label="Offence Main"
+                  placeholder="Select offence main play"
+                  collection={collections.stratCollections.oMainCollection}
+                  isLoading={isLoading}
+                  itemToKey={(item) => item.strategy_id}
+                  renderItem={(item) => (
+                    <Stack gap={0}>
+                      <Text>{item.strategy}</Text>
+                      <Text color="fg.muted" fontSize="xs">
+                        {item.strategy_type}
+                      </Text>
+                    </Stack>
+                  )}
+                />
+                <Controller
+                  name="throws"
+                  control={control}
+                  defaultValue={0}
+                  render={({ field }) => (
+                    <ThrowCounter
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
+                  )}
+                />
+                {possessionToEdit.is_score === false && (
+                  <>
+                    <Text textStyle="xl" mb={4}>Turnover Details</Text>
+                    <Center>
+                      <Image src="/pitch-zoned.png" mb={4} alt="Pitch Zoned" />
+                    </Center>
+                    <AsyncDropdown
+                      name="turn_throw_zone"
+                      control={control}
+                      label="Thrown From"
+                      placeholder="Select throw zone"
+                      collection={collections.zoneCollection}
+                      isLoading={isLoading}
+                      itemToKey={(zoneNumber) => zoneNumber}
+                      renderItem={(zoneNumber) => `Zone ${zoneNumber}`}
+                    />
+                    <AsyncDropdown
+                      name="turn_receive_zone"
+                      control={control}
+                      label="Intended Receive Zone"
+                      placeholder="Select receive zone"
+                      collection={collections.zoneCollection}
+                      isLoading={isLoading}
+                      itemToKey={(zoneNumber) => zoneNumber}
+                      renderItem={(zoneNumber) => `Zone ${zoneNumber}`}
+                    />
+                    <AsyncDropdown
+                      name="turn_thrower"
+                      control={control}
+                      label="Thrower"
+                      placeholder="Select thrower"
+                      collection={activeOffenceCollection}
+                      isLoading={isLoading}
+                      itemToKey={(item) => item.player_id}
+                      renderItem={(item) => (
+                        <Stack gap={0}>
+                          <Text>{item.player_name}</Text>
+                          <Text textStyle="xs" color="fg.muted">{item.number ? "#"+item.number+" - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
+                        </Stack>
+                      )}
+                    />
+                    <AsyncDropdown
+                      name="turn_intended_receiver"
+                      control={control}
+                      label="Intended Receiver"
+                      placeholder="Select intended receiver"
+                      collection={activeOffenceCollection}
+                      isLoading={isLoading}
+                      itemToKey={(item) => item.player_id}
+                      renderItem={(item) => (
+                        <Stack gap={0}>
+                          <Text>{item.player_name}</Text>
+                          <Text textStyle="xs"
+                                color="fg.muted">{item.number ? "#" + item.number + " - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
+                        </Stack>
+                      )}
+                    />
+                    <AsyncDropdown
+                      name="turnover_reason"
+                      control={control}
+                      label="Turnover Reason"
+                      placeholder="Select reason"
+                      collection={collections.reasonCollection}
+                      isLoading={isLoading}
+                      itemToKey={(item) => item}
+                      renderItem={(item) => item}
+                    />
+                    <AsyncDropdown
+                      name="d_player"
+                      control={control}
+                      label="D player"
+                      placeholder="Select D player"
+                      collection={activeDefenceCollection}
+                      isLoading={isLoading}
+                      itemToKey={(item) => item.player_id}
+                      renderItem={(item) => (
+                        <Stack gap={0}>
+                          <Text>{item.player_name}</Text>
+                          <Text textStyle="xs"
+                                color="fg.muted">{item.number ? "#" + item.number + " - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
+                        </Stack>
+                      )}
+                    />
+                  </>
+                )}
+                {possessionToEdit.is_score === true && (
+                  <>
+                    <Text textStyle="xl" mb={4}>Score Details</Text>
+                    <AsyncDropdown
+                      name="assist_player"
+                      control={control}
+                      label="Assist Thrower"
+                      placeholder="Select assist thrower"
+                      collection={activeOffenceCollection}
+                      isLoading={isLoading}
+                      itemToKey={(item) => item.player_id}
+                      renderItem={(item) => (
+                        <Stack gap={0}>
+                          <Text>{item.player_name}</Text>
+                          <Text textStyle="xs" color="fg.muted">{item.number ? "#"+item.number+" - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
+                        </Stack>
+                      )}
+                    />
+                    <AsyncDropdown
+                      name="score_player"
+                      control={control}
+                      label="Scorer"
+                      placeholder="Select scorer"
+                      collection={activeOffenceCollection}
+                      isLoading={isLoading}
+                      itemToKey={(item) => item.player_id}
+                      renderItem={(item) => (
+                        <Stack gap={0}>
+                          <Text>{item.player_name}</Text>
+                          <Text textStyle="xs" color="fg.muted">{item.number ? "#"+item.number+" - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
+                        </Stack>
+                      )}
+                    />
+                    <AsyncDropdown
+                      name="score_method"
+                      control={control}
+                      label="Score Method"
+                      placeholder="Select score method"
+                      collection={collections.methodCollection}
+                      isLoading={isLoading}
+                      itemToKey={(item) => item}
+                      renderItem={(item) => item}
+                    />
+                  </>
+                )}
+              </form>
             </VStack>
           </Dialog.Body>
           <Dialog.Footer display="flex" justifyContent="space-between">
-            <Button colorPalette="green" onClick={handleSubmit}>
+            <Button
+              colorScheme="green"
+              type="submit"
+              form="edit-possession-form"
+              loading={isSubmitting}
+              disabled={isValid || isSubmitting}
+            >
               Update Possession
             </Button>
           </Dialog.Footer>

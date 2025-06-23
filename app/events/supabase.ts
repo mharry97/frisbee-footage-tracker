@@ -8,17 +8,12 @@ export type Event = {
   type: "Game" | "Training"
   team_1_id: string
   team_2_id: string
+  teams: string[]
 }
 
-export type EventDetail = {
-  event_id: string
-  event_name: string
-  event_date: string
-  type: "Game" | "Training"
-  team_1_id: string
+export type EventDetail = Event & {
   team_1: string
   team_1_scores: number
-  team_2_id: string
   team_2: string
   team_2_scores: number
 }
@@ -30,7 +25,8 @@ export async function fetchEvents(): Promise<EventDetail[]> {
     const { data } = await supabase
       .from("view_event_detail")
       .select("*")
-      .order("event_date", { ascending: false });
+      .order("event_date", { ascending: false })
+      .order("event_name", { ascending: true });
 
     return data ?? []
   } catch (error) {
@@ -40,10 +36,10 @@ export async function fetchEvents(): Promise<EventDetail[]> {
 }
 
 // Fetch specific event
-export async function fetchEvent(event_id: string): Promise<Event | null> {
+export async function fetchEvent(event_id: string): Promise<EventDetail | null> {
   try {
     const { data } = await supabase
-      .from("events")
+      .from("view_event_detail")
       .select("*")
       .eq("event_id", event_id)
       .single();
@@ -55,13 +51,7 @@ export async function fetchEvent(event_id: string): Promise<Event | null> {
   }
 }
 
-type AddEvent = {
-  event_name: string,
-  event_date: string,
-  type: 'Game' | 'Training',
-  team_1_id?: string,
-  team_2_id?: string
-}
+type AddEvent = Omit<Event, "event_id">
 
 // Insert event
 export async function addEvent(data: AddEvent): Promise<void> {
@@ -81,6 +71,7 @@ export async function addEvent(data: AddEvent): Promise<void> {
     team_1_id = homeId
     team_2_id = homeId
   }
+    const constructed_teams = [team_1_id,team_2_id]
 
   const { error } = await supabase
     .from('events')
@@ -90,6 +81,7 @@ export async function addEvent(data: AddEvent): Promise<void> {
       type: data.type,
       team_1_id,
       team_2_id,
+      teams:constructed_teams
     })
 
   if (error) {

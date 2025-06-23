@@ -12,7 +12,6 @@ const FloatingActionButton: React.FC<IconButtonProps> = (props) => {
       bottom={4}
       right={4}
       zIndex={9999}
-      colorPalette="green"
       rounded="full"
       size="lg"
       boxShadow="lg"

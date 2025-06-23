@@ -15,29 +15,9 @@ export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "", {
   },
 })
 
-export type Point = {
-  point_id: string
-  event_id: string
-  timestamp: string
-  offence_team: string
-  defence_team: string
-  is_break: boolean
-  source_id: string
-  created_at: string
-  base_url: string
-  timestamp_url: string
-}
-
 export type PointPlayer = {
   player_id: string
   point_id: string
-}
-
-export type Team = {
-  team_id: string
-  team_name: string
-  created_at: string
-  is_home_team: boolean
 }
 
 // export type Activity = {
@@ -60,15 +40,16 @@ export type Player = {
 
 export type Possession = {
   point_id: string
-  offence_init: string
-  defence_init: string
-  offence_main: string
-  defence_main: string
+  possession_id: string
+  offence_init: string | null
+  defence_init: string | null
+  offence_main: string | null
+  defence_main: string | null
   throws: number
-  turn_throw_zone: number
-  turn_receive_zone: number
-  turnover_reason: string
-  score_method: string
+  turn_throw_zone: number | null
+  turn_receive_zone: number | null
+  turnover_reason: string | null
+  score_method: string | null
   score_player: string | null
   assist_player: string | null
   offence_team: string
@@ -80,22 +61,13 @@ export type Possession = {
   is_score: boolean
 }
 
-export type Clip = {
-  clip_id: string
-  title: string
-  description: string
-  event_id: string | null
-  is_public: boolean
-  timestamp: string
-  timestamp_url: string
-}
-
 export type Playlist = {
   playlist_id: string
   title: string
   description: string
   is_public: boolean
-  creator: string | null
+  created_by: string
+  created_at: string
 }
 
 export type PlaylistClip = {
@@ -109,41 +81,3 @@ export type PlaylistClip = {
 //   user_id: string
 // }
 
-export type PointDetailed = {
-  possession_id: string
-  point_id: string
-  event_id: string
-  event_name: string
-  offence_init: string | null
-  defence_init: string | null
-  offence_main: string | null
-  defence_main: string | null
-  throws: number | null
-  turn_throw_zone: number | null
-  turn_receive_zone: number | null
-  turnover_reason: string | null
-  score_method: string | null
-  offence_team: string | null
-  offence_team_name: string | null
-  defence_team: string | null
-  defence_team_name: string | null
-  possession_number: number | null
-  is_score: boolean
-  timestamp_url: string | null
-  point_offence_team: string | null
-  point_offence_team_name: string | null
-  point_defence_team: string | null
-  point_defence_team_name: string | null
-  score_player: string | null
-  score_player_name: string | null
-  assist_player: string | null
-  assist_player_name: string | null
-  turn_thrower: string | null
-  turn_thrower_name: string | null
-  turn_intended_receiver: string | null
-  turn_intended_receiver_name: string | null
-  d_player: string | null
-  d_player_name: string | null
-  timestamp: string | null
-  event_date: string | null
-}

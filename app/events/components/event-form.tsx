@@ -30,8 +30,7 @@ const schema = z.object({
   event_name: z.string(),
   event_date: z.string(),
   type: game_types.array(),
-  team_1_id: z.string().array(),
-  team_2_id: z.string().array(),
+  teams: z.string().array().max(2, { message: "You can select a maximum of 2 teams." }),
 });
 
 type EventData = z.infer<typeof schema>;
@@ -70,16 +69,14 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
         event_name: currentData.event_name,
         event_date: currentData.event_date?.split("T")[0] || "",
         type: currentData.type ? [currentData.type] : [],
-        team_1_id: currentData.team_1_id ? [currentData.team_1_id] : [],
-        team_2_id: currentData.team_2_id ? [currentData.team_2_id] : [],
+        teams: [currentData.team_1_id,currentData.team_2_id],
       }
       : {
         // Set defaults for "add" mode to empty arrays
         event_name: "",
         event_date: "",
         type: [],
-        team_1_id: [],
-        team_2_id: [],
+        teams: [],
       },
   })
 
@@ -115,8 +112,8 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
     const payload = {
       ...data,
       type: data.type[0],
-      team_1_id: data.team_1_id[0],
-      team_2_id: data.team_2_id[0],
+      team_1_id: data.teams[0],
+      team_2_id: data.teams[1],
     };
 
     try {
@@ -204,22 +201,23 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
                     <Field.Root>
                       <Controller
                         control={control}
-                        name = "team_1_id"
+                        name = "teams"
                         render={({ field }) => (
                           <Select.Root
                             name={field.name}
                             value={field.value}
+                            multiple
                             onValueChange={
-                            ({ value }) => {field.onChange(value)}}
+                              ({ value }) => {field.onChange(value)}}
                             onInteractOutside={() => field.onBlur()}
                             collection={collection}
                             disabled={isGameFieldsDisabled}
                           >
                             <Select.HiddenSelect />
-                            <Select.Label>Team 1</Select.Label>
+                            <Select.Label>Teams</Select.Label>
                             <Select.Control>
                               <Select.Trigger>
-                                <Select.ValueText placeholder="Pick a team" />
+                                <Select.ValueText placeholder="Select teams" />
                               </Select.Trigger>
                               <Select.IndicatorGroup>
                                 {state.loading && (
@@ -241,46 +239,9 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
                           </Select.Root>
                         )}
                       />
-                    </Field.Root>
-                    <Field.Root>
-                      <Controller
-                        control={control}
-                        name = "team_2_id"
-                        render={({ field }) => (
-                          <Select.Root
-                            name={field.name}
-                            value={field.value}
-                            onValueChange={({ value }) => {field.onChange(value)}}
-                            onInteractOutside={() => field.onBlur()}
-                            collection={collection}
-                            disabled={isGameFieldsDisabled}
-                          >
-                            <Select.HiddenSelect />
-                            <Select.Label>Team 2</Select.Label>
-                            <Select.Control>
-                              <Select.Trigger>
-                                <Select.ValueText placeholder="Pick a team" />
-                              </Select.Trigger>
-                              <Select.IndicatorGroup>
-                                {state.loading && (
-                                  <Spinner />
-                                )}
-                                <Select.Indicator />
-                              </Select.IndicatorGroup>
-                            </Select.Control>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {collection.items.map((team) => (
-                                  <Select.Item item={team} key={team.team_id}>
-                                    {team.team_name}
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Select.Root>
-                        )}
-                      />
+                      {errors.teams && (
+                        <Field.ErrorText>{errors.teams.message}</Field.ErrorText>
+                      )}
                     </Field.Root>
                   </VStack>
                   <HStack justify="space-between">
