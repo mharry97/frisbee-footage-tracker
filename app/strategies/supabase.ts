@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase"
-import {PlayerDetailed} from "@/app/players/supabase.ts";
 
 // TYPES
 

@@ -1,5 +1,4 @@
 import {supabase} from "@/lib/supabase.ts";
-import {ascending} from "d3-array";
 
 export type Player = {
   player_id: string;
