@@ -1,5 +1,4 @@
 import {Possession, supabase} from "@/lib/supabase";
-import {PlayerDetailed} from "@/app/players/supabase.ts";
 
 export type PossessionDetailed = {
   possession_id: string
@@ -73,7 +72,7 @@ export async function fetchPointPossessions(point_id: string): Promise<Possessio
 }
 
 // Fetch all possessions
-export async function fetchAllPossessions(): Promise<PlayerDetailed[]> {
+export async function fetchAllPossessions(): Promise<PossessionDetailed[]> {
   const { data, error } = await supabase
     .from("view_possession_detail")
     .select("*")
