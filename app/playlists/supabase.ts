@@ -52,14 +52,12 @@ export async function fetchPlaylist(id: string): Promise<Playlist | null> {
 }
 
 
-export async function addPlaylist(playlist: AddPlaylist): Promise<Playlist[]> {
-  const { data, error } = await supabase
+export async function addPlaylist(playlist: AddPlaylist): Promise<void> {
+  const { error } = await supabase
     .from("playlists")
     .insert(playlist)
-    .select();
 
   if (error) throw error;
-  return data ?? [];
 }
 
 // Fetch all user playlists from Supabase

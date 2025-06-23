@@ -203,7 +203,7 @@ function EventPageContent() {
     }
     return (
       <>
-        <Flex direction="column" align="center" mb={8}>
+        <Flex direction="column" align="center" mb={8} mt={4}>
           <Text fontSize="xl">Score</Text>
           <Grid
             templateColumns="1fr auto 1fr"

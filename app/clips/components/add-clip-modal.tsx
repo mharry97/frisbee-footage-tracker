@@ -37,7 +37,7 @@ interface AddClipModalProps {
 }
 
 export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose }: AddClipModalProps) {
-  console.log(sourceId);
+  // console.log(sourceId);
   const {
     control,
     register,
@@ -160,7 +160,7 @@ export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose }: A
                 <Field.Root mb={4}>
                   <Field.Label>Description</Field.Label>
                   <Textarea
-                    placeholder="Optional description"
+                    placeholder="Brief description"
                     {...register("description", { required: "Description is required" })}
                     size="xl"
                     variant="outline"
@@ -204,7 +204,6 @@ export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose }: A
               </Dialog.Body>
               <Dialog.Footer display="flex" justifyContent="space-between">
                 <Button
-                  colorPalette="green"
                   type="submit"
                   loading={isSubmitting}
                   disabled={!isValid || isSubmitting}

@@ -1,112 +1,135 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Dialog,
   Button,
   Portal,
   Field,
   Input,
-  CloseButton,
-  Textarea
+  Textarea,
+  Checkbox
 } from "@chakra-ui/react";
-import {addPlaylist} from "@/app/playlists/supabase";
-import { useToast } from "@chakra-ui/toast";
+import { addPlaylist } from "@/app/playlists/supabase";
+import {z} from "zod";
+import {Controller, useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {useMutation, useQueryClient} from "@tanstack/react-query";
 
+const schema = z.object({
+  title: z.string(),
+  description: z.string(),
+  is_public: z.boolean()
+})
 
-interface AddClipModalProps {
+type AddPlaylist = z.infer<typeof schema>
+
+interface AddPlaylistModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function AddPlaylistModal({ isOpen, onClose }: AddClipModalProps) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const toast = useToast();
+export function AddPlaylistModal({ isOpen, onClose }: AddPlaylistModalProps) {
+  const {
+    control,
+    register,
+    handleSubmit,
+    setError,
+    formState: {errors, isSubmitting, isValid}} = useForm<AddPlaylist>({ resolver: zodResolver(schema),
+    mode: 'onChange',
+    defaultValues: {
+      title: "",
+      description: "",
+      is_public: true
+    },
+  });
+  const queryClient = useQueryClient()
 
-  function handleCancel() {
-    onClose();
-    resetForm();
-  }
+  const { mutateAsync: addPlaylistMutation } = useMutation({
+    mutationFn: addPlaylist,
+  });
 
-  function resetForm() {
-    setTitle("");
-    setDescription("");
-  }
-
-  async function handleAdd() {
+  const onSubmit = async (formData: AddPlaylist) => {
     try {
-      setIsSubmitting(true);
+      const clipPayload = {
+        title: formData.title,
+        description: formData.description,
+        is_public: formData.is_public,
+      };
 
-      await addPlaylist({
-        title,
-        description,
-        is_public: true,
-      });
-
+      await addPlaylistMutation(clipPayload);
+      await queryClient.invalidateQueries({ queryKey: ["playlists"] });
       onClose();
-      resetForm();
-    } catch (error) {
-      console.error("Error saving playlist:", error);
-      toast({
-        title: "Failed to save playlist",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsSubmitting(false);
+    } catch (err) {
+      setError("root", { message: err instanceof Error ? err.message : "Submission failed" });
     }
-  }
+  };
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(details) => {
+        if (!details.open) {
+          onClose();
+        }
+      }}
+    >
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>
-              <Dialog.Title>Add Playlist</Dialog.Title>
-            </Dialog.Header>
-
-            <Dialog.Body>
-              <Field.Root mb={4}>
-                <Field.Label>Title</Field.Label>
-                <Input
-                  placeholder="Playlist Title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <Dialog.Header>
+                <Dialog.Title>Add Playlist</Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body>
+                <Field.Root mb={4}>
+                  <Field.Label>Title</Field.Label>
+                  <Input {...register("title", { required: "Title is required" })} />
+                  {errors.title && (
+                    <Field.ErrorText>{errors.title.message}</Field.ErrorText>
+                  )}
+                </Field.Root>
+                <Field.Root mb={4}>
+                  <Field.Label>Description</Field.Label>
+                  <Textarea
+                    placeholder="Brief description"
+                    {...register("description", { required: "Description is required" })}
+                    size="xl"
+                    variant="outline"
+                  />
+                  {errors.description && (
+                    <Field.ErrorText>{errors.description.message}</Field.ErrorText>
+                  )}
+                </Field.Root>
+                <Controller
+                  control={control}
+                  name="is_public"
+                  render={({ field }) => (
+                    <Field.Root>
+                      <Checkbox.Root
+                        checked={field.value}
+                        onCheckedChange={({ checked }) => field.onChange(checked)}
+                      >
+                        <Checkbox.HiddenInput />
+                        <Checkbox.Control />
+                        <Checkbox.Label>Public Clip?</Checkbox.Label>
+                      </Checkbox.Root>
+                    </Field.Root>
+                  )}
                 />
-              </Field.Root>
-              <Field.Root mb={4}>
-                <Field.Label>Description</Field.Label>
-                <Textarea
-                  placeholder="Brief outline of the sort of clips found in the playlist"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  size="xl"
-                  variant="outline"
-                  required
-                />
-              </Field.Root>
-            </Dialog.Body>
-            <Dialog.Footer display="flex" justifyContent="space-between">
-              <Button variant="outline" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button
-                colorScheme="green"
-                onClick={handleAdd}
-                loading={isSubmitting}
-                disabled={!title || !description}
-              >
-                Add
-              </Button>
-            </Dialog.Footer>
-
-            <Dialog.CloseTrigger asChild>
-              <CloseButton position="absolute" top="2" right="2" onClick={handleCancel} />
-            </Dialog.CloseTrigger>
+              </Dialog.Body>
+              <Dialog.Footer display="flex" justifyContent="space-between">
+                <Button
+                  type="submit"
+                  loading={isSubmitting}
+                  disabled={!isValid || isSubmitting}
+                >
+                  Add Playlist
+                </Button>
+                <Button variant="ghost" onClick={onClose} mt={4}>
+                  Cancel
+                </Button>
+              </Dialog.Footer>
+            </form>
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>
