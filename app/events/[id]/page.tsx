@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useMemo } from "react";
 import NextLink from "next/link";
 import {
   Container,
@@ -9,20 +9,14 @@ import {
   SimpleGrid,
   Separator,
   Box,
-  Grid, Text, Card, Badge, Button, Dialog, Portal, CloseButton, HStack } from "@chakra-ui/react";
+  Grid, Text, Card, Badge, Button, Dialog, Portal, CloseButton, HStack, VStack
+} from "@chakra-ui/react";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomTabs from "@/components/tabbed-page";
-import { fetchEvent, type Event } from "@/app/events/supabase";
-import { fetchEventPoints, PointDetailed } from "@/app/points/supabase";
-import type {Possession} from "@/lib/supabase";
-import {TeamDetailed, fetchTeamMapping } from "@/app/teams/supabase";
-import {fetchEventPossessions} from "@/app/possessions/supabase";
+import { fetchEventPoints } from "@/app/points/supabase";
+import { fetchEventPossessions } from "@/app/possessions/supabase";
 import {baseUrlToTimestampUrl, convertTimestampToSeconds} from "@/lib/utils";
-import {fetchPlayerTeamMapping} from "@/app/teams/[team_id]/[player_id]/supabase";
-import {GenericTableItem, MyDynamicTable, myPieChart, myStackedBarChart} from "@/app/stats/charts";
-import {playerStats, SequenceStat, sequenceStats, teamStats} from "@/app/stats/utils";
-import { fetchClips } from "@/app/clips/supabase";
-import {TeamPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
+import { fetchEventClips } from "@/app/clips/supabase";
 import {useParams} from "next/navigation";
 import {useAuth} from "@/lib/auth-context.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
@@ -30,140 +24,100 @@ import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
 import PointForm from "@/app/events/[id]/components/new-point-form.tsx";
 import {useQuery} from "@tanstack/react-query";
+import ScoreProgressionChart from "@/app/stats/components/charts/ScoreProgressionChart.tsx";
+import {transformPointsForScoreChart} from "@/app/stats/utils.ts";
+import {fetchEvent} from "@/app/events/supabase.ts";
+import {CalculatedStat, calculateGameStats} from "@/app/stats/game-stats.ts";
+import {StatRow} from "@/app/stats/components/charts/StatRow.tsx";
 
 function EventPageContent() {
-  // Unwrap the promised params
   const { id } = useParams<{ id: string }>();
   const { player } = useAuth();
-  const [eventData, setEventData] = useState<Event | null>(null);
-  const [points, setPoints] = useState<PointDetailed[]>([]);
-  const [possessions, setPossessions] = useState<Possession[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [teamMapping, setTeamMapping] = useState<TeamDetailed[]>([]);
-  const [playerTeamMapping, setPlayerTeamMapping] = useState<TeamPlayer[]>([]);
 
-  const { data: clips, isLoading } = useQuery({
-    queryFn: () => fetchClips(),
-    queryKey: ["clips"]
-  })
+  const { data: points, isLoading: isLoadingPoints } = useQuery({
+    queryKey: ['points', id],
+    queryFn: () => fetchEventPoints(id),
+    enabled: !!id,
+  });
 
+  // Fetch the possessions for this event
+  const { data: possessions, isLoading: isLoadingPossessions } = useQuery({
+    queryKey: ['possessions', id],
+    queryFn: () => fetchEventPossessions(id),
+    enabled: !!id,
+  });
 
-  // Fetch data needed for page
-  useEffect(() => {
-    if (!id) return;
-    async function loadData() {
-      // Fetch event data
-      const eventData = await fetchEvent(id);
-      if (!eventData) {
-        setLoading(false);
-        return;
-      }
-      setEventData(eventData);
+  // Fetch event data
+  const { data: event, isLoading: isLoadingEvent } = useQuery({
+    queryKey: ['event', id],
+    queryFn: () => fetchEvent(id),
+    enabled: !!id,
+  });
 
-      // Fetch all points for event
-      const points = await fetchEventPoints(id);
-      setPoints(points);
+  // Fetch clips
+  const { data: clips, isLoading: isLoadingClips } = useQuery({
+    queryKey: ["clips", id, player?.player_id],
+    queryFn: () => fetchEventClips(id, player!.player_id),
+    enabled: !!id && !!player,
+  });
 
-      // Fetch all possessions for event
-      const possessions = await fetchEventPossessions(id);
-      setPossessions(possessions);
+  const isLoading = isLoadingPossessions || isLoadingPoints || isLoadingClips || isLoadingEvent;
+  const hasPoints = points?.length != 0;
 
-      // Fetch team id/name mapping table
-      const teamMapping = await fetchTeamMapping();
-      setTeamMapping(teamMapping);
-
-      // Fetch player/team mapping table
-      const playerTeamMapping = await fetchPlayerTeamMapping();
-      setPlayerTeamMapping(playerTeamMapping);
-
-      setLoading(false);
+  // STATS
+  const scoreData = useMemo(() => {
+    if (!points || points.length === 0) {
+      return [];
     }
-    loadData();
-  }, [id]);
+    const scoreTally: { [key: string]: number } = {};
+    for (const point of points) {
+      let scoringTeamName: string | null = null;
 
-  // TEAM LEVEL STATS
-  const teamLevelStats = teamStats(possessions, teamMapping);
-
-  const turnoversData = teamLevelStats.map((team) => ({
-    name: team.team_name,
-    value: team.Turns,
-  }));
-
-  const scoreData = teamLevelStats.map((team) => ({
-    name: team.team_name,
-    value: team.Scores,
-  }));
-
-  const breakData = teamLevelStats.map((team) => ({
-    name: team.team_name,
-    value: team.Breaks,
-  }));
-
-  // Possessions
-  const sequenceData = sequenceStats(possessions, teamMapping);
-
-  const teamOneOffenceSequences = sequenceData
-    .filter((s) => s.team_id === eventData?.team_1_id && s.role === "offence")
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-
-  const teamOneDefenceSequences = sequenceData
-    .filter((s) => s.team_id === eventData?.team_1_id && s.role === "defence")
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-
-  const teamTwoOffenceSequences = sequenceData
-    .filter((s) => s.team_id === eventData?.team_2_id && s.role === "offence")
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-
-  const teamTwoDefenceSequences = sequenceData
-    .filter((s) => s.team_id === eventData?.team_2_id && s.role === "defence")
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-
-  const toTableData = (items: SequenceStat[]): GenericTableItem[] =>
-    items.map(({ initiation, main, count }) => ({
-      initiation,
-      main,
-      possessions: count,
+      if (point.point_outcome === 'hold') {
+        scoringTeamName = point.offence_team_name;
+      } else if (point.point_outcome === 'break') {
+        scoringTeamName = point.defence_team_name;
+      }
+      if (scoringTeamName) {
+        scoreTally[scoringTeamName] = (scoreTally[scoringTeamName] || 0) + 1;
+      }
+    }
+    return Object.entries(scoreTally).map(([teamName, score]) => ({
+      name: teamName,
+      value: score,
     }));
+  }, [points]);
 
-  // PLAYER LEVEL STATS
-  const playerLevelStats = playerStats(possessions, playerTeamMapping);
+  // Game Flow
+  const scoreChartData = useMemo(() => {
+    if (!points || !event) {
+      return [];
+    }
+    return transformPointsForScoreChart(points, event);
+  }, [points, event]);
 
-  const teamOneName = teamMapping.find((t) => t.team_id === eventData?.team_1_id)?.team_name ?? "Team 1";
-  const teamTwoName = teamMapping.find((t) => t.team_id === eventData?.team_2_id)?.team_name ?? "Team 2";
+  // Stat grid
+  const gameStats = useMemo(() => {
+    if (!points || !event || !possessions) {
+      return [] as CalculatedStat[];
+    }
+    return calculateGameStats(points, possessions, event);
+    }, [points, possessions, event]);
 
-  const teamOneTopPlayers = playerLevelStats
-    .filter((p) => p.team_id === eventData?.team_1_id)
-    .sort((a, b) => b.scores + b.assists + b.ds - (a.scores + a.assists + a.ds))
-    .slice(0, 5)
-    .map((p) => ({
-      name: p.player_name,
-      Scores: p.scores,
-      Assists: p.assists,
-      Ds: p.ds,
-    }));
-
-  const teamTwoTopPlayers = playerLevelStats
-    .filter((p) => p.team_id === eventData?.team_2_id)
-    .sort((a, b) => b.scores + b.assists + b.ds - (a.scores + a.assists + a.ds))
-    .slice(0, 5)
-    .map((p) => ({
-      name: p.player_name,
-      Scores: p.scores,
-      Assists: p.assists,
-      Ds: p.ds,
-    }));
 
   const PointsContent = () => {
-    const sortedPoints = [...points].sort(
+    const sortedPoints = [...(points ?? [])].sort(
       (a, b) =>
         convertTimestampToSeconds(a.timestamp) -
         convertTimestampToSeconds(b.timestamp)
     );
-
+    if (!hasPoints) {
+      return (
+        <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
+          <Text color="white" fontSize="lg">No points for this event yet.</Text>
+        </Box>
+      )
+    }
     return (
       <>
         <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
@@ -239,98 +193,135 @@ function EventPageContent() {
   };
 
 
-  const OverviewContent = () => (
-    <>
-      <Flex direction="column" align="center" mb={8}>
-        <Heading size="md" mb={4} color="white">
-          Score
-        </Heading>
-
-        <Grid
-          templateColumns="1fr auto 1fr"
-          alignItems="center"
-          gap={12}
-          px={4}
-          py={4}
-          width="100%"
-          maxW="lg"
-          mx="auto"
-        >
-          <Flex direction="column" align="flex-end" gap={4}>
-            {scoreData.map((team) => (
-              <Heading key={team.name} size="md" color="white">
-                {team.name}
-              </Heading>
+  const OverviewContent = () => {
+    if (!hasPoints) {
+      return (
+        <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
+          <Text color="white" fontSize="lg">No stats for this event yet.</Text>
+        </Box>
+      )
+    }
+    return (
+      <>
+        <Flex direction="column" align="center" mb={8}>
+          <Text fontSize="xl">Score</Text>
+          <Grid
+            templateColumns="1fr auto 1fr"
+            alignItems="center"
+            gap={12}
+            px={4}
+            py={4}
+            width="100%"
+            maxW="lg"
+            mx="auto"
+          >
+            <Flex direction="column" align="flex-end" gap={4}>
+              {scoreData.map((team) => (
+                <Heading key={team.name} size="md" color="white">
+                  {team.name}
+                </Heading>
+              ))}
+            </Flex>
+            <Box h="100%" w="1px" bg="#facc15"/>
+            <Flex direction="column" align="flex-start" gap={4}>
+              {scoreData.map((team) => (
+                <Heading key={team.name + "-score"} size="md" color="white">
+                  {team.value}
+                </Heading>
+              ))}
+            </Flex>
+          </Grid>
+        </Flex>
+        <VStack>
+          <HStack mb={4} mt={4} width="100%">
+            <Separator flex="1" size="sm"></Separator>
+            <Text flexShrink="0" fontSize="xl">Game Flow</Text>
+            <Separator flex="1" size="sm"></Separator>
+          </HStack>
+          <Box height="300px" width="100%" mt={4} mb={4}>
+            <ScoreProgressionChart
+              data={scoreChartData}
+              teamOneName={event?.team_1 ?? 'Team 1'}
+              teamTwoName={event?.team_2 ?? 'Team 2'}
+            />
+          </Box>
+          <HStack mb={4} mt={4} width="100%">
+            <Separator flex="1" size="sm"></Separator>
+            <Text flexShrink="0" fontSize="xl">Team Stats</Text>
+            <Separator flex="1" size="sm"></Separator>
+          </HStack>
+          <VStack gap={6} mx="auto" width = "100%">
+            <Grid templateColumns="1fr 1fr 1fr" gap={4} width="100%">
+              <Heading textAlign="left">{event?.team_1}</Heading>
+              <Box />
+              <Heading textAlign="right">{event?.team_2}</Heading>
+            </Grid>
+            {(gameStats ?? []).map((stat) => (
+              <StatRow
+                key={stat.label}
+                label={stat.label}
+                teamOneValue={stat.teamOneValue}
+                teamTwoValue={stat.teamTwoValue}
+                isPercentage={stat.isPercentage}
+              />
             ))}
-          </Flex>
-          <Box h="100%" w="1px" bg="#facc15" />
-          <Flex direction="column" align="flex-start" gap={4}>
-            {scoreData.map((team) => (
-              <Heading key={team.name + "-score"} size="md" color="white">
-                {team.value}
-              </Heading>
+          </VStack>
+        </VStack>
+      </>
+    )
+  };
+
+  const ClipsContent = () => {
+    if (clips?.length === 0) {
+      return (
+        <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
+          <Text color="white" fontSize="lg">No clips for this event yet.</Text>
+        </Box>
+      )
+    }
+    return (
+      <>
+        {!clips ? (
+          <Text color="white" fontSize="lg">No teams yet!</Text>
+        ) : (
+          <SimpleGrid columns={{base: 1, md: 2}} gap={8} mb={8}>
+            {clips.map((item) => (
+              <Card.Root key={item.clip_id} variant="elevated">
+                <Card.Header>
+                  <Card.Title>{item.title}</Card.Title>
+                </Card.Header>
+                <Card.Body>
+                  <Card.Description>
+                    {item.description}
+                  </Card.Description>
+                </Card.Body>
+                <Card.Footer gap="2">
+                  <Dialog.Root size="xl">
+                    <Dialog.Trigger asChild>
+                      <Button colorPalette='gray'>View Clip</Button>
+                    </Dialog.Trigger>
+                    <Portal>
+                      <Dialog.Backdrop/>
+                      <Dialog.Positioner>
+                        <Dialog.Content>
+                          <Dialog.Body>
+                            <OnPageVideoLink url={baseUrlToTimestampUrl(item.url, item.timestamp)}/>
+                          </Dialog.Body>
+                          <Dialog.CloseTrigger asChild>
+                            <CloseButton size="sm"/>
+                          </Dialog.CloseTrigger>
+                        </Dialog.Content>
+                      </Dialog.Positioner>
+                    </Portal>
+                  </Dialog.Root>
+                </Card.Footer>
+              </Card.Root>
             ))}
-          </Flex>
-        </Grid>
-      </Flex>
-      <Separator mb={8}></Separator>
-      <SimpleGrid columns={{ base: 1, md: 2 }} rowGap = "10" >
-        {myPieChart("Turnovers", turnoversData)}
-        {myPieChart("Breaks", breakData)}
-        {myStackedBarChart(`${teamOneName} Top Contributors`, teamOneTopPlayers, ["Scores", "Assists", "Ds"])}
-        {myStackedBarChart(`${teamTwoName} Top Contributors`, teamTwoTopPlayers, ["Scores", "Assists", "Ds"])}
-      </SimpleGrid>
-      <Flex direction="column" align="center" width="100%" mt={8} gap={8}>
-        <MyDynamicTable
-          title={`Top ${teamOneName} Offence Sequences`}
-          keys={["initiation", "main", "possessions"]}
-          data={toTableData(teamOneOffenceSequences)}
-        />
-        <MyDynamicTable
-          title={`Top ${teamTwoName} Offence Sequences`}
-          keys={["initiation", "main", "possessions"]}
-          data={toTableData(teamTwoOffenceSequences)}
-        />
-        <MyDynamicTable
-          title={`Top ${teamOneName} Defence Sequences`}
-          keys={["initiation", "main", "possessions"]}
-          data={toTableData(teamOneDefenceSequences)}
-        />
-        <MyDynamicTable
-          title={`Top ${teamTwoName} Defence Sequences`}
-          keys={["initiation", "main", "possessions"]}
-          data={toTableData(teamTwoDefenceSequences)}
-        />
-      </Flex>
-
-    </>
-  )
-
-  const ClipsContent = () => (
-    <>
-      {!clips ? (
-        <Text color="white" fontSize="lg">No teams yet!</Text>
-      ) : (
-        <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
-          {clips.map((item) => (
-            <Card.Root key={item.clip_id} variant="elevated">
-              <Card.Header>
-                <Card.Title>{item.title}</Card.Title>
-              </Card.Header>
-              <Card.Body>
-                <Card.Description>
-                  {item.description}
-                </Card.Description>
-              </Card.Body>
-              <Card.Footer gap="2">
-                Hello
-              </Card.Footer>
-            </Card.Root>
-          ))}
-        </SimpleGrid>
-      )}
-    </>
-  );
+          </SimpleGrid>
+        )}
+      </>
+    )
+  };
 
   // Set up the tabs available
   const tabs = [
@@ -351,7 +342,7 @@ function EventPageContent() {
       },
     ];
 
-  if (!player || loading || isLoading) {
+  if (!player || isLoading) {
     return (
       <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
         <Text color="white" fontSize="lg">Loading player data...</Text>
@@ -361,12 +352,14 @@ function EventPageContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text={eventData ? eventData.event_name : ""} is_admin={player.is_admin} />
-      {loading ? (
+      <StandardHeader text={points ? points[0].event_name : ""} is_admin={player.is_admin} />
+      {isLoading ? (
         <LoadingSpinner text="Loading..." />
       ) : (
         <CustomTabs defaultValue="overview" tabs={tabs} />
       )}
+      <Box width="100%" height="50px">
+      </Box>
     </Container>
   );
 }

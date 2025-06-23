@@ -12,7 +12,7 @@ import ThrowCounter from "@/components/throws-input";
 import {usePointFormCollections, usePointFormData} from "@/app/hooks/usePointFormData.ts";
 import {AsyncDropdown} from "@/components/async-dropdown.tsx";
 import {Controller, useForm} from "react-hook-form";
-import {AddPossession, EditPossession, editSchema} from "@/app/possessions/possessions.schema.ts";
+import { EditPossession, editSchema} from "@/app/possessions/possessions.schema.ts";
 import {zodResolver} from "@hookform/resolvers/zod";
 import { ScoreMethods, TurnoverReasons } from "@/app/possessions/possessions.schema.ts";
 import {useEditPossessionSubmit} from "@/app/hooks/usePermissionSubmit.ts";
@@ -50,7 +50,7 @@ export default function EditPossessionDialog({
     handleSubmit,
     watch,
     reset,
-    formState: { isSubmitting: isFormSubmitting, errors }
+    formState: { isSubmitting: isFormSubmitting, errors, isValid }
   } = useForm<EditPossession>({
     resolver: zodResolver(editSchema),
     defaultValues: {
@@ -199,6 +199,7 @@ export default function EditPossessionDialog({
           <Dialog.Body>
             <VStack gap={4}>
               <form id="edit-possession-form" onSubmit={handleSubmit(onSubmit)}>
+                <Text textStyle="xl" mb={4}>Players</Text>
                 <AsyncDropdown
                   name="offence_team_players"
                   control={control}
@@ -231,6 +232,7 @@ export default function EditPossessionDialog({
                     </Stack>
                   )}
                 />
+                <Text textStyle="xl" mb={4}>Plays</Text>
                 <AsyncDropdown
                   name="defence_init"
                   control={control}
@@ -312,6 +314,7 @@ export default function EditPossessionDialog({
                 />
                 {possessionToEdit.is_score === false && (
                   <>
+                    <Text textStyle="xl" mb={4}>Turnover Details</Text>
                     <Center>
                       <Image src="/pitch-zoned.png" mb={4} alt="Pitch Zoned" />
                     </Center>
@@ -396,6 +399,7 @@ export default function EditPossessionDialog({
                 )}
                 {possessionToEdit.is_score === true && (
                   <>
+                    <Text textStyle="xl" mb={4}>Score Details</Text>
                     <AsyncDropdown
                       name="assist_player"
                       control={control}
@@ -447,6 +451,7 @@ export default function EditPossessionDialog({
               type="submit"
               form="edit-possession-form"
               loading={isSubmitting}
+              disabled={isValid || isSubmitting}
             >
               Update Possession
             </Button>

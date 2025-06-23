@@ -1,208 +1,221 @@
-import React, {useEffect, useMemo, useState} from "react";
+import React, { useMemo } from "react";
 import {
   Dialog,
   Button,
   Portal,
   Field,
   Input,
-  Select,
-  CloseButton,
   Textarea,
-  createListCollection
+  createListCollection, Stack, Text, Checkbox
 } from "@chakra-ui/react";
-import {fetchPlaylists, upsertPlaylistClip} from "@/app/playlists/supabase";
-import { useToast } from "@chakra-ui/toast";
-import type { PlaylistWithCreator } from "@/app/playlists/supabase";
-import {upsertClip} from "@/app/clips/supabase";
-import { baseUrlToTimestampUrl } from "@/lib/utils";
+import { fetchVisiblePlaylists } from "@/app/playlists/supabase";
+import { addClip } from "@/app/clips/supabase";
+import {AsyncDropdown} from "@/components/async-dropdown.tsx";
+import {z} from "zod";
+import {Controller, useForm} from "react-hook-form";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
+import {fetchSources} from "@/app/sources/supabase.ts";
+
+const schema = z.object({
+  title: z.string(),
+  source: z.string().array(),
+  timestamp: z.string(),
+  description: z.string(),
+  playlists: z.string().array().optional(),
+  is_public: z.boolean()
+})
+
+type AddClip = z.infer<typeof schema>
 
 interface AddClipModalProps {
+  eventId?: string;
+  playerId: string;
+  sourceId: string;
   isOpen: boolean;
   onClose: () => void;
-  eventId: string;
-  baseUrl: string;
 }
 
-export function AddClipModal({ isOpen, onClose, eventId, baseUrl }: AddClipModalProps) {
-  const [title, setTitle] = useState("");
-  const [timestamp, setTimestamp] = useState("");
-  const [description, setDescription] = useState("");
-  const [playlists, setPlaylists] = useState<PlaylistWithCreator[]>([]);
-  const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const toast = useToast();
+export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose }: AddClipModalProps) {
+  console.log(sourceId);
+  const {
+    control,
+    register,
+    handleSubmit,
+    setError,
+    formState: {errors, isSubmitting, isValid}} = useForm<AddClip>({ resolver: zodResolver(schema),
+    mode: 'onChange',
+    defaultValues: {
+      title: "",
+      source: [sourceId],
+      timestamp: "",
+      description: "",
+      playlists: [],
+      is_public: true
+    },
+  });
+  const queryClient = useQueryClient()
 
+  const { data: playlistsData, isLoading: isLoadingPlaylists } = useQuery({
+    queryFn: () => fetchVisiblePlaylists(playerId),
+    queryKey: ["playlists"]
+  })
 
-  useEffect(() => {
-    async function loadPlaylists() {
-      const playlists = await fetchPlaylists();
-      setPlaylists(playlists);
-    }
-    void loadPlaylists();
-  }, []);
+  const { data: sourcesData, isLoading: isLoadingSources } = useQuery({
+    queryKey: ["sources"],
+    queryFn: fetchSources,
+  });
 
-  useEffect(() => {
-    (async () => {
-      const playlists = await fetchPlaylists();
-      setPlaylists(playlists);
-    })();
-  }, []);
+  const isLoading = isLoadingSources || isLoadingPlaylists;
 
-  const collection = useMemo(
-    () =>
+  const sourceCollection = useMemo(() =>
       createListCollection({
-        items: playlists.map((p) => ({
-          value: p.playlist_id,
-          label: p.title,
-        })),
+        items: sourcesData ?? [],
+        itemToString: (item) => item.title,
+        itemToValue: (item) => item.source_id,
       }),
-    [playlists],
+    [sourcesData]
   );
 
-  function handleCancel() {
-    onClose();
-    resetForm();
-  }
+  const playlistCollection = useMemo(() =>
+      createListCollection({
+        items: playlistsData ?? [],
+        itemToString: (item) => item.title,
+        itemToValue: (item) => item.playlist_id,
+      }),
+    [playlistsData]
+  );
 
-  function resetForm() {
-    setTitle("");
-    setTimestamp("");
-    setDescription("");
-    setSelectedPlaylists([]);
-  }
+  const { mutateAsync: upsertClipMutation } = useMutation({
+    mutationFn: addClip,
+  });
 
-  async function handleAdd() {
+  const onSubmit = async (formData: AddClip) => {
     try {
-      setIsSubmitting(true);
+      const clipPayload = {
+        title: formData.title,
+        source_id: formData.source[0],
+        event_id: eventId || null,
+        timestamp: formData.timestamp,
+        description: formData.description,
+        playlists: formData.playlists || null,
+        is_public: formData.is_public,
+      };
 
-      const newClip = await upsertClip({
-        title,
-        event_id: eventId,
-        timestamp,
-        description,
-        is_public: true,
-        timestamp_url: baseUrlToTimestampUrl(baseUrl, timestamp)
-      });
-
-      await upsertPlaylistClip(
-        selectedPlaylists.map((pid) => ({
-          playlist_id: pid,
-          clip_id: newClip.clip_id,
-        })),
-      );
-
-      toast({
-        title: "Clip saved successfully",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-
+      await upsertClipMutation(clipPayload);
+      await queryClient.invalidateQueries({ queryKey: ["clips", eventId] });
       onClose();
-      resetForm();
-    } catch (error) {
-      console.error("Error saving clip:", error);
-      toast({
-        title: "Failed to save clip",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setIsSubmitting(false);
+    } catch (err) {
+      setError("root", { message: err instanceof Error ? err.message : "Submission failed" });
     }
-  }
+  };
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(details) => {
+        if (!details.open) {
+          onClose();
+        }
+      }}
+    >
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
           <Dialog.Content>
-            <Dialog.Header>
-              <Dialog.Title>Add Clip</Dialog.Title>
-            </Dialog.Header>
-
-            <Dialog.Body>
-              <Field.Root mb={4}>
-                <Field.Label>Title</Field.Label>
-                <Input
-                  placeholder="Clip Title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <Dialog.Header>
+                <Dialog.Title>Add Clip</Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body>
+                <Field.Root mb={4}>
+                  <Field.Label>Title</Field.Label>
+                  <Input {...register("title", { required: "Title is required" })} />
+                  {errors.title && (
+                    <Field.ErrorText>{errors.title.message}</Field.ErrorText>
+                  )}
+                </Field.Root>
+                <AsyncDropdown
+                  name="source"
+                  control={control}
+                  label="Source"
+                  placeholder="Select source"
+                  collection={sourceCollection}
+                  isLoading={isLoading}
+                  itemToKey={(item) => item.source_id}
+                  renderItem={(item) => (
+                    <Stack gap={0}>
+                      <Text>{item.title}</Text>
+                      <Text textStyle="xs" color="fg.muted">{item.url}</Text>
+                    </Stack>
+                  )}
                 />
-              </Field.Root>
-
-              <Field.Root mb={4}>
-                <Field.Label>Timestamp</Field.Label>
-                <Input
-                  placeholder="e.g. 6:32"
-                  value={timestamp}
-                  onChange={(e) => setTimestamp(e.target.value)}
+                <Field.Root mb={4}>
+                  <Field.Label>Timestamp</Field.Label>
+                  <Input {...register("timestamp", { required: "Timestamp is required" })} />
+                  {errors.timestamp && (
+                    <Field.ErrorText>{errors.timestamp.message}</Field.ErrorText>
+                  )}
+                </Field.Root>
+                <Field.Root mb={4}>
+                  <Field.Label>Description</Field.Label>
+                  <Textarea
+                    placeholder="Optional description"
+                    {...register("description", { required: "Description is required" })}
+                    size="xl"
+                    variant="outline"
+                  />
+                  {errors.description && (
+                    <Field.ErrorText>{errors.description.message}</Field.ErrorText>
+                  )}
+                </Field.Root>
+                <AsyncDropdown
+                  name="playlists"
+                  control={control}
+                  label="Playlist/s"
+                  placeholder="Select playlist/s"
+                  collection={playlistCollection}
+                  isLoading={isLoading}
+                  multiple={true}
+                  itemToKey={(item) => item.playlist_id}
+                  renderItem={(item) => (
+                    <Stack gap={0}>
+                      <Text>{item.title}</Text>
+                      <Text textStyle="xs" color="fg.muted">{item.created_by_name}</Text>
+                    </Stack>
+                  )}
                 />
-              </Field.Root>
-
-              <Field.Root mb={4}>
-                <Field.Label>Description</Field.Label>
-                <Textarea
-                  placeholder="Optional description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  size="xl"
-                  variant="outline"
+                <Controller
+                  control={control}
+                  name="is_public"
+                  render={({ field }) => (
+                    <Field.Root>
+                      <Checkbox.Root
+                        checked={field.value}
+                        onCheckedChange={({ checked }) => field.onChange(checked)}
+                      >
+                        <Checkbox.HiddenInput />
+                        <Checkbox.Control />
+                        <Checkbox.Label>Public Clip?</Checkbox.Label>
+                      </Checkbox.Root>
+                    </Field.Root>
+                  )}
                 />
-              </Field.Root>
-              <Select.Root multiple
-                           collection={collection}
-                           size="sm"
-                           width="320px"
-                           value={selectedPlaylists}
-                           onValueChange={(d) => setSelectedPlaylists(d.value as string[])}>
-                <Select.HiddenSelect />
-                <Select.Label>Playlist</Select.Label>
-                <Select.Control>
-                  <Select.Trigger>
-                    <Select.ValueText placeholder="Select playlists/s" />
-                  </Select.Trigger>
-                  <Select.IndicatorGroup>
-                    <Select.Indicator />
-                  </Select.IndicatorGroup>
-                </Select.Control>
-                <Portal>
-                  <Select.Positioner>
-                    <Select.Content
-                      zIndex="popover">
-                      {collection.items.map((playlist) => (
-                        <Select.Item item={playlist} key={playlist.value}>
-                          {playlist.label}
-                          <Select.ItemIndicator />
-                        </Select.Item>
-                      ))}
-                    </Select.Content>
-                  </Select.Positioner>
-                </Portal>
-              </Select.Root>
-
-
-            </Dialog.Body>
-
-            <Dialog.Footer display="flex" justifyContent="space-between">
-              <Button variant="outline" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button
-                colorPalette="green"
-                onClick={handleAdd}
-                loading={isSubmitting}
-                disabled={!title || !timestamp}
-              >
-                Add
-              </Button>
-            </Dialog.Footer>
-
-            <Dialog.CloseTrigger asChild>
-              <CloseButton position="absolute" top="2" right="2" onClick={handleCancel} />
-            </Dialog.CloseTrigger>
+              </Dialog.Body>
+              <Dialog.Footer display="flex" justifyContent="space-between">
+                <Button
+                  colorPalette="green"
+                  type="submit"
+                  loading={isSubmitting}
+                  disabled={!isValid || isSubmitting}
+                >
+                  Add Clip
+                </Button>
+                <Button variant="ghost" onClick={onClose} mt={4}>
+                  Cancel
+                </Button>
+              </Dialog.Footer>
+            </form>
           </Dialog.Content>
         </Dialog.Positioner>
       </Portal>

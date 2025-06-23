@@ -48,11 +48,11 @@ export type NewPossession = Omit<Possession, 'possession_id'>
 
 
 // Fetch basic info for all possessions from Supabase for a given event_id
-export async function fetchEventPossessions(event_id: string): Promise<Possession[]> {
+export async function fetchEventPossessions(event_id: string): Promise<PossessionDetailed[]> {
   const { data, error } = await supabase
-    .from("possessions")
-    .select("*, points!inner()")
-    .eq("points.event_id", event_id);
+    .from("view_possession_detail")
+    .select("*")
+    .eq("event_id", event_id);
 
   if (error) throw error;
 

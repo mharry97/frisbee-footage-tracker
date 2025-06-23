@@ -8,13 +8,21 @@ export type Clip = {
   description: string
   event_id: string | null
   is_public: boolean
-  base_url: string
+  source_id: string
   timestamp: string
-  timestamp_seconds: number
   created_at: string
+  created_by: string
+  playlists: string[] | null
 }
 
-type NewClip = Omit<Clip, "clip_id"| "created_at" >
+export type ClipDetail = Clip & {
+  created_by_name: string
+  event_name: string
+  source_title: string
+  url: string
+}
+
+export type NewClip = Omit<Clip, "clip_id"| "created_at" | "created_by" >
 
 // READING
 
@@ -53,14 +61,14 @@ export async function upsertClip(payload: NewClip): Promise<Clip> {
 }
 
 // Fetch most recent info for all events from Supabase for a given event_id
-export async function fetchEventClips(event_id: string): Promise<Clip[]> {
+export async function fetchEventClips(event_id: string, player_id: string): Promise<ClipDetail[]> {
   try {
     const { data } = await supabase
-      .from("clips")
+      .from("view_clip_detail")
       .select('*')
-      .eq("is_public", true)
+      .or(`is_public.eq.true, created_by.eq.${player_id}`)
       .eq("event_id", event_id)
-      .order("title");
+      .order("created_at", {ascending: false});
 
     return (data || []);
   } catch (error) {

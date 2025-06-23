@@ -13,7 +13,7 @@ import {
   Stack,
   Text,
   Image,
-  Center, Button
+  Center, Button, useDisclosure
 } from "@chakra-ui/react";
 import StandardHeader from "@/components/standard-header.tsx";
 import {useParams } from "next/navigation";
@@ -27,6 +27,8 @@ import ThrowCounter from "@/components/throws-input.tsx";
 import { usePointFormData, usePointFormCollections } from "@/app/hooks/usePointFormData.ts";
 import {AddPossession, schema} from "@/app/possessions/possessions.schema.ts";
 import {usePossessionSubmit} from "@/app/hooks/usePermissionSubmit.ts";
+import FloatingClipButton from "@/components/ui/add-clip-button.tsx";
+import {AddClipModal} from "@/app/clips/components/add-clip-modal.tsx";
 
 function PossessionPageContent() {
   const { player } = useAuth();
@@ -145,6 +147,8 @@ function PossessionPageContent() {
   }, [possessionNumber, availableOnOffenceCollection, availableOnDefenceCollection]);
 
   const watchedOutcome = watch("possession_outcome");
+
+  const { open, onOpen, onClose } = useDisclosure();
 
   if (!player || isLoading) {
     return (
@@ -463,6 +467,14 @@ function PossessionPageContent() {
           </>
         )}
       </form>
+      <FloatingClipButton onClick={onOpen} />
+      <AddClipModal
+        isOpen={open}
+        onClose={onClose}
+        eventId={id}
+        sourceId = {point.source_id}
+        playerId={player.player_id}
+      />
     </Container>
   )
 

@@ -36,10 +36,10 @@ export async function fetchEvents(): Promise<EventDetail[]> {
 }
 
 // Fetch specific event
-export async function fetchEvent(event_id: string): Promise<Event | null> {
+export async function fetchEvent(event_id: string): Promise<EventDetail | null> {
   try {
     const { data } = await supabase
-      .from("events")
+      .from("view_event_detail")
       .select("*")
       .eq("event_id", event_id)
       .single();
