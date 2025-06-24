@@ -9,6 +9,7 @@ const FloatingActionButton: React.FC<IconButtonProps> = (props) => {
   return (
     <IconButton
       position="fixed"
+      colorPalette = 'gray'
       bottom={4}
       right={4}
       zIndex={9999}

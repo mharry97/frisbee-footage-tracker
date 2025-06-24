@@ -1,74 +1,74 @@
 "use client";
 
+import React from "react";
 import {
+  Badge,
+  Box,
   Button,
   Card,
-  Center,
-  CloseButton, Container,
-  Dialog,
+  CloseButton,
+  Dialog, HStack,
   Portal,
   SimpleGrid,
+  Text,
 } from "@chakra-ui/react";
-import { ClipDetail } from "@/app/clips/supabase";
-import OnPageVideoLink from "@/components/on-page-video-link.tsx";
-import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
-type ClipCardProps = { clip: ClipDetail };
+import OnPageVideoLink from "@/components/on-page-video-link";
+import { baseUrlToTimestampUrl } from "@/lib/utils";
+import type { ClipDetail } from "@/app/clips/supabase";
 
-function ClipCard({ clip }: ClipCardProps) {
 
-  return (
-    <Card.Root width="4xl">
-      <Card.Body gap="2">
-        <Card.Title mt="2">{clip.title}</Card.Title>
-        <Card.Description>{clip.description}</Card.Description>
-      </Card.Body>
-
-      <Card.Footer justifyContent="flex-end">
-        <Dialog.Root size="full">
-          <Dialog.Trigger asChild>
-            <Button variant="solid" size="md" colorPalette="green">
-              view
-            </Button>
-          </Dialog.Trigger>
-
-          <Portal>
-            <Dialog.Backdrop />
-            <Dialog.Positioner>
-              <Dialog.Content>
-                <Dialog.Header>
-                  <Dialog.Title>{clip.title}</Dialog.Title>
-                </Dialog.Header>
-                <Dialog.Body>
-                  <OnPageVideoLink url={baseUrlToTimestampUrl(clip.url, clip.timestamp)} />
-                </Dialog.Body>
-                <Dialog.CloseTrigger asChild>
-                  <CloseButton size="sm" />
-                </Dialog.CloseTrigger>
-              </Dialog.Content>
-            </Dialog.Positioner>
-          </Portal>
-        </Dialog.Root>
-      </Card.Footer>
-    </Card.Root>
-  );
+interface ClipGridProps {
+  clips: ClipDetail[];
 }
 
-type ClipGridProps = {
-  clips: ClipDetail[];
-};
-
 export function ClipGrid({ clips }: ClipGridProps) {
-  if (!clips.length) return null;
+  if (!clips || clips.length === 0) {
+    return (
+      <Box p={4} display="flex" alignItems="center" justifyContent="center">
+        <Text color="white" fontSize="lg">
+          No clips found.
+        </Text>
+      </Box>
+    );
+  }
 
   return (
-    <Container maxW="4xl">
-      <SimpleGrid columns={{ base: 1, md: 2 }} columnGap="5" rowGap="5" mt={4}>
-        {clips.map((clip) => (
-          <Center key={clip.clip_id}>
-            <ClipCard clip={clip} />
-          </Center>
-        ))}
-      </SimpleGrid>
-    </Container>
+    <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
+      {clips.map((item) => (
+        <Card.Root key={item.clip_id} variant="elevated">
+          <Card.Header>
+            <HStack justify='space-between'>
+              <Card.Title>{item.title}</Card.Title>
+              <Card.Title>
+                {!item.is_public && (<Badge colorPalette="green">Private</Badge>)}
+              </Card.Title>
+            </HStack>
+          </Card.Header>
+          <Card.Body>
+            <Card.Description>{item.description}</Card.Description>
+          </Card.Body>
+          <Card.Footer gap="2">
+            <Dialog.Root size="xl">
+              <Dialog.Trigger asChild>
+                <Button colorPalette="gray">View Clip</Button>
+              </Dialog.Trigger>
+              <Portal>
+                <Dialog.Backdrop />
+                <Dialog.Positioner>
+                  <Dialog.Content>
+                    <Dialog.Body>
+                      <OnPageVideoLink url={baseUrlToTimestampUrl(item.url, item.timestamp)} />
+                    </Dialog.Body>
+                    <Dialog.CloseTrigger asChild>
+                      <CloseButton size="sm" />
+                    </Dialog.CloseTrigger>
+                  </Dialog.Content>
+                </Dialog.Positioner>
+              </Portal>
+            </Dialog.Root>
+          </Card.Footer>
+        </Card.Root>
+      ))}
+    </SimpleGrid>
   );
 }

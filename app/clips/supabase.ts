@@ -13,6 +13,8 @@ export type Clip = {
   created_at: string
   created_by: string
   playlists: string[] | null
+  teams: string[] | null
+  players: string[] | null
 }
 
 export type ClipDetail = Clip & {
@@ -35,6 +37,45 @@ export async function fetchClips(): Promise<Clip[]> {
 
   if (error) throw error;
   return data || []
+}
+
+// Fetch visible clips for given column
+interface ClipFilters {
+  eventId?: string;
+  teamId?: string;
+  requestPlayer: string;
+  clipPlayer?: string;
+  playlist?: string;
+}
+
+export async function fetchClipsCustom(filters: ClipFilters) {
+  let query = supabase
+    .from("view_clip_detail")
+    .select("*")
+    .or(`is_public.eq.true, created_by.eq.${filters.requestPlayer}`)
+    .order("created_at", { ascending: false });
+
+  if (filters.eventId) {
+    query = query.eq("event_id", filters.eventId);
+  }
+  if (filters.clipPlayer) {
+    query = query.containedBy("players", JSON.stringify([filters.clipPlayer]));
+  }
+  if (filters.teamId) {
+    query = query.containedBy("teams", JSON.stringify([filters.teamId]));
+  }
+  if (filters.playlist) {
+    query = query.containedBy("playlists", JSON.stringify([filters.playlist]));
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching clips:", error);
+    throw error;
+  }
+
+  return data || [];
 }
 
 // WRITING

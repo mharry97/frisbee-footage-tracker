@@ -2,11 +2,13 @@
 
 import React from "react";
 import {
-  Box, Button, Card, CloseButton,
-  Container, Dialog, Portal, Separator, SimpleGrid,
-  Text, useDisclosure
+  Box,
+  Container,
+  Separator,
+  Text,
+  useDisclosure
 } from "@chakra-ui/react";
-import { fetchPlaylistClips } from "@/app/clips/supabase";
+import { fetchClipsCustom } from "@/app/clips/supabase";
 import {fetchPlaylist} from "@/app/playlists/supabase";
 import FloatingClipButton from "@/components/ui/add-clip-button";
 import {useParams} from "next/navigation";
@@ -14,9 +16,8 @@ import {useAuth} from "@/lib/auth-context.tsx";
 import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
 import {useQuery} from "@tanstack/react-query";
-import OnPageVideoLink from "@/components/on-page-video-link.tsx";
-import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
 import {AddClipModal} from "@/app/clips/components/add-clip-modal.tsx";
+import {ClipGrid} from "@/app/clips/components/clip-grid.tsx";
 
 
 
@@ -33,9 +34,12 @@ function PointPageContent() {
   });
 
   // Fetch clips
-  const { data: clips, isLoading:isClipLoading } = useQuery({
-    queryKey: ["clips", playlist_id, player?.player_id],
-    queryFn: () => fetchPlaylistClips(playlist_id, player!.player_id),
+  const { data: clips, isLoading: isClipLoading } = useQuery({
+    queryKey: ["clips", { playlist: playlist_id, requestPlayerId: player?.auth_user_id }],
+    queryFn: () => fetchClipsCustom({
+      playlist: playlist_id,
+      requestPlayer: player!.auth_user_id
+    }),
     enabled: !!playlist_id && !!player,
   });
 
@@ -61,41 +65,8 @@ function PointPageContent() {
     <Container maxW="4xl">
       <StandardHeader text={playlist?.title || ""} is_admin={player.is_admin} />
       <Text textStyle="xl" mb={4} mt ={4}>{playlist?.description}</Text>
-      <Separator />
-      <SimpleGrid columns={{base: 1, md: 2}} gap={8} mb={8}>
-        {clips.map((item) => (
-          <Card.Root key={item.clip_id} variant="elevated">
-            <Card.Header>
-              <Card.Title>{item.title}</Card.Title>
-            </Card.Header>
-            <Card.Body>
-              <Card.Description>
-                {item.description}
-              </Card.Description>
-            </Card.Body>
-            <Card.Footer gap="2">
-              <Dialog.Root size="xl">
-                <Dialog.Trigger asChild>
-                  <Button colorPalette='gray'>View Clip</Button>
-                </Dialog.Trigger>
-                <Portal>
-                  <Dialog.Backdrop/>
-                  <Dialog.Positioner>
-                    <Dialog.Content>
-                      <Dialog.Body>
-                        <OnPageVideoLink url={baseUrlToTimestampUrl(item.url, item.timestamp)}/>
-                      </Dialog.Body>
-                      <Dialog.CloseTrigger asChild>
-                        <CloseButton size="sm"/>
-                      </Dialog.CloseTrigger>
-                    </Dialog.Content>
-                  </Dialog.Positioner>
-                </Portal>
-              </Dialog.Root>
-            </Card.Footer>
-          </Card.Root>
-        ))}
-      </SimpleGrid>
+      <Separator mb={8} />
+      <ClipGrid clips={clips ?? []} />
       <FloatingClipButton onClick={onOpen} />
       <AddClipModal
         isOpen={open}

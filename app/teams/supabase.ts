@@ -56,7 +56,7 @@ export async function fetchEventTeams(event_id: string): Promise<TeamDetailed[]>
 // Get specific team info fetchBaseTeamInfo BaseTeamInfo
 export async function fetchTeam(id: string): Promise<TeamDetailed> {
   const { data, error } = await supabase
-    .from("view_team_detailed")
+    .from("view_team_detail")
     .select("*")
     .eq("team_id", id)
     .single();

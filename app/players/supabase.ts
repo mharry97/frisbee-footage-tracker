@@ -7,7 +7,6 @@ export type Player = {
   is_admin: string;
   is_editor: string;
   notes: string;
-  username: string;
   number: number;
 }
 
@@ -25,7 +24,6 @@ export async function getPlayersForTeam(team_id: string): Promise<PlayerDetailed
     .from("view_player_detail")
     .select("*")
     .eq("team_id", team_id)
-    .order("team_name", {ascending: true})
     .order("player_name", {ascending: true})
 
   if (error) throw error;
@@ -42,4 +40,16 @@ export async function fetchPlayers(): Promise<PlayerDetailed[]> {
 
   if (error) throw error;
   return data || []
+}
+
+// Fetch specific player details
+export async function fetchPlayer(playerId: string): Promise<PlayerDetailed | null> {
+  const { data, error } = await supabase
+    .from("view_player_detail")
+    .select("*")
+    .eq("player_id", playerId)
+    .single()
+
+  if (error) throw error;
+  return data || null
 }
