@@ -16,7 +16,7 @@ import CustomTabs from "@/components/tabbed-page";
 import { fetchEventPoints } from "@/app/points/supabase";
 import { fetchEventPossessions } from "@/app/possessions/supabase";
 import {baseUrlToTimestampUrl, convertTimestampToSeconds} from "@/lib/utils";
-import { fetchEventClips } from "@/app/clips/supabase";
+import { fetchClipsCustom } from "@/app/clips/supabase";
 import {useParams} from "next/navigation";
 import {useAuth} from "@/lib/auth-context.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
@@ -25,10 +25,11 @@ import OnPageVideoLink from "@/components/on-page-video-link.tsx";
 import PointForm from "@/app/events/[id]/components/new-point-form.tsx";
 import {useQuery} from "@tanstack/react-query";
 import ScoreProgressionChart from "@/app/stats/components/charts/ScoreProgressionChart.tsx";
-import {transformPointsForScoreChart} from "@/app/stats/utils.ts";
+import {transformPointsForScoreChart} from "@/app/stats/game-flow.ts";
 import {fetchEvent} from "@/app/events/supabase.ts";
 import {CalculatedStat, calculateGameStats} from "@/app/stats/game-stats.ts";
 import {StatRow} from "@/app/stats/components/charts/StatRow.tsx";
+import {ClipGrid} from "@/app/clips/components/clip-grid.tsx";
 
 function EventPageContent() {
   const { id } = useParams<{ id: string }>();
@@ -54,14 +55,7 @@ function EventPageContent() {
     enabled: !!id,
   });
 
-  // Fetch clips
-  const { data: clips, isLoading: isLoadingClips } = useQuery({
-    queryKey: ["clips", id, player?.player_id],
-    queryFn: () => fetchEventClips(id, player!.player_id),
-    enabled: !!id && !!player,
-  });
-
-  const isLoading = isLoadingPossessions || isLoadingPoints || isLoadingClips || isLoadingEvent;
+  const isLoading = isLoadingPossessions || isLoadingPoints || isLoadingEvent;
   const hasPoints = points?.length != 0;
 
   // STATS
@@ -272,55 +266,18 @@ function EventPageContent() {
   };
 
   const ClipsContent = () => {
-    if (clips?.length === 0) {
-      return (
-        <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-          <Text color="white" fontSize="lg">No clips for this event yet.</Text>
-        </Box>
-      )
+    const { data: clips, isLoading } = useQuery({
+      queryKey: ["customClips", { eventId: id, requestPlayerId: player?.auth_user_id }],
+      queryFn: () => fetchClipsCustom({
+        eventId: id,
+        requestPlayer: player!.auth_user_id
+      }),
+      enabled: !!id && !!player,
+    });
+    if (isLoading) {
+      return <LoadingSpinner text="Loading clips..." />;
     }
-    return (
-      <>
-        {!clips ? (
-          <Text color="white" fontSize="lg">No teams yet!</Text>
-        ) : (
-          <SimpleGrid columns={{base: 1, md: 2}} gap={8} mb={8}>
-            {clips.map((item) => (
-              <Card.Root key={item.clip_id} variant="elevated">
-                <Card.Header>
-                  <Card.Title>{item.title}</Card.Title>
-                </Card.Header>
-                <Card.Body>
-                  <Card.Description>
-                    {item.description}
-                  </Card.Description>
-                </Card.Body>
-                <Card.Footer gap="2">
-                  <Dialog.Root size="xl">
-                    <Dialog.Trigger asChild>
-                      <Button colorPalette='gray'>View Clip</Button>
-                    </Dialog.Trigger>
-                    <Portal>
-                      <Dialog.Backdrop/>
-                      <Dialog.Positioner>
-                        <Dialog.Content>
-                          <Dialog.Body>
-                            <OnPageVideoLink url={baseUrlToTimestampUrl(item.url, item.timestamp)}/>
-                          </Dialog.Body>
-                          <Dialog.CloseTrigger asChild>
-                            <CloseButton size="sm"/>
-                          </Dialog.CloseTrigger>
-                        </Dialog.Content>
-                      </Dialog.Positioner>
-                    </Portal>
-                  </Dialog.Root>
-                </Card.Footer>
-              </Card.Root>
-            ))}
-          </SimpleGrid>
-        )}
-      </>
-    )
+    return <ClipGrid clips={clips ?? []} />;
   };
 
   // Set up the tabs available

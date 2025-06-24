@@ -2,7 +2,7 @@
 import NextLink from "next/link";
 import {
   Container,
-  Box, Text, Card, Dialog, Button, SimpleGrid, useDisclosure
+  Box, Text, Card, Dialog, Button, SimpleGrid, useDisclosure, Badge, HStack
 } from "@chakra-ui/react";
 import React from "react";
 import { AddPlaylistModal } from "@/app/playlists/components/add-playlist-modal";
@@ -19,8 +19,8 @@ function PlaylistsPageContent() {
 
 
   const { data: playlists, isLoading } = useQuery({
-    queryKey: ["playlists", player?.player_id],
-    queryFn: () => fetchVisiblePlaylists(player!.player_id),
+    queryKey: ["playlists", player?.auth_user_id],
+    queryFn: () => fetchVisiblePlaylists(player!.auth_user_id),
     enabled: !!player
   })
 
@@ -48,7 +48,12 @@ function PlaylistsPageContent() {
           {playlists.map((item) => (
             <Card.Root key={item.playlist_id} variant="elevated">
               <Card.Header>
-                <Card.Title>{item.title}</Card.Title>
+                <HStack justify='space-between'>
+                  <Card.Title>{item.title}</Card.Title>
+                  <Card.Title>
+                    {!item.is_public && (<Badge colorPalette="green">Private</Badge>)}
+                  </Card.Title>
+                </HStack>
                 <Card.Description>
                   Created by {item.created_by_name} on {new Intl.DateTimeFormat('en-GB', {
                   day: '2-digit',

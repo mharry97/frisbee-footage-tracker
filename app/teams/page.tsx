@@ -1,6 +1,6 @@
 "use client"
 
-import {Box, Card, Container, SimpleGrid, Text} from "@chakra-ui/react";
+import {Box, Button, Card, Container, SimpleGrid, Text} from "@chakra-ui/react";
 import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 import {useAuth} from "@/lib/auth-context.tsx";
 import {useQuery} from "@tanstack/react-query";
@@ -8,6 +8,7 @@ import {fetchTeams} from "@/app/teams/supabase.ts";
 import React from "react";
 import StandardHeader from "@/components/standard-header.tsx";
 import TeamModal from "@/app/teams/components/team-modal.tsx";
+import NextLink from "next/link";
 
 function TeamsPageContent() {
   const { player } = useAuth()
@@ -16,7 +17,6 @@ function TeamsPageContent() {
     queryFn: () => fetchTeams(),
     queryKey: ["teams"]
   })
-
 
   if (!player || isLoading) {
     return (
@@ -37,19 +37,20 @@ function TeamsPageContent() {
   return (
     <Container maxW="4xl">
       <StandardHeader text="Teams" is_admin={player.is_admin} />
-      <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
+      <SimpleGrid columns={{ base: 2, md: 3 }} gap={8} mb={8}>
         {teams.map((item, index) => (
           <Card.Root key={index} variant="elevated">
             <Card.Header>
               <Card.Title>{item.team_name}</Card.Title>
-              <Card.Description>Description</Card.Description>
             </Card.Header>
             <Card.Body>
               <Card.Description>
               </Card.Description>
             </Card.Body>
             <Card.Footer gap="2">
-              Hello
+              <NextLink href={`/teams/${item.team_id}`} passHref>
+                <Button>View Team</Button>
+              </NextLink>
             </Card.Footer>
           </Card.Root>
         ))}

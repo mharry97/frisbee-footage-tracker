@@ -89,6 +89,7 @@ export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose, pla
 
   const { mutateAsync: upsertClipMutation } = useMutation({
     mutationFn: addClip,
+    onSuccess: () => {queryClient.invalidateQueries({ queryKey: ["clips"] })}
   });
 
   const onSubmit = async (formData: AddClip) => {
@@ -101,6 +102,8 @@ export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose, pla
         description: formData.description,
         playlists: formData.playlists || null,
         is_public: formData.is_public,
+        teams: [],
+        players: []
       };
 
       await upsertClipMutation(clipPayload);
