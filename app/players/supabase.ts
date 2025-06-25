@@ -3,19 +3,28 @@ import {supabase} from "@/lib/supabase.ts";
 export type Player = {
   player_id: string;
   player_name: string;
-  is_active: string;
+  is_active: boolean;
   is_admin: string;
   is_editor: string;
   notes: string;
   number: number;
+  team_id: string;
 }
 
 export type PlayerDetailed = Player & {
-  team_id: string;
   team_name: string;
   is_home_team: string;
   auth_user_id: string;
 }
+
+export type UpsertPlayer = {
+  player_id?: string | null;
+  team_id: string;
+  number?: number| null;
+  notes?: string | null;
+  player_name: string;
+  is_active?: boolean;
+};
 
 // Reading
 
@@ -52,4 +61,16 @@ export async function fetchPlayer(playerId: string): Promise<PlayerDetailed | nu
 
   if (error) throw error;
   return data || null
+}
+
+
+// Writing
+
+// Upsert player
+export async function upsertPlayer(data: UpsertPlayer): Promise<void> {
+  const { error } = await supabase
+    .from("players")
+    .upsert(data)
+
+  if (error) throw error;
 }

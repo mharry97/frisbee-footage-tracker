@@ -3,7 +3,7 @@
 import {useAuth} from "@/lib/auth-context.tsx";
 import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 import React, {useMemo} from "react";
-import {Box, Container, Text} from "@chakra-ui/react";
+import {Box, Container, Text, useDisclosure} from "@chakra-ui/react";
 import StandardHeader from "@/components/standard-header.tsx";
 import {useParams} from "next/navigation";
 import {useQuery} from "@tanstack/react-query";
@@ -14,10 +14,13 @@ import LoadingSpinner from "@/components/ui/loading-spinner.tsx";
 import {ClipGrid} from "@/app/clips/components/clip-grid.tsx";
 import {getPlayersForTeam} from "@/app/players/supabase.ts";
 import {PlayerGrid} from "@/components/ui/player-grid.tsx";
+import FloatingPlusButton from "@/components/ui/floating-plus.tsx";
+import {PlayerModal} from "@/app/players/components/player-modal.tsx";
 
 function TeamPageContent() {
   const {player} = useAuth()
   const { team_id } = useParams<{ team_id: string }>();
+  const { open, onOpen, onClose } = useDisclosure();
 
   const { data: teamData, isLoading: isLoadingTeam } = useQuery({
     queryFn: () => fetchTeam(team_id),
@@ -74,13 +77,20 @@ function TeamPageContent() {
         <PlayerGrid players={activePlayers ?? []} />
         <Text mb={4} mt={4} textStyle="2xl">Inactive Players</Text>
         <PlayerGrid players={inactivePlayers ?? []} />
+        <FloatingPlusButton onClick={onOpen} iconType="add" />
+        <PlayerModal
+          isOpen={open}
+          onClose={onClose}
+          mode="add"
+          teamId={team_id}
+        />
 
       </>
 
     );
   }
 
-  // PLAYERS
+  // CLIPS
   const ClipsContent = () => {
     const { data: clips, isLoading } = useQuery({
       queryKey: ["customClips", { teamId: team_id, requestPlayerId: player?.auth_user_id }],

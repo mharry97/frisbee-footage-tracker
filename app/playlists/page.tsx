@@ -6,7 +6,7 @@ import {
 } from "@chakra-ui/react";
 import React from "react";
 import { AddPlaylistModal } from "@/app/playlists/components/add-playlist-modal";
-import FloatingActionButton from "@/components/ui/plus-button";
+import FloatingActionButton from "@/components/ui/floating-plus";
 import { fetchVisiblePlaylists } from "@/app/playlists/supabase";
 import {AuthWrapper} from "@/components/auth-wrapper";
 import {useAuth} from "@/lib/auth-context.tsx";
@@ -79,7 +79,7 @@ function PlaylistsPageContent() {
             </Card.Root>
           ))}
         </SimpleGrid>
-        <FloatingActionButton onClick={onOpen} />
+        <FloatingActionButton onClick={onOpen} iconType="add" />
         <AddPlaylistModal
           isOpen={open}
           onClose={onClose}

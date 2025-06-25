@@ -1,6 +1,6 @@
 "use client";
 
-import {Box, Container, Text} from "@chakra-ui/react";
+import {Box, Container, Text, useDisclosure} from "@chakra-ui/react";
 import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 import React from "react";
 import {useAuth} from "@/lib/auth-context.tsx";
@@ -12,11 +12,14 @@ import CustomTabs from "@/components/tabbed-page.tsx";
 import LoadingSpinner from "@/components/ui/loading-spinner.tsx";
 import {ClipGrid} from "@/app/clips/components/clip-grid.tsx";
 import {fetchClipsCustom} from "@/app/clips/supabase.ts";
+import {PlayerModal} from "@/app/players/components/player-modal.tsx";
+import FloatingPlusButton from "@/components/ui/floating-plus.tsx";
 
 
 function PlayerPageContent() {
   const { player } = useAuth();
   const { player_id } = useParams<{ player_id: string }>();
+  const { open, onOpen, onClose } = useDisclosure();
 
   const { data: playerData, isLoading } = useQuery({
     queryFn: () => fetchPlayer(player_id),
@@ -35,7 +38,16 @@ function PlayerPageContent() {
   // OVERVIEW
   const OverviewContent = () => {
     return (
-      <Text mb={4} mt={4} textStyle="2xl">Player level stats - not dissimilar to homepage i think</Text>
+      <>
+        <Text mb={4} mt={4} textStyle="2xl">Player level stats - not dissimilar to homepage i think</Text>
+        <FloatingPlusButton onClick={onOpen} iconType="edit" />
+        <PlayerModal
+          isOpen={open}
+          onClose={onClose}
+          mode="edit"
+          playerToEdit={playerData}
+        />
+      </>
     )
   }
 

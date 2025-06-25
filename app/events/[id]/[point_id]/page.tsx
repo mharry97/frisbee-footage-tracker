@@ -27,7 +27,7 @@ import ThrowCounter from "@/components/throws-input.tsx";
 import { usePointFormData, usePointFormCollections } from "@/app/hooks/usePointFormData.ts";
 import {AddPossession, schema} from "@/app/possessions/possessions.schema.ts";
 import {usePossessionSubmit} from "@/app/hooks/usePermissionSubmit.ts";
-import FloatingClipButton from "@/components/ui/add-clip-button.tsx";
+import FloatingActionButton from "@/components/ui/floating-plus.tsx";
 import {AddClipModal} from "@/app/clips/components/add-clip-modal.tsx";
 
 function PossessionPageContent() {
@@ -467,7 +467,7 @@ function PossessionPageContent() {
           </>
         )}
       </form>
-      <FloatingClipButton onClick={onOpen} />
+      <FloatingActionButton onClick={onOpen} iconType="clip" />
       <AddClipModal
         isOpen={open}
         onClose={onClose}

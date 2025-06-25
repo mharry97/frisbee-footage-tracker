@@ -18,7 +18,7 @@ import { AuthWrapper } from "@/components/auth-wrapper"
 import { getHomeTeamPlayerInfo } from "@/app/admin/supabase"
 import { TeamPlayer } from "@/app/teams/[team_id]/[player_id]/supabase"
 import { useAuth } from "@/lib/auth-context"
-import FloatingActionButton from "@/components/ui/plus-button"
+import FloatingActionButton from "@/components/ui/floating-plus"
 import NewUserDetailsPortal from "@/app/admin/component/new-user-details"
 import EditUserDetailsPortal from "@/app/admin/component/edit-user-details"
 import StandardHeader from "@/components/standard-header.tsx";
@@ -124,7 +124,7 @@ function PlayersPageContent() {
 
       <Dialog.Root>
         <Dialog.Trigger asChild>
-          <FloatingActionButton />
+          <FloatingActionButton iconType="add" />
         </Dialog.Trigger>
         <Portal>
           <Dialog.Backdrop />
