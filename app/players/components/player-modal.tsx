@@ -83,6 +83,7 @@ export function PlayerModal({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: ['pointPageData'] });
+      queryClient.invalidateQueries({ queryKey: ['player'] });
       onClose();
     },
   });
