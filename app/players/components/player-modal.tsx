@@ -81,7 +81,8 @@ export function PlayerModal({
   const { mutateAsync: upsertPlayerMutation } = useMutation({
     mutationFn: upsertPlayer,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['player'], queryKey: ['pointPageData'] });
+      queryClient.invalidateQueries({ queryKey: ['players'] });
+      queryClient.invalidateQueries({ queryKey: ['pointPageData'] });
       onClose();
     },
   });

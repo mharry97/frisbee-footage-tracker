@@ -20,19 +20,6 @@ export async function fetchHomePlayers(): Promise<Player[]> {
   }
 }
 
-// Fetch players for a team
-export async function fetchPlayersForTeam(teamId: string): Promise<Player[]> {
-  try {
-    const { data } = await supabase.from("players").select("*").eq("team_id", teamId).order("player_name")
-
-
-    return data || []
-  } catch (error) {
-    console.error("Error fetching players for team:", error)
-    return []
-  }
-}
-
 
 // Get the number of points played by each player
 export type PointsByPlayer = PointDetailed & { player_id: string }

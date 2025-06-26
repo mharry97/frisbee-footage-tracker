@@ -1,12 +1,10 @@
-import {Button, HStack, Icon, Text} from "@chakra-ui/react";
+import {Button, ButtonProps, HStack, Icon, Text} from "@chakra-ui/react";
 import { RiUserAddLine } from "react-icons/ri";
 import React from "react";
 
 
-const AddPlayerButton = React.forwardRef<
-  HTMLButtonElement,
-  ActionButtonProps
->(({...props}, ref) => {
+const AddPlayerButton = React.forwardRef<HTMLButtonElement, ButtonProps>
+((props, ref) => {
   return (
     <Button ref={ref} {...props} variant="ghost">
       <HStack>

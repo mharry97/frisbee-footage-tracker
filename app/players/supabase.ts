@@ -4,8 +4,8 @@ export type Player = {
   player_id: string;
   player_name: string;
   is_active: boolean;
-  is_admin: string;
-  is_editor: string;
+  is_admin: boolean;
+  is_editor: boolean;
   notes: string;
   number: number;
   team_id: string;
@@ -15,6 +15,7 @@ export type PlayerDetailed = Player & {
   team_name: string;
   is_home_team: string;
   auth_user_id: string;
+  username: string;
 }
 
 export type UpsertPlayer = {

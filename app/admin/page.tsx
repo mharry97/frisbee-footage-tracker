@@ -16,18 +16,18 @@ import {
 } from "@chakra-ui/react"
 import { AuthWrapper } from "@/components/auth-wrapper"
 import { getHomeTeamPlayerInfo } from "@/app/admin/supabase"
-import { TeamPlayer } from "@/app/teams/[team_id]/[player_id]/supabase"
 import { useAuth } from "@/lib/auth-context"
 import FloatingActionButton from "@/components/ui/floating-plus"
 import NewUserDetailsPortal from "@/app/admin/component/new-user-details"
 import EditUserDetailsPortal from "@/app/admin/component/edit-user-details"
 import StandardHeader from "@/components/standard-header.tsx";
+import {PlayerDetailed} from "@/app/players/supabase.ts";
 
 function PlayersPageContent() {
   const { player } = useAuth()
-  const [players, setPlayers] = useState<TeamPlayer[]>([])
+  const [players, setPlayers] = useState<PlayerDetailed[]>([])
   const [loading, setLoading] = useState(true)
-  const [editingPlayer, setEditingPlayer] = useState<TeamPlayer | null>(null)
+  const [editingPlayer, setEditingPlayer] = useState<PlayerDetailed | null>(null)
 
   const refreshPlayers = useCallback(async () => {
     if (!player) return
