@@ -32,7 +32,7 @@ export function PlayerGrid({  players }: ClipGridProps) {
           <Box border="1px solid #202020" borderRadius="lg" p={4} _hover={{ bg: "#101010" }}>
             <HStack gap="4">
               <Avatar.Root colorPalette = 'gray'>
-                {item.number ? (<Avatar.Fallback name={String(item.number)} />):(<Avatar.Fallback />)}
+                {item.number ? (<Avatar.Fallback>{item.number}</Avatar.Fallback>):(<Avatar.Fallback />)}
               </Avatar.Root>
               <Text>{item.player_name}</Text>
             </HStack>

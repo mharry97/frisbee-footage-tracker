@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { fetchClipsCustom } from "@/app/clips/supabase";
 import {fetchPlaylist} from "@/app/playlists/supabase";
-import FloatingClipButton from "@/components/ui/add-clip-button";
+import FloatingActionButton from "@/components/ui/floating-plus";
 import {useParams} from "next/navigation";
 import {useAuth} from "@/lib/auth-context.tsx";
 import {AuthWrapper} from "@/components/auth-wrapper.tsx";
@@ -67,7 +67,7 @@ function PointPageContent() {
       <Text textStyle="xl" mb={4} mt ={4}>{playlist?.description}</Text>
       <Separator mb={8} />
       <ClipGrid clips={clips ?? []} />
-      <FloatingClipButton onClick={onOpen} />
+      <FloatingActionButton onClick={onOpen} iconType = "clip"/>
       <AddClipModal
         isOpen={open}
         onClose={onClose}

@@ -2,20 +2,6 @@ import { type Player, supabase } from "@/lib/supabase";
 import { getHomeTeam } from "@/app/teams/supabase";
 import {PointDetailed} from "@/app/points/supabase.ts";
 
-export type TeamPlayer = {
-  player_id: string
-  player_name: string
-  team_id: string
-  team_name: string
-  is_home_team: boolean
-  is_admin: boolean
-  is_editor: boolean
-  notes: string
-  is_active: boolean
-  username: string
-  auth_user_id: string
-}
-
 // Get home team players
 export async function fetchHomePlayers(): Promise<Player[]> {
   const teamId = await getHomeTeam();
@@ -31,29 +17,6 @@ export async function fetchHomePlayers(): Promise<Player[]> {
   } catch (error) {
     console.error("Error fetching players:", error);
     return [];
-  }
-}
-
-// Fetch team player mappings
-export async function fetchPlayerTeamMapping(): Promise<TeamPlayer[]> {
-  const { data, error } = await supabase
-    .from("view_player_detail")
-    .select("*")
-
-  if (error) throw error;
-  return data ?? []
-}
-
-// Fetch players for a team
-export async function fetchPlayersForTeam(teamId: string): Promise<Player[]> {
-  try {
-    const { data } = await supabase.from("players").select("*").eq("team_id", teamId).order("player_name")
-
-
-    return data || []
-  } catch (error) {
-    console.error("Error fetching players for team:", error)
-    return []
   }
 }
 

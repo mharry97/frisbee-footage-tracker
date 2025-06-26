@@ -41,6 +41,8 @@ export type PossessionDetailed = {
   timestamp: string
   base_url: string
   event_date: string
+  offence_team_players: string[];
+  defence_team_players: string[];
 }
 
 export type NewPossession = Omit<Possession, 'possession_id'>
@@ -83,6 +85,33 @@ export async function fetchAllPossessions(): Promise<PossessionDetailed[]> {
   return data || []
 }
 
+// Fetch all possessions for a team
+export async function fetchTeamPossessions(teamId: string): Promise<PossessionDetailed[]> {
+  const { data, error } = await supabase
+    .from("view_possession_detail")
+    .select("*")
+    .or(`offence_team.eq.${teamId}, defence_team.eq.${teamId}`)
+    .order("event_date", { ascending: false })
+    .order("timestamp_seconds", { ascending: false });
+
+  if (error) throw error;
+  return data || []
+}
+
+// Fetch all possessions for a player
+export async function fetchPlayerPossessions(playerId: string): Promise<PossessionDetailed[]> {
+  console.log(playerId)
+  const { data, error } = await supabase
+    .from("view_possession_detail")
+    .select("*")
+    .or(`offence_team_players.cs.["${playerId}"],defence_team_players.cs.["${playerId}"]`)
+    .order("event_date", { ascending: false })
+    .order("timestamp_seconds", { ascending: false });
+
+  if (error) throw error;
+  return data || []
+}
+
 //Fetch all possessions
 interface PossessionFilters {
   offenceTeamId?: string;
@@ -117,8 +146,8 @@ export async function fetchFilteredPossessions(filters: PossessionFilters = {}):
   }
 
   if (filters.playerId && filters.playerId.length > 0) {
-    const offenceFilter = `offence_team_players.cs.{${filters.playerId[0]}}`;
-    const defenceFilter = `defence_team_players.cs.{${filters.playerId[0]}}`;
+    const offenceFilter = `offence_team_players.cs.["${filters.playerId[0]}"]`;
+    const defenceFilter = `defence_team_players.cs.["${filters.playerId[0]}"]`;
     query = query.or(`${offenceFilter},${defenceFilter}`);
   }
 

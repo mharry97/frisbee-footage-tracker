@@ -24,11 +24,11 @@ import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
 import PointForm from "@/app/events/[id]/components/new-point-form.tsx";
 import {useQuery} from "@tanstack/react-query";
-import ScoreProgressionChart from "@/app/stats/components/charts/ScoreProgressionChart.tsx";
-import {transformPointsForScoreChart} from "@/app/stats/game-flow.ts";
+import ScoreProgressionChart from "@/app/stats/game/components/ScoreProgressionChart.tsx";
+import {transformPointsForScoreChart} from "@/app/stats/game/game-flow.ts";
 import {fetchEvent} from "@/app/events/supabase.ts";
-import {CalculatedStat, calculateGameStats} from "@/app/stats/game-stats.ts";
-import {StatRow} from "@/app/stats/components/charts/StatRow.tsx";
+import {CalculatedStat, calculateGameStats} from "@/app/stats/game/game-stats.ts";
+import {StatRow} from "@/app/stats/game/components/StatRow.tsx";
 import {ClipGrid} from "@/app/clips/components/clip-grid.tsx";
 
 function EventPageContent() {
@@ -302,7 +302,7 @@ function EventPageContent() {
   if (!player || isLoading) {
     return (
       <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading player data...</Text>
+        <Text color="white" fontSize="lg">Loading event data...</Text>
       </Box>
     )
   }

@@ -26,8 +26,8 @@ import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {fetchPoint} from "@/app/points/supabase.ts";
-import FloatingClipButton from "@/components/ui/add-clip-button.tsx";
 import {AddClipModal} from "@/app/clips/components/add-clip-modal.tsx";
+import FloatingActionButton from "@/components/ui/floating-plus.tsx";
 
 function PointViewContent() {
   const { id, point_id } = useParams<{ id: string; point_id: string }>()
@@ -295,7 +295,7 @@ function PointViewContent() {
           </Dialog.Root>
         </HStack>
       )}
-      <FloatingClipButton onClick={onOpen} />
+      <FloatingActionButton onClick={onOpen} iconType="clip" />
       <AddClipModal
         isOpen={open}
         onClose={onClose}

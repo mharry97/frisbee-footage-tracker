@@ -3,7 +3,7 @@
 import {useAuth} from "@/lib/auth-context.tsx";
 import {AuthWrapper} from "@/components/auth-wrapper.tsx";
 import React, {useMemo} from "react";
-import {Box, Container, Text} from "@chakra-ui/react";
+import {Box, Container, Heading, HStack, Separator, SimpleGrid, Text, useDisclosure, VStack} from "@chakra-ui/react";
 import StandardHeader from "@/components/standard-header.tsx";
 import {useParams} from "next/navigation";
 import {useQuery} from "@tanstack/react-query";
@@ -12,19 +12,70 @@ import CustomTabs from "@/components/tabbed-page.tsx";
 import {fetchClipsCustom} from "@/app/clips/supabase.ts";
 import LoadingSpinner from "@/components/ui/loading-spinner.tsx";
 import {ClipGrid} from "@/app/clips/components/clip-grid.tsx";
-import {getPlayersForTeam} from "@/app/players/supabase.ts";
+import {fetchTeamMapping, getPlayersForTeam} from "@/app/players/supabase.ts";
 import {PlayerGrid} from "@/components/ui/player-grid.tsx";
+import {PlayerModal} from "@/app/players/components/player-modal.tsx";
+import FloatingActionButton from "@/components/ui/floating-plus.tsx";
+import {fetchTeamPossessions} from "@/app/possessions/supabase.ts";
+import {calculatePlayerStats, PlayerStatLine} from "@/app/stats/player/player-base-stats.ts";
+import {StatLeaderCard} from "@/app/stats/player/components/player-stat-card.tsx";
+import {PlayerStatsTable} from "@/app/stats/player/components/player-stat-table.tsx";
 
 function TeamPageContent() {
   const {player} = useAuth()
   const { team_id } = useParams<{ team_id: string }>();
+  const { open, onOpen, onClose } = useDisclosure();
 
   const { data: teamData, isLoading: isLoadingTeam } = useQuery({
     queryFn: () => fetchTeam(team_id),
     queryKey: ["team"]
   })
 
-  if (!player || isLoadingTeam) {
+  const { data: playerTeamMapping, isLoading: isLoadingTeamPlayer } = useQuery({
+    queryFn: fetchTeamMapping,
+    queryKey: ["teamPlayer"]
+  })
+
+  // Calculate stats
+  const { data: possessionData, isLoading: isLoadingPossessions } = useQuery({
+    queryKey: ["teamPossessions", team_id],
+    queryFn: () => fetchTeamPossessions(team_id),
+    enabled: !!team_id,
+  });
+
+  // Player stat lines
+  const allPlayerStats = useMemo(() =>
+      calculatePlayerStats(possessionData ?? [], playerTeamMapping ?? [], team_id),
+    [possessionData, team_id, playerTeamMapping]
+  );
+
+  const filteredPlayerStats = useMemo(() => {
+    if (!allPlayerStats) {
+      return [];
+    }
+    // Filter for players with >0 points
+    return allPlayerStats.filter(player => player.points_played > 0);
+  }, [allPlayerStats]);
+
+  // Find the leader for each category from the calculated stats
+  const leaders = useMemo(() => {
+    if (!filteredPlayerStats || filteredPlayerStats.length === 0) return {};
+
+    const findLeader = (stat: keyof PlayerStatLine) =>
+      filteredPlayerStats.reduce((top, current) => (current[stat] > top[stat] ? current : top));
+
+    return {
+      topScorer: findLeader('scores'),
+      topAssister: findLeader('assists'),
+      topDefender: findLeader('ds'),
+      topPlusMinus: findLeader('plus_minus'),
+    };
+  }, [filteredPlayerStats]);
+
+  const isLoading = isLoadingTeam || isLoadingPossessions || isLoadingTeamPlayer ;
+
+
+  if (!player || isLoading) {
     return (
       <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
         <Text color="white" fontSize="lg">Loading team data...</Text>
@@ -43,7 +94,39 @@ function TeamPageContent() {
   // OVERVIEW
   const OverviewContent = () => {
     return (
-      <Container maxW="4xl"></Container>
+      <>
+        <VStack gap={8} align="stretch">
+          <Heading size="md" textAlign="center">Top Players</Heading>
+          <SimpleGrid columns={{ base: 2, md: 4 }} gap={6}>
+            <StatLeaderCard
+              label="Scores"
+              player={leaders.topScorer}
+              statValue={leaders.topScorer?.scores}
+            />
+            <StatLeaderCard
+              label="Assists"
+              player={leaders.topAssister}
+              statValue={leaders.topAssister?.assists}
+            />
+            <StatLeaderCard
+              label="Ds"
+              player={leaders.topDefender}
+              statValue={leaders.topDefender?.ds}
+            />
+            <StatLeaderCard
+              label="+/-"
+              player={leaders.topPlusMinus}
+              statValue={leaders.topPlusMinus?.plus_minus}
+            />
+          </SimpleGrid>
+          <HStack mb={4} mt={4}>
+            <Separator flex="1" size="sm"></Separator>
+            <Text flexShrink="0" fontSize="xl">Overview</Text>
+            <Separator flex="1" size="sm"></Separator>
+          </HStack>
+          <PlayerStatsTable data={filteredPlayerStats} />
+        </VStack>
+      </>
     )
   }
 
@@ -74,13 +157,20 @@ function TeamPageContent() {
         <PlayerGrid players={activePlayers ?? []} />
         <Text mb={4} mt={4} textStyle="2xl">Inactive Players</Text>
         <PlayerGrid players={inactivePlayers ?? []} />
+        <FloatingActionButton onClick={onOpen} iconType="add" />
+        <PlayerModal
+          isOpen={open}
+          onClose={onClose}
+          mode="add"
+          teamId={team_id}
+        />
 
       </>
 
     );
   }
 
-  // PLAYERS
+  // CLIPS
   const ClipsContent = () => {
     const { data: clips, isLoading } = useQuery({
       queryKey: ["customClips", { teamId: team_id, requestPlayerId: player?.auth_user_id }],

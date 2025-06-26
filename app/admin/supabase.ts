@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase"
-import {TeamPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
+import {PlayerDetailed} from "@/app/players/supabase.ts";
 
-export async function getHomeTeamPlayerInfo(team_id: string): Promise<TeamPlayer[]> {
+export async function getHomeTeamPlayerInfo(team_id: string): Promise<PlayerDetailed[]> {
   const { data, error } = await supabase
     .from("view_player_detail")
     .select("*")

@@ -84,13 +84,12 @@ export async function fetchEventPoints(event_id: string): Promise<PointDetailed[
   return data ?? [];
 }
 
-type PlayerPoint = PointDetailed & { player_id: string }
 //Fetch all points for player
-export async function fetchPlayerPoints(player_id: string): Promise<PlayerPoint[]> {
+export async function fetchPlayerPoints(player_id: string): Promise<PointDetailed[]> {
   const { data, error } = await supabase
-    .from("view_points_by_player")
+    .from("view_point_detail")
     .select("*")
-    .eq("player_id", player_id)
+    .or(`offence_team_players.cs.["${player_id}"],defence_team_players.cs.["${player_id}"]`)
     .order("event_date", { ascending: false })
     .order("timestamp_seconds", { ascending: false });
 

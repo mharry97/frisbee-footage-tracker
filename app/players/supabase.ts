@@ -3,18 +3,34 @@ import {supabase} from "@/lib/supabase.ts";
 export type Player = {
   player_id: string;
   player_name: string;
-  is_active: string;
-  is_admin: string;
-  is_editor: string;
+  is_active: boolean;
+  is_admin: boolean;
+  is_editor: boolean;
   notes: string;
   number: number;
+  team_id: string;
 }
 
 export type PlayerDetailed = Player & {
-  team_id: string;
   team_name: string;
   is_home_team: string;
   auth_user_id: string;
+  username: string;
+}
+
+export type UpsertPlayer = {
+  player_id?: string | null;
+  team_id: string;
+  number?: number| null;
+  notes?: string | null;
+  player_name: string;
+  is_active?: boolean;
+};
+
+export type TeamPlayer = {
+  player_id: string;
+  team_id: string;
+  player_name: string;
 }
 
 // Reading
@@ -52,4 +68,26 @@ export async function fetchPlayer(playerId: string): Promise<PlayerDetailed | nu
 
   if (error) throw error;
   return data || null
+}
+
+
+// Writing
+
+// Upsert player
+export async function upsertPlayer(data: UpsertPlayer): Promise<void> {
+  const { error } = await supabase
+    .from("players")
+    .upsert(data)
+
+  if (error) throw error;
+}
+
+// Get view for mapping team ids to name
+export async function fetchTeamMapping(): Promise<TeamPlayer[]> {
+  const { data, error } = await supabase
+    .from("players")
+    .select("player_id, team_id, player_name")
+
+  if (error) throw error;
+  return data ?? [];
 }

@@ -4,50 +4,18 @@ import {
   Box,
   Heading,
   Text,
-  VStack,
   HStack,
-  Center,
-  Separator,
-  Card, Button, SimpleGrid, Dialog, Portal, CloseButton, Badge
-} from "@chakra-ui/react";
-import NextLink from 'next/link';
+  Separator
+  } from "@chakra-ui/react";
 import { AuthWrapper } from "@/components/auth-wrapper";
 import { useAuth } from "@/lib/auth-context.tsx";
-import {InfoTip} from "@/components/ui/toggle-tip.tsx";
 import React, {useEffect, useState} from "react";
 import {getPlayerPointsPlayed, PointsByPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
 import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/teams/[team_id]/[player_id]/utils.ts";
 import { fetchAllPossessions } from "@/app/possessions/supabase.ts";
-import OnPageVideoLink from "@/components/on-page-video-link.tsx";
 import MainMenu from "@/components/main-menu.tsx";
-import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
-
-interface StatTileProps {
-  title: string;
-  value: number;
-  help?: string;
-}
-
-function StatTile({ title, value, help }: StatTileProps) {
-  return (
-    <Center>
-      <Box
-        width={110}
-        height={110}
-      >
-        <VStack>
-          <Text mt={2} color="gray.400">
-            {title}
-            {help && <InfoTip>{help}</InfoTip>}
-          </Text>
-          <Text color="yellow.400" fontSize="3xl">
-            {value}
-          </Text>
-        </VStack>
-      </Box>
-    </Center>
-  )
-}
+import StatTile from "@/components/stat-tile.tsx";
+import {PointGrid} from "@/app/points/components/point-grid.tsx";
 
 function HomepageContent() {
   const { player } = useAuth();
@@ -137,53 +105,7 @@ function HomepageContent() {
         <Text flexShrink="0" fontSize="xl" >Your Points</Text>
         <Separator flex="1" size="sm"></Separator>
       </HStack>
-      <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
-        {playerPoints.map((item) => (
-          <Card.Root key={item.point_id} variant="elevated">
-            <Card.Header>
-              <Card.Title>{item.event_name}</Card.Title>
-              <Card.Description>{item.timestamp}</Card.Description>
-              <Text>
-                Offence Team: {item.offence_team_name}
-              </Text>
-            </Card.Header>
-            <Card.Body>
-              <Card.Description>
-                {item.point_outcome === "break" ? (
-                  <Badge colorPalette="red">Break</Badge>
-                ) : (
-                  <Badge colorPalette="green">Hold</Badge>
-                )}
-              </Card.Description>
-            </Card.Body>
-            <Card.Footer gap="2">
-              <NextLink href={`/events/${item.event_id}/${item.point_id}/view`} passHref>
-                <Button variant="solid">
-                  Details
-                </Button>
-              </NextLink>
-              <Dialog.Root size="xl">
-                <Dialog.Trigger asChild>
-                  <Button variant="ghost">Quick View</Button>
-                </Dialog.Trigger>
-                <Portal>
-                  <Dialog.Backdrop />
-                  <Dialog.Positioner>
-                    <Dialog.Content>
-                      <Dialog.Body>
-                        <OnPageVideoLink url={baseUrlToTimestampUrl(item.base_url, item.timestamp)} />
-                      </Dialog.Body>
-                      <Dialog.CloseTrigger asChild>
-                        <CloseButton size="sm" />
-                      </Dialog.CloseTrigger>
-                    </Dialog.Content>
-                  </Dialog.Positioner>
-                </Portal>
-              </Dialog.Root>
-            </Card.Footer>
-          </Card.Root>
-        ))}
-      </SimpleGrid>
+      <PointGrid points={playerPoints} />
     </Container>
   );
 }

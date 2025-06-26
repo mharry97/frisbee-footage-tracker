@@ -27,12 +27,18 @@ import ThrowCounter from "@/components/throws-input.tsx";
 import { usePointFormData, usePointFormCollections } from "@/app/hooks/usePointFormData.ts";
 import {AddPossession, schema} from "@/app/possessions/possessions.schema.ts";
 import {usePossessionSubmit} from "@/app/hooks/usePermissionSubmit.ts";
-import FloatingClipButton from "@/components/ui/add-clip-button.tsx";
+import FloatingActionButton from "@/components/ui/floating-plus.tsx";
 import {AddClipModal} from "@/app/clips/components/add-clip-modal.tsx";
+import {PlayerModal} from "@/app/players/components/player-modal.tsx";
+import AddPlayerButton from "@/components/ui/add-player-button.tsx"
 
 function PossessionPageContent() {
   const { player } = useAuth();
   const { id, point_id } = useParams<{ id: string, point_id: string }>();
+  // Clip modal disclosure
+  const { open, onOpen, onClose } = useDisclosure();
+  // Player modal disclosure
+  const { open:playerOpen, onOpen:playerOnOpen, onClose:playerOnClose } = useDisclosure();
 
   const {
     handleSubmit,
@@ -148,8 +154,6 @@ function PossessionPageContent() {
 
   const watchedOutcome = watch("possession_outcome");
 
-  const { open, onOpen, onClose } = useDisclosure();
-
   if (!player || isLoading) {
     return (
       <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
@@ -208,6 +212,12 @@ function PossessionPageContent() {
               <Text textStyle="xs" color="fg.muted">{item.number ? "#"+item.number+" - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
             </Stack>
           )}
+        />
+        <AddPlayerButton onClick={playerOnOpen} />
+        <PlayerModal
+          isOpen={playerOpen}
+          onClose={playerOnClose}
+          mode="add"
         />
         <HStack mb={4} mt={4}>
           <Separator flex="1" size="sm"></Separator>
@@ -467,7 +477,7 @@ function PossessionPageContent() {
           </>
         )}
       </form>
-      <FloatingClipButton onClick={onOpen} />
+      <FloatingActionButton onClick={onOpen} iconType="clip" />
       <AddClipModal
         isOpen={open}
         onClose={onClose}

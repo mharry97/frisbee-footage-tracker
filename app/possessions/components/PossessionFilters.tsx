@@ -27,7 +27,7 @@ interface PossessionFiltersProps {
 
 export function PossessionFilters({ onApplyFilters, onClearFilters }: PossessionFiltersProps) {
   // Set up a local form instance to manage all the filter inputs
-  console.log("EventPageContent is rendering at:", new Date().toLocaleTimeString());
+  // console.log("EventPageContent is rendering at:", new Date().toLocaleTimeString());
   const { control, handleSubmit, reset } = useForm<PossessionFilters>({
     defaultValues: {
       offenceTeamId: [],

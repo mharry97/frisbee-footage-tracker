@@ -3,30 +3,42 @@
 import React from "react";
 import { IconButton, IconButtonProps } from "@chakra-ui/react";
 import { IoMdAdd } from "react-icons/io";
+import { FiEdit } from "react-icons/fi";
+import { FaScissors } from "react-icons/fa6";
 
-// Use forwardRef so Dialog.Trigger can access the ref
-const FloatingPlusButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
-  (props, ref) => {
-    return (
-      <IconButton
-        ref={ref}
-        position="fixed"
-        bottom={4}
-        right={4}
-        zIndex={9999}
-        colorPalette = 'gray'
-        rounded="full"
-        size="lg"
-        boxShadow="lg"
-        aria-label="Add Source"
-        {...props}
-      >
-        <IoMdAdd />
-      </IconButton>
-    );
-  }
-);
+interface ActionButtonProps extends Omit<IconButtonProps, "icon" | "children"> {
+  iconType: "add" | "edit" | "clip";
+}
 
-FloatingPlusButton.displayName = "FloatingPlusButton";
+const FloatingActionButton = React.forwardRef<
+  HTMLButtonElement,
+  ActionButtonProps
+>(({ iconType, ...props }, ref) => {
+  const iconMap = {
+    add: <IoMdAdd />,
+    edit: <FiEdit />,
+    clip: <FaScissors />,
+  };
 
-export default FloatingPlusButton;
+  return (
+    <IconButton
+      ref={ref}
+      position="fixed"
+      bottom={4}
+      right={4}
+      zIndex={9999}
+      colorPalette = 'gray'
+      rounded="full"
+      size="lg"
+      boxShadow="lg"
+      aria-label="Floating Button"
+      {...props}
+    >
+      {iconMap[iconType]}
+    </IconButton>
+  );
+});
+
+FloatingActionButton.displayName = "FloatingActionButton";
+
+export default FloatingActionButton;
