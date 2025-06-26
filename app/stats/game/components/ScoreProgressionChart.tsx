@@ -4,7 +4,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer
 } from "recharts";
-import { ScoreChartDataPoint } from "@/app/stats/game-flow.ts";
+import { ScoreChartDataPoint } from "@/app/stats/game/game-flow.ts";
 
 interface ChartProps {
   data: ScoreChartDataPoint[];

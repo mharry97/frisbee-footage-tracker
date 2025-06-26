@@ -15,9 +15,9 @@ import React, {useMemo} from "react";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {addEvent, editEvent, EventDetail} from "@/app/events/supabase";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
-import FloatingPlusButton from "@/components/ui/floating-plus.tsx";
 import {useAsync} from "react-use";
 import {fetchTeams} from "@/app/teams/supabase.ts";
+import FloatingActionButton from "@/components/ui/floating-plus.tsx";
 
 interface PortalProps {
   mode: "add" | "edit";
@@ -137,7 +137,7 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
 
   return(
     <>
-      {mode === "add" ? <FloatingPlusButton onClick={handleOpenPortal} /> : <Button variant="ghost" onClick={handleOpenPortal}>Edit</Button>}
+      {mode === "add" ? <FloatingActionButton onClick={handleOpenPortal} iconType="add"/> : <Button variant="ghost" onClick={handleOpenPortal}>Edit</Button>}
       <Dialog.Root open={open} onOpenChange={(open) => (open ? onOpen() : onClose())}>
         <Portal>
           <Dialog.Backdrop />
@@ -159,6 +159,7 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
                             onValueChange={({ value }) => {field.onChange(value)}}
                             onInteractOutside={field.onBlur}
                             collection={typeCollection}
+                            disabled={mode === "edit"}
                           >
                             <Select.HiddenSelect />
                             <Select.Control>
@@ -211,7 +212,7 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
                               ({ value }) => {field.onChange(value)}}
                             onInteractOutside={() => field.onBlur()}
                             collection={collection}
-                            disabled={isGameFieldsDisabled}
+                            disabled={mode === "edit"}
                           >
                             <Select.HiddenSelect />
                             <Select.Label>Teams</Select.Label>

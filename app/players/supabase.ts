@@ -26,6 +26,12 @@ export type UpsertPlayer = {
   is_active?: boolean;
 };
 
+export type TeamPlayer = {
+  player_id: string;
+  team_id: string;
+  player_name: string;
+}
+
 // Reading
 
 export async function getPlayersForTeam(team_id: string): Promise<PlayerDetailed[]> {
@@ -73,4 +79,14 @@ export async function upsertPlayer(data: UpsertPlayer): Promise<void> {
     .upsert(data)
 
   if (error) throw error;
+}
+
+// Get view for mapping team ids to name
+export async function fetchTeamMapping(): Promise<TeamPlayer[]> {
+  const { data, error } = await supabase
+    .from("players")
+    .select("player_id, team_id, player_name")
+
+  if (error) throw error;
+  return data ?? [];
 }

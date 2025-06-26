@@ -65,16 +65,6 @@ export async function fetchTeam(id: string): Promise<TeamDetailed> {
   return data ?? null;
 }
 
-// Get view for mapping team ids to name
-export async function fetchTeamMapping(): Promise<TeamDetailed[]> {
-  const { data, error } = await supabase
-    .from("teams")
-    .select("*")
-
-  if (error) throw error;
-  return data ?? [];
-}
-
 // WRITING
 
 // Insert new team

@@ -6,7 +6,7 @@ import {
   Portal,
   VStack,
   Image,
-  Text, Stack, Center, createListCollection,
+  Text, Stack, Center, createListCollection, useDisclosure,
 } from "@chakra-ui/react";
 import ThrowCounter from "@/components/throws-input";
 import {usePointFormCollections, usePointFormData} from "@/app/hooks/usePointFormData.ts";
@@ -17,6 +17,8 @@ import {zodResolver} from "@hookform/resolvers/zod";
 import { ScoreMethods, TurnoverReasons } from "@/app/possessions/possessions.schema.ts";
 import {useEditPossessionSubmit} from "@/app/hooks/usePermissionSubmit.ts";
 import {PlayerDetailed} from "@/app/players/supabase.ts";
+import AddPlayerButton from "@/components/ui/add-player-button.tsx";
+import {PlayerModal} from "@/app/players/components/player-modal.tsx";
 
 type EditPossessionDialogProps = {
   possessionNumber: number;
@@ -30,6 +32,7 @@ export default function EditPossessionDialog({
                                                pointId,
                                              }: EditPossessionDialogProps) {
   const { data, isLoading, error } = usePointFormData(pointId);
+  const { open:playerOpen, onOpen:playerOnOpen, onClose:playerOnClose } = useDisclosure();
 
   if (error) throw error;
 
@@ -50,7 +53,7 @@ export default function EditPossessionDialog({
     handleSubmit,
     watch,
     reset,
-    formState: { isSubmitting: isFormSubmitting, errors, isValid }
+    formState: { isSubmitting: isFormSubmitting, errors }
   } = useForm<EditPossession>({
     resolver: zodResolver(editSchema),
     defaultValues: {
@@ -231,6 +234,12 @@ export default function EditPossessionDialog({
                       <Text textStyle="xs" color="fg.muted">{item.number ? "#"+item.number+" - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
                     </Stack>
                   )}
+                />
+                <AddPlayerButton onClick={playerOnOpen} />
+                <PlayerModal
+                  isOpen={playerOpen}
+                  onClose={playerOnClose}
+                  mode="add"
                 />
                 <Text textStyle="xl" mb={4}>Plays</Text>
                 <AsyncDropdown
@@ -451,7 +460,7 @@ export default function EditPossessionDialog({
               type="submit"
               form="edit-possession-form"
               loading={isSubmitting}
-              disabled={isValid || isSubmitting}
+              // disabled={isValid || isSubmitting}
             >
               Update Possession
             </Button>

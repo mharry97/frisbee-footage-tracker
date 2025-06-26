@@ -17,6 +17,7 @@ interface AsyncDropdownProps<TItem, TFormValues extends FieldValues> {
   itemToKey: (item: TItem) => string | number;
   isLoading?: boolean;
   multiple?: boolean;
+  disabled?: boolean;
 }
 
 export function AsyncDropdown<TItem, TFormValues extends FieldValues>({
@@ -29,6 +30,7 @@ export function AsyncDropdown<TItem, TFormValues extends FieldValues>({
                                                                         itemToKey,
                                                                         isLoading = false,
                                                                         multiple = false,
+                                                                        disabled = false,
                                                                       }: AsyncDropdownProps<TItem, TFormValues>) {
   return (
     <Field.Root mb={4}>
@@ -45,6 +47,7 @@ export function AsyncDropdown<TItem, TFormValues extends FieldValues>({
               onInteractOutside={() => field.onBlur()}
               multiple={multiple}
               collection={collection}
+              disabled={disabled}
             >
               <Select.HiddenSelect />
               <Select.Control>

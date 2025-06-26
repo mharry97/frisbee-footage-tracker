@@ -19,7 +19,7 @@ import {fetchTeams} from "@/app/teams/supabase.ts";
 const schema = z.object({
   player_name: z.string(),
   team_id: z.string().array(),
-  number: z.number().optional(),
+  number: z.coerce.number().optional(),
   is_active: z.boolean(),
   notes: z.string().optional(),
 })
@@ -48,7 +48,7 @@ export function PlayerModal({
     register,
     handleSubmit,
     control,
-    formState: { isSubmitting, isValid, errors },
+    formState: { isSubmitting, errors },
   } = useForm<PlayerFormData>({
     resolver: zodResolver(schema),
     // Set defaults based on the mode
@@ -57,7 +57,7 @@ export function PlayerModal({
       number: mode === 'edit' ? playerToEdit?.number : undefined,
       is_active: mode === 'edit' ? playerToEdit?.is_active : true,
       team_id: mode === 'edit' ? [playerToEdit?.team_id] : (teamId ? [teamId] : []),
-      notes: mode === 'edit' ? playerToEdit?.notes : '',
+      notes: mode === 'edit' ? (playerToEdit?.notes ?? '') : '',
     },
   });
 
@@ -81,7 +81,7 @@ export function PlayerModal({
   const { mutateAsync: upsertPlayerMutation } = useMutation({
     mutationFn: upsertPlayer,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['players'] });
+      queryClient.invalidateQueries({ queryKey: ['player'], queryKey: ['pointPageData'] });
       onClose();
     },
   });
@@ -90,7 +90,7 @@ export function PlayerModal({
   const onSubmit = (formData: PlayerFormData) => {
     const payload = {
       player_name: formData.player_name,
-      number: formData.number || null,
+      number: formData.number || undefined,
       is_active: formData.is_active,
       notes: formData.notes || null,
       player_id: mode === 'edit' ? playerToEdit?.player_id : undefined,
@@ -127,13 +127,14 @@ export function PlayerModal({
                   </Field.Root>
                   <Field.Root>
                     <Field.Label>Number</Field.Label>
-                    <Input type="number" {...register("number", { valueAsNumber: true })} />
+                    <Input type="number" {...register("number")} />
                   </Field.Root>
                   <AsyncDropdown
                     name="team_id"
                     control={control}
                     label="Team"
                     placeholder="Select player's team"
+                    disabled={isEditMode}
                     collection={teamCollection}
                     isLoading={isLoadingTeams}
                     itemToKey={(item) => item.team_id}

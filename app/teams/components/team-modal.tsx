@@ -1,6 +1,6 @@
 import {Button, Dialog, Field, HStack, Input, Portal, Text, useDisclosure} from "@chakra-ui/react";
 import React from "react";
-import FloatingPlusButton from "@/components/ui/floating-plus.tsx";
+import FloatingActionButton from "@/components/ui/floating-plus.tsx";
 import {SubmitHandler, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {z} from "zod";
@@ -50,7 +50,7 @@ export default function TeamModal() {
 
   return (
     <>
-      <FloatingPlusButton onClick={onOpen} />
+      <FloatingActionButton onClick={onOpen} iconType="add"/>
       <Dialog.Root open={open} onOpenChange={(isOpen) => (isOpen ? onOpen() : onClose())}>
         <Portal>
           <Dialog.Backdrop />

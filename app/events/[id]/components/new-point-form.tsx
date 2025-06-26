@@ -18,7 +18,7 @@ import {Controller, SubmitHandler, useForm} from "react-hook-form";
 import React, {useMemo} from "react";
 import {zodResolver} from "@hookform/resolvers/zod";
 import { addPoint } from "@/app/points/supabase";
-import FloatingPlusButton from "@/components/ui/floating-plus.tsx";
+import FloatingActionButton from "@/components/ui/floating-plus.tsx";
 import {useAsync} from "react-use";
 import {fetchSources} from "@/app/sources/supabase.ts";
 import {fetchEventTeams, fetchEventTeamsInfo } from "@/app/events/[id]/supabase.ts";
@@ -130,7 +130,7 @@ const PointForm = ({ event_id }: PortalProps) => {
 
   return(
     <>
-      <FloatingPlusButton onClick={handleOpenPortal} />
+      <FloatingActionButton onClick={handleOpenPortal} iconType="add"/>
       <Dialog.Root open={open} onOpenChange={(open) => (open ? onOpen() : onClose())}>
         <Portal>
           <Dialog.Backdrop />

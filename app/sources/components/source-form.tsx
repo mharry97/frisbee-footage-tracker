@@ -15,7 +15,7 @@ import React from "react";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {addSource, editSource, Source} from "@/app/sources/supabase";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
-import FloatingPlusButton from "@/components/ui/floating-plus.tsx";
+import FloatingActionButton from "@/components/ui/floating-plus.tsx";
 
 interface PortalProps {
   mode: "add" | "edit";
@@ -90,7 +90,7 @@ const SourceForm = ({ mode, currentSourceData }: PortalProps) => {
 
   return(
     <>
-      {mode === "add" ? <FloatingPlusButton onClick={onOpen} /> : <Button variant="ghost" onClick={onOpen}>Edit</Button>}
+      {mode === "add" ? <FloatingActionButton onClick={onOpen} iconType="add"/> : <Button variant="ghost" onClick={onOpen}>Edit</Button>}
       <Dialog.Root open={open} onOpenChange={(open) => (open ? onOpen() : onClose())}>
         <Portal>
           <Dialog.Backdrop />
