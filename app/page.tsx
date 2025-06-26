@@ -5,19 +5,15 @@ import {
   Heading,
   Text,
   HStack,
-  Separator,
-  Card, Button, SimpleGrid, Dialog, Portal, CloseButton, Badge
-} from "@chakra-ui/react";
-import NextLink from 'next/link';
+  Separator
+  } from "@chakra-ui/react";
 import { AuthWrapper } from "@/components/auth-wrapper";
 import { useAuth } from "@/lib/auth-context.tsx";
 import React, {useEffect, useState} from "react";
 import {getPlayerPointsPlayed, PointsByPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
 import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/teams/[team_id]/[player_id]/utils.ts";
 import { fetchAllPossessions } from "@/app/possessions/supabase.ts";
-import OnPageVideoLink from "@/components/on-page-video-link.tsx";
 import MainMenu from "@/components/main-menu.tsx";
-import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
 import StatTile from "@/components/stat-tile.tsx";
 import {PointGrid} from "@/app/points/components/point-grid.tsx";
 
