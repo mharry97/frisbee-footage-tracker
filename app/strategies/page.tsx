@@ -2,112 +2,116 @@
 import {
   Container,
   Box,
-  Heading,
-  Text,
-  HStack,
-  Separator
+  Text, VStack, useDisclosure,
 } from "@chakra-ui/react";
 import { AuthWrapper } from "@/components/auth-wrapper";
 import { useAuth } from "@/lib/auth-context.tsx";
-import React, {useEffect, useState} from "react";
-import {getPlayerPointsPlayed, PointsByPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
-import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/teams/[team_id]/[player_id]/utils.ts";
-import { fetchAllPossessions } from "@/app/possessions/supabase.ts";
-import MainMenu from "@/components/main-menu.tsx";
-import StatTile from "@/components/stat-tile.tsx";
-import {PointGrid} from "@/app/points/components/point-grid.tsx";
+import React, {useMemo} from "react";
+
+import StandardHeader from "@/components/standard-header.tsx";
+import CustomTabs from "@/components/tabbed-page.tsx";
+import {useQuery} from "@tanstack/react-query";
+import {fetchStrategies} from "@/app/strategies/supabase.ts";
+import {StratGrid} from "@/app/strategies/components/strat-grid.tsx";
+import LoadingSpinner from "@/components/ui/loading-spinner.tsx";
+import FloatingActionButton from "@/components/ui/floating-plus.tsx";
+import {AddStratModal} from "@/app/strategies/components/strategy-modal.tsx";
 
 function StrategyPageContent() {
   const { player } = useAuth();
-  const [playerPoints, setPlayerPoints] = useState<PointsByPlayer[]>([]);
-  const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { open, onOpen, onClose } = useDisclosure();
 
-  useEffect(() => {
-    if (!player) return;
+  const { data: strats, isLoading } = useQuery({
+    queryFn: fetchStrategies,
+    queryKey: ["strats"]
+  })
 
-    (async () => {
-      try {
-        const points = await getPlayerPointsPlayed(player.player_id);
-        setPlayerPoints(points);
+  const {
+    offenceInitiationStrats,
+    offenceMainStrats,
+    defenceInitiationStrats,
+    defenceMainStrats
+  } = useMemo(() => {
+    const allStrats = strats ?? [];
+    return {
+      offenceInitiationStrats: allStrats.filter(s => s.play_type === 'offence_initiation'),
+      offenceMainStrats: allStrats.filter(s => s.play_type === 'offence_main'),
+      defenceInitiationStrats: allStrats.filter(s => s.play_type === 'defence_initiation'),
+      defenceMainStrats: allStrats.filter(s => s.play_type === 'defence_main'),
+    };
+  }, [strats]);
 
-        const allPoints = await fetchAllPossessions();
-        const allStats = getPlayerStatsFromPossessions(allPoints);
 
-        const currentPlayerStats = allStats[String(player.player_id)] ?? null;
-
-        setPlayerStats(currentPlayerStats ?? null);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [player]);
-
-  if (!player || loading) {
+  if (!player || isLoading) {
     return (
       <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading player data...</Text>
+        <Text color="white" fontSize="lg">Loading strategies...</Text>
       </Box>
     );
   }
 
-  const turns = (playerStats?.drops ?? 0) + (playerStats?.throwaways ?? 0);
-  const pointsPlayed = playerPoints.length
+  // Offence
+  const OffenceContent = () => {
+    if (isLoading) {
+      return <LoadingSpinner text="Loading strats..." />;
+    }
+    return (
+      <>
+        <VStack gap={2}>
+          <Text mb={4} mt={4} textStyle="2xl">Initiation Plays</Text>
+          <StratGrid strats={offenceInitiationStrats ?? []} />
+          <Text mb={4} mt={4} textStyle="2xl">Main Plays</Text>
+          <StratGrid strats={offenceMainStrats ?? []} />
+        </VStack>
+      </>
+    );
+  };
+
+  // Defence
+  const DefenceContent = () => {
+    if (isLoading) {
+      return <LoadingSpinner text="Loading strats..." />;
+    }
+    return (
+      <>
+        <VStack gap={2}>
+          <Text mb={4} mt={4} textStyle="2xl">Initiation Plays</Text>
+          <StratGrid strats={defenceInitiationStrats ?? []} />
+          <Text mb={4} mt={4} textStyle="2xl">Main Plays</Text>
+          <StratGrid strats={defenceMainStrats ?? []} />
+        </VStack>
+      </>
+    );
+  };
+
+
+  const tabs = [
+    {
+      value: "defence",
+      label: "Defence",
+      content: <DefenceContent />,
+    },
+    {
+      value: "offence",
+      label: "Offence",
+      content: <OffenceContent />,
+    },
+  ];
 
 
   return (
     <Container maxW="4xl">
-      <Heading as="h1" fontWeight="light" size='4xl' color="white" mb={4} mt={4}>
-        Hello, {player.player_name}
-      </Heading>
-      <MainMenu is_admin={player.is_admin} is_home />
-      <HStack mb={6}>
-        <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
-        <Text flexShrink="0" fontSize="2xl" >Player Overview</Text>
-        <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
-      </HStack>
-      <Box
-        display="grid"
-        gap="4"
-        gridTemplateColumns="repeat(3, 1fr)"
-        w="full"
-      >
-        <StatTile
-          title="+/-"
-          value={playerStats?.plusMinus ?? 0}
-          // help="(Scores+Assists+Ds)-Turns" Currently throws off alignment
-        />
-        <StatTile
-          title="Points Played"
-          value={pointsPlayed}
-        />
-        <StatTile
-          title="Scores"
-          value={playerStats?.scores ?? 0}
-        />
-        <StatTile
-          title="Assists"
-          value={playerStats?.assists ?? 0}
-        />
-        <StatTile
-          title="Ds"
-          value={playerStats?.ds ?? 0}
-        />
-        <StatTile
-          title="Turns"
-          value={turns}
-        />
-      </Box>
-      <HStack mb={6}>
-        <Separator flex="1" size="sm"></Separator>
-        <Text flexShrink="0" fontSize="xl" >Your Points</Text>
-        <Separator flex="1" size="sm"></Separator>
-      </HStack>
-      <PointGrid points={playerPoints} />
+      <StandardHeader text="Strategies" is_admin={player.is_admin} />
+      <CustomTabs defaultValue="defence" tabs={tabs} />
+      <FloatingActionButton onClick={onOpen} iconType="add" />
+      <AddStratModal
+        isOpen={open}
+        onClose={onClose}
+        mode="add"
+      />
     </Container>
-  );
+  )
+
 }
 
 
