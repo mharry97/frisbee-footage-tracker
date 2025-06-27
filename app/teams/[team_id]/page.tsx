@@ -183,7 +183,7 @@ function TeamPageContent() {
     if (isLoading) {
       return <LoadingSpinner text="Loading clips..." />;
     }
-    return <ClipGrid clips={clips ?? []} />;
+    return <ClipGrid clips={clips ?? []} playerId={player.player_id} />;
   };
 
 
