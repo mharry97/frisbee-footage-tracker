@@ -5,8 +5,8 @@ import {
   Heading,
   Text,
   HStack,
-  Separator
-  } from "@chakra-ui/react";
+  Separator,
+} from "@chakra-ui/react";
 import { AuthWrapper } from "@/components/auth-wrapper";
 import { useAuth } from "@/lib/auth-context.tsx";
 import React, {useEffect, useState} from "react";
@@ -59,7 +59,7 @@ function HomepageContent() {
 
   return (
     <Container maxW="4xl">
-      <Heading as="h1" fontWeight="light" size='4xl' color="white" mb={4} mt={4}>
+      <Heading as="h1" fontWeight="light" size='4xl' mb={4} mt={4}>
         Hello, {player.player_name}
       </Heading>
       <MainMenu is_admin={player.is_admin} is_home />

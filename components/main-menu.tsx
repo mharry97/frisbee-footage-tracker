@@ -48,8 +48,8 @@ function HorizontalIconMenu({ menuItems }: { menuItems: HorizontalMenuItem[] }) 
               transition="background-color 0.2s ease-in-out"
               rounded="md"
             >
-              <Icon as={item.iconComponent} boxSize="30px" color="white" />
-              <Text fontSize="xs" color="white" textAlign="center">
+              <Icon as={item.iconComponent} boxSize="30px" />
+              <Text fontSize="xs" textAlign="center">
                 {item.title}
               </Text>
             </VStack>

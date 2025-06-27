@@ -13,7 +13,7 @@ export default function StandardHeader({text, is_admin, is_home}: StandardHeader
   return (
     <>
       <BackButton />
-      <Heading as="h1" fontWeight="light" size='4xl' color="white" mb={4} mt={4}>
+      <Heading as="h1" fontWeight="light" size='4xl' mb={4} mt={4} >
         {text}
       </Heading>
       <CollapsibleMainMenu is_admin={is_admin} is_home={is_home} />
