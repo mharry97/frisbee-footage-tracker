@@ -26,6 +26,19 @@ export type ClipDetail = Clip & {
 
 export type NewClip = Omit<Clip, "clip_id"| "created_at" | "created_by" >
 
+export type UpsertClip = {
+  clip_id?: string
+  title: string
+  description: string
+  event_id?: string | null
+  is_public: boolean
+  source_id: string
+  timestamp: string
+  playlists?: string[] | []
+  teams?: string[] | []
+  players?: string[] | []
+}
+
 // READING
 
 // Fetch all clips
@@ -59,7 +72,7 @@ export async function fetchClipsCustom(filters: ClipFilters) {
     query = query.eq("event_id", filters.eventId);
   }
   if (filters.clipPlayer) {
-    query = query.containedBy("players", JSON.stringify([filters.clipPlayer]));
+    query = query.contains("players", `["${filters.clipPlayer}"]`)
   }
   if (filters.teamId) {
     query = query.containedBy("teams", JSON.stringify([filters.teamId]));
@@ -90,15 +103,13 @@ export async function addClip(data: NewClip): Promise<void> {
 }
 
 
-// Updates a clip
-export async function upsertClip(payload: NewClip): Promise<Clip> {
-  const { data, error } = await supabase
+// Updates/adds a clip
+export async function upsertClip(payload: UpsertClip): Promise<void> {
+  const { error } = await supabase
     .from("clips")
     .upsert(payload)
-    .single()
 
   if (error) throw error
-  return data || []
 }
 
 // Fetch all clips visible to a player for a given event_id

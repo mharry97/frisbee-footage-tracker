@@ -484,6 +484,7 @@ function PossessionPageContent() {
         eventId={id}
         sourceId = {point.source_id}
         playerId={player.player_id}
+        mode="add"
       />
     </Container>
   )

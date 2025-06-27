@@ -66,13 +66,14 @@ function PointPageContent() {
       <StandardHeader text={playlist?.title || ""} is_admin={player.is_admin} />
       <Text textStyle="xl" mb={4} mt ={4}>{playlist?.description}</Text>
       <Separator mb={8} />
-      <ClipGrid clips={clips ?? []} />
+      <ClipGrid clips={clips ?? []} playerId={player.player_id}/>
       <FloatingActionButton onClick={onOpen} iconType = "clip"/>
       <AddClipModal
         isOpen={open}
         onClose={onClose}
         playerId={player.player_id}
         playlists={[playlist_id]}
+        mode="add"
       />
     </Container>
   );
