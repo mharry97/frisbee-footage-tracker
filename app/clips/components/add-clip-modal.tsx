@@ -6,16 +6,21 @@ import {
   Field,
   Input,
   Textarea,
-  createListCollection, Stack, Text, Checkbox
+  createListCollection,
+  Stack,
+  Text,
+  Checkbox
 } from "@chakra-ui/react";
 import { fetchVisiblePlaylists } from "@/app/playlists/supabase";
-import { addClip } from "@/app/clips/supabase";
+import {ClipDetail, upsertClip} from "@/app/clips/supabase";
 import {AsyncDropdown} from "@/components/async-dropdown.tsx";
 import {z} from "zod";
 import {Controller, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
 import {fetchSources} from "@/app/sources/supabase.ts";
+import {fetchPlayers} from "@/app/players/supabase.ts";
+import {fetchTeams} from "@/app/teams/supabase.ts";
 
 const schema = z.object({
   title: z.string(),
@@ -23,7 +28,9 @@ const schema = z.object({
   timestamp: z.string(),
   description: z.string(),
   playlists: z.string().array().optional(),
-  is_public: z.boolean()
+  is_public: z.boolean(),
+  players: z.string().array().optional(),
+  teams: z.string().array().optional(),
 })
 
 type AddClip = z.infer<typeof schema>
@@ -32,12 +39,21 @@ interface AddClipModalProps {
   eventId?: string;
   playerId: string;
   sourceId?: string;
+  clipToEdit?: ClipDetail;
   playlists?: string[];
   isOpen: boolean;
   onClose: () => void;
+  mode: 'add' | 'edit';
 }
 
-export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose, playlists }: AddClipModalProps) {
+export function AddClipModal({ eventId,
+                               sourceId,
+                               playerId,
+                               isOpen,
+                               onClose,
+                               playlists,
+                               mode,
+                               clipToEdit}: AddClipModalProps) {
   // console.log(sourceId);
   const {
     control,
@@ -47,27 +63,48 @@ export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose, pla
     formState: {errors, isSubmitting, isValid}} = useForm<AddClip>({ resolver: zodResolver(schema),
     mode: 'onChange',
     defaultValues: {
-      title: "",
-      source: [sourceId],
-      timestamp: "",
-      description: "",
-      playlists: playlists,
-      is_public: true
+      title: mode === 'edit' ? clipToEdit?.title : '',
+      source: mode === 'edit' ? [clipToEdit?.source_id] : (sourceId ? [sourceId] : []),
+      timestamp: mode === 'edit' ? clipToEdit?.timestamp : '',
+      description: mode === 'edit' ? clipToEdit?.description : '',
+      playlists: mode === 'edit' ? clipToEdit?.playlists ?? [] : (playlists ? playlists : []),
+      is_public: mode === 'edit' ? clipToEdit?.is_public : true,
     },
   });
   const queryClient = useQueryClient()
 
+  // Fetch data for dropdowns
+
+  // Playlists
   const { data: playlistsData, isLoading: isLoadingPlaylists } = useQuery({
     queryFn: () => fetchVisiblePlaylists(playerId),
     queryKey: ["playlists"]
   })
+
+  // Sources
 
   const { data: sourcesData, isLoading: isLoadingSources } = useQuery({
     queryKey: ["sources"],
     queryFn: fetchSources,
   });
 
-  const isLoading = isLoadingSources || isLoadingPlaylists;
+  // Players
+
+  const { data: playersData, isLoading: isLoadingPlayers } = useQuery({
+    queryKey: ["players"],
+    queryFn: fetchPlayers,
+  });
+
+  // Teams
+
+  const { data: teamsData, isLoading: isLoadingTeams } = useQuery({
+    queryKey: ["teams"],
+    queryFn: fetchTeams,
+  });
+
+  const isLoading = isLoadingSources || isLoadingPlaylists || isLoadingPlayers || isLoadingTeams;
+
+  // Form collections for dropdowns
 
   const sourceCollection = useMemo(() =>
       createListCollection({
@@ -76,6 +113,24 @@ export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose, pla
         itemToValue: (item) => item.source_id,
       }),
     [sourcesData]
+  );
+
+  const playersCollection = useMemo(() =>
+      createListCollection({
+        items: playersData ?? [],
+        itemToString: (item) => item.player_name,
+        itemToValue: (item) => item.player_id,
+      }),
+    [playersData]
+  );
+
+  const teamsCollection = useMemo(() =>
+      createListCollection({
+        items: teamsData ?? [],
+        itemToString: (item) => item.team_name,
+        itemToValue: (item) => item.team_id,
+      }),
+    [teamsData]
   );
 
   const playlistCollection = useMemo(() =>
@@ -88,7 +143,7 @@ export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose, pla
   );
 
   const { mutateAsync: upsertClipMutation } = useMutation({
-    mutationFn: addClip,
+    mutationFn: upsertClip,
     onSuccess: () => {queryClient.invalidateQueries({ queryKey: ["clips"] })}
   });
 
@@ -97,13 +152,14 @@ export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose, pla
       const clipPayload = {
         title: formData.title,
         source_id: formData.source[0],
-        event_id: eventId || null,
+        event_id: eventId ?? clipToEdit?.event_id ?? null,
         timestamp: formData.timestamp,
         description: formData.description,
-        playlists: formData.playlists || null,
+        playlists: formData.playlists || [],
         is_public: formData.is_public,
-        teams: [],
-        players: []
+        teams: formData.teams || [],
+        players: formData.players || [],
+        clip_id: clipToEdit?.clip_id ?? undefined,
       };
 
       await upsertClipMutation(clipPayload);
@@ -129,7 +185,9 @@ export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose, pla
           <Dialog.Content>
             <form onSubmit={handleSubmit(onSubmit)}>
               <Dialog.Header>
-                <Dialog.Title>Add Clip</Dialog.Title>
+                <Dialog.Title>
+                  {mode==="edit" ? 'Edit Clip' : 'Add New Clip'}
+                </Dialog.Title>
               </Dialog.Header>
               <Dialog.Body>
                 <Field.Root mb={4}>
@@ -147,6 +205,7 @@ export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose, pla
                   collection={sourceCollection}
                   isLoading={isLoading}
                   itemToKey={(item) => item.source_id}
+                  disabled={mode==="edit"}
                   renderItem={(item) => (
                     <Stack gap={0}>
                       <Text>{item.title}</Text>
@@ -189,6 +248,37 @@ export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose, pla
                     </Stack>
                   )}
                 />
+                <AsyncDropdown
+                  name="players"
+                  control={control}
+                  label="Player/s"
+                  placeholder="Select player/s"
+                  collection={playersCollection}
+                  isLoading={isLoading}
+                  multiple={true}
+                  itemToKey={(item) => item.player_id}
+                  renderItem={(item) => (
+                    <Stack gap={0}>
+                      <Text>{item.player_name}</Text>
+                      <Text textStyle="xs" color="fg.muted">{item.team_name}{item.number && ` - #${item.number}`}</Text>
+                    </Stack>
+                  )}
+                />
+                <AsyncDropdown
+                  name="teams"
+                  control={control}
+                  label="Team/s"
+                  placeholder="Team/s"
+                  collection={teamsCollection}
+                  isLoading={isLoading}
+                  multiple={true}
+                  itemToKey={(item) => item.team_id}
+                  renderItem={(item) => (
+                    <Stack gap={0}>
+                      <Text>{item.team_name}</Text>
+                    </Stack>
+                  )}
+                />
                 <Controller
                   control={control}
                   name="is_public"
@@ -212,7 +302,7 @@ export function AddClipModal({ eventId, sourceId, playerId, isOpen, onClose, pla
                   loading={isSubmitting}
                   disabled={!isValid || isSubmitting}
                 >
-                  Add Clip
+                  {mode === "edit" ? 'Update' : 'Add'}
                 </Button>
                 <Button variant="ghost" onClick={onClose} mt={4}>
                   Cancel

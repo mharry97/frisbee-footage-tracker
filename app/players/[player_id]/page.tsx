@@ -107,7 +107,7 @@ function PlayerPageContent() {
   // CLIPS
   const ClipsContent = () => {
     const { data: clips, isLoading } = useQuery({
-      queryKey: ["playerClips", { clipPlayer: player_id, requestPlayer: player?.auth_user_id }],
+      queryKey: ["clips", { clipPlayer: player_id, requestPlayer: player?.auth_user_id }],
       queryFn: () => fetchClipsCustom({
         clipPlayer: player_id,
         requestPlayer: player!.auth_user_id
@@ -117,7 +117,7 @@ function PlayerPageContent() {
     if (isLoading) {
       return <LoadingSpinner text="Loading clips..." />;
     }
-    return <ClipGrid clips={clips ?? []} />;
+    return <ClipGrid clips={clips ?? []} playerId={player_id} />;
   };
 
   // POINTS

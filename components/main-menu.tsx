@@ -4,10 +4,10 @@ import NextLink from "next/link";
 import { FiDatabase } from "react-icons/fi";
 import { FaRegCalendarAlt } from "react-icons/fa";
 import { TbPlaylistAdd } from "react-icons/tb";
-import { LuClapperboard } from "react-icons/lu";
 import { MdOutlineAdminPanelSettings, MdOutlineScoreboard } from "react-icons/md";
 import { IoPeopleOutline } from "react-icons/io5";
 import { IoHomeOutline } from "react-icons/io5";
+import { PiStrategy } from "react-icons/pi";
 
 interface MainMenuProps {
   is_admin: boolean;
@@ -68,7 +68,7 @@ export default function MainMenu({ is_admin, is_home }: MainMenuProps) {
     { title: "Sources", href: "/sources", iconComponent: FiDatabase },
     { title: "Events", href: "/events", iconComponent: FaRegCalendarAlt },
     { title: "Playlists", href: "/playlists", iconComponent: TbPlaylistAdd },
-    { title: "Clips", href: "/clips", iconComponent: LuClapperboard },
+    { title: "Strategies", href: "/strategies", iconComponent: PiStrategy },
     { title: "Possessions", href: "/possessions", iconComponent: MdOutlineScoreboard },
     { title: "Teams", href: "/teams", iconComponent: IoPeopleOutline },
     ...(is_admin

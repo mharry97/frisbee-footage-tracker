@@ -267,7 +267,7 @@ function EventPageContent() {
 
   const ClipsContent = () => {
     const { data: clips, isLoading } = useQuery({
-      queryKey: ["customClips", { eventId: id, requestPlayerId: player?.auth_user_id }],
+      queryKey: ["clips", { eventId: id, requestPlayerId: player?.auth_user_id }],
       queryFn: () => fetchClipsCustom({
         eventId: id,
         requestPlayer: player!.auth_user_id
@@ -277,7 +277,13 @@ function EventPageContent() {
     if (isLoading) {
       return <LoadingSpinner text="Loading clips..." />;
     }
-    return <ClipGrid clips={clips ?? []} />;
+    if (!player) {
+      return <Text>Who are you</Text>;
+    }
+    return <ClipGrid
+      clips={clips ?? []}
+      playerId={player.player_id}
+    />;
   };
 
   // Set up the tabs available
