@@ -107,9 +107,12 @@ function EventPageContent() {
     );
     if (!hasPoints) {
       return (
-        <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-          <Text color="white" fontSize="lg">No points for this event yet.</Text>
-        </Box>
+        <>
+          <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
+            <Text color="white" fontSize="lg">No points for this event yet.</Text>
+          </Box>
+          <PointForm event_id={id} />
+        </>
       )
     }
     return (
@@ -252,7 +255,6 @@ function EventPageContent() {
             </Grid>
             {(gameStats ?? []).map((stat) => (
               <StatRow
-                key={stat.label}
                 label={stat.label}
                 teamOneValue={stat.teamOneValue}
                 teamTwoValue={stat.teamTwoValue}
