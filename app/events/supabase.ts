@@ -9,6 +9,7 @@ export type Event = {
   team_1_id: string
   team_2_id: string
   teams: string[]
+  notes?: string
 }
 
 export type EventDetail = Event & {
