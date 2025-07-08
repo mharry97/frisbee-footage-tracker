@@ -214,7 +214,7 @@ function EventPageContent() {
 
 
   const OverviewContent = () => {
-    if (!hasPoints) {
+    if (!hasPoints || !event) {
       return (
         <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
           <Text color="white" fontSize="lg">No stats for this event yet.</Text>
@@ -224,6 +224,7 @@ function EventPageContent() {
     return (
       <>
         <Flex direction="column" align="center" mb={8} mt={4}>
+          {event.notes && <Text mt={0} mb={4} color="fg.muted" fontSize="sm">*Note: {event.notes}</Text>}
           <Text fontSize="xl">Score</Text>
           <Grid
             templateColumns="1fr auto 1fr"

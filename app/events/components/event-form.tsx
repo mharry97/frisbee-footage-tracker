@@ -8,7 +8,7 @@ import {
   useDisclosure,
   Dialog,
   Portal,
-  HStack, Select, Spinner, createListCollection
+  HStack, Select, Spinner, createListCollection, Textarea
 } from "@chakra-ui/react";
 import {Controller, SubmitHandler, useForm} from "react-hook-form";
 import React, {useMemo} from "react";
@@ -31,6 +31,7 @@ const schema = z.object({
   event_date: z.string(),
   type: game_types.array(),
   teams: z.string().array().max(2, { message: "You can select a maximum of 2 teams." }),
+  notes: z.string().optional(),
 });
 
 type EventData = z.infer<typeof schema>;
@@ -70,6 +71,7 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
         event_date: currentData.event_date?.split("T")[0] || "",
         type: currentData.type ? [currentData.type] : [],
         teams: [currentData.team_1_id,currentData.team_2_id],
+        notes: currentData.notes,
       }
       : {
         // Set defaults for "add" mode to empty arrays
@@ -77,6 +79,7 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
         event_date: "",
         type: [],
         teams: [],
+        notes: ""
       },
   })
 
@@ -243,6 +246,15 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
                       {errors.teams && (
                         <Field.ErrorText>{errors.teams.message}</Field.ErrorText>
                       )}
+                    </Field.Root>
+                    <Field.Root mb={4}>
+                      <Field.Label>Notes</Field.Label>
+                      <Textarea
+                        placeholder="Any notes on the event"
+                        {...register("notes")}
+                        size="xl"
+                        variant="outline"
+                      />
                     </Field.Root>
                   </VStack>
                   <HStack justify="space-between">
