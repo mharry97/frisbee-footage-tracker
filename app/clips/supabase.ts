@@ -24,8 +24,6 @@ export type ClipDetail = Clip & {
   url: string
 }
 
-export type NewClip = Omit<Clip, "clip_id"| "created_at" | "created_by" >
-
 export type UpsertClip = {
   clip_id?: string
   title: string
@@ -40,17 +38,6 @@ export type UpsertClip = {
 }
 
 // READING
-
-// Fetch all clips
-export async function fetchClips(): Promise<Clip[]> {
-  const { data, error } = await supabase
-    .from("clips")
-    .select("*")
-    .order("created_at", {ascending: false});
-
-  if (error) throw error;
-  return data || []
-}
 
 // Fetch visible clips for given column
 interface ClipFilters {
@@ -93,16 +80,6 @@ export async function fetchClipsCustom(filters: ClipFilters) {
 
 // WRITING
 
-// Add a new clip
-export async function addClip(data: NewClip): Promise<void> {
-  const { error } = await supabase
-    .from("clips")
-    .insert(data)
-
-  if (error) throw error;
-}
-
-
 // Updates/adds a clip
 export async function upsertClip(payload: UpsertClip): Promise<void> {
   const { error } = await supabase
@@ -112,37 +89,5 @@ export async function upsertClip(payload: UpsertClip): Promise<void> {
   if (error) throw error
 }
 
-// Fetch all clips visible to a player for a given event_id
-export async function fetchEventClips(event_id: string, player_id: string): Promise<ClipDetail[]> {
-  try {
-    const { data } = await supabase
-      .from("view_clip_detail")
-      .select('*')
-      .or(`is_public.eq.true, created_by.eq.${player_id}`)
-      .eq("event_id", event_id)
-      .order("created_at", {ascending: false});
 
-    return (data || []);
-  } catch (error) {
-    console.error("Error fetching clips:", error);
-    return [];
-  }
-}
-
-// Fetch all clips visible to a player for a given playlist_id
-export async function fetchPlaylistClips(playlist_id: string, player_id: string): Promise<ClipDetail[]> {
-  try {
-    const { data } = await supabase
-      .from("view_clip_detail")
-      .select('*')
-      .or(`is_public.eq.true, created_by.eq.${player_id}`)
-      .containedBy("playlists", playlist_id)
-      .order("created_at", {ascending: false});
-
-    return (data || []);
-  } catch (error) {
-    console.error("Error fetching clips:", error);
-    return [];
-  }
-}
 
