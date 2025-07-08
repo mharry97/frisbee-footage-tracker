@@ -41,6 +41,7 @@ interface AddClipModalProps {
   sourceId?: string;
   clipToEdit?: ClipDetail;
   playlists?: string[];
+  players?: string[];
   isOpen: boolean;
   onClose: () => void;
   mode: 'add' | 'edit';
@@ -52,6 +53,7 @@ export function AddClipModal({ eventId,
                                isOpen,
                                onClose,
                                playlists,
+                               players,
                                mode,
                                clipToEdit}: AddClipModalProps) {
   // console.log(sourceId);
@@ -70,6 +72,7 @@ export function AddClipModal({ eventId,
       description: mode === 'edit' ? clipToEdit?.description : '',
       playlists: mode === 'edit' ? clipToEdit?.playlists ?? [] : (playlists ? playlists : []),
       is_public: mode === 'edit' ? clipToEdit?.is_public : true,
+      players: mode === 'edit' ? clipToEdit?.players ?? [] : (players ? players : []),
     },
   });
   const queryClient = useQueryClient()
