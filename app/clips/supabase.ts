@@ -66,7 +66,7 @@ export async function fetchClipsCustom(filters: ClipFilters) {
     .from("view_clip_detail")
     .select("*")
     .or(`is_public.eq.true, created_by.eq.${filters.requestPlayer}`)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: true });
 
   if (filters.eventId) {
     query = query.eq("event_id", filters.eventId);
@@ -75,10 +75,10 @@ export async function fetchClipsCustom(filters: ClipFilters) {
     query = query.contains("players", `["${filters.clipPlayer}"]`)
   }
   if (filters.teamId) {
-    query = query.containedBy("teams", JSON.stringify([filters.teamId]));
+    query = query.contains("teams", `["${filters.teamId}"]`);
   }
   if (filters.playlist) {
-    query = query.containedBy("playlists", JSON.stringify([filters.playlist]));
+    query = query.contains("playlists", `["${filters.playlist}"]`);
   }
 
   const { data, error } = await query;
