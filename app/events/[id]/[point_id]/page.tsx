@@ -152,6 +152,24 @@ function PossessionPageContent() {
     }
   }, [possessionNumber, availableOnOffenceCollection, availableOnDefenceCollection]);
 
+  const currentOffenceTeam = useMemo(() => {
+    if (!point) return null;
+
+    const nextPossessionNumber = (possessions?.length ?? 0) + 1;
+
+    if (nextPossessionNumber % 2 === 0) {
+      return {
+        id: point.defence_team,
+        name: point.defence_team_name,
+      };
+    }
+    return {
+      id: point.offence_team,
+      name: point.offence_team_name,
+    };
+  }, [possessions, point]);
+
+
   const watchedOutcome = watch("possession_outcome");
 
   if (!player || isLoading) {
@@ -224,7 +242,7 @@ function PossessionPageContent() {
           <Text flexShrink="0" fontSize="2xl">{`Possession #${(possessions.length ?? 0) +1}`}</Text>
           <Separator flex="1" size="sm"></Separator>
         </HStack>
-        <Text textStyle="xl" mb={4} color="gray.400">{`Offence: ${point.offence_team_name}`}</Text>
+        <Text textStyle="xl" mb={4} color="gray.400">{`Offence: ${currentOffenceTeam?.name}`}</Text>
         <HStack>
           <AsyncDropdown
             name="defence_init"

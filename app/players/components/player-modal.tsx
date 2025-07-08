@@ -48,6 +48,7 @@ export function PlayerModal({
     register,
     handleSubmit,
     control,
+    reset,
     formState: { isSubmitting, errors },
   } = useForm<PlayerFormData>({
     resolver: zodResolver(schema),
@@ -84,6 +85,7 @@ export function PlayerModal({
       queryClient.invalidateQueries({ queryKey: ['players'] });
       queryClient.invalidateQueries({ queryKey: ['pointPageData'] });
       queryClient.invalidateQueries({ queryKey: ['player'] });
+      reset();
       onClose();
     },
   });

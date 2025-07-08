@@ -60,6 +60,7 @@ export function AddClipModal({ eventId,
     register,
     handleSubmit,
     setError,
+    reset,
     formState: {errors, isSubmitting, isValid}} = useForm<AddClip>({ resolver: zodResolver(schema),
     mode: 'onChange',
     defaultValues: {
@@ -164,6 +165,7 @@ export function AddClipModal({ eventId,
 
       await upsertClipMutation(clipPayload);
       await queryClient.invalidateQueries({ queryKey: ["clips", eventId] });
+      reset();
       onClose();
     } catch (err) {
       setError("root", { message: err instanceof Error ? err.message : "Submission failed" });
