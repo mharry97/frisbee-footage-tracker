@@ -255,6 +255,7 @@ function EventPageContent() {
             </Grid>
             {(gameStats ?? []).map((stat) => (
               <StatRow
+                key={stat.label}
                 label={stat.label}
                 teamOneValue={stat.teamOneValue}
                 teamTwoValue={stat.teamTwoValue}

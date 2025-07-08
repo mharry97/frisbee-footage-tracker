@@ -97,7 +97,7 @@ function PointViewContent() {
   if (!player || isLoading) {
     return (
       <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading player data...</Text>
+        <Text color="white" fontSize="lg">Loading point data...</Text>
       </Box>
     )
   }
