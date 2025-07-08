@@ -30,6 +30,9 @@ import {fetchEvent} from "@/app/events/supabase.ts";
 import {CalculatedStat, calculateGameStats} from "@/app/stats/game/game-stats.ts";
 import {StatRow} from "@/app/stats/game/components/StatRow.tsx";
 import {ClipGrid} from "@/app/clips/components/clip-grid.tsx";
+import {PlayerStatsTable} from "@/app/stats/player/components/player-stat-table.tsx";
+import {calculatePlayerStats} from "@/app/stats/player/player-base-stats.ts";
+import {fetchTeamMapping} from "@/app/players/supabase.ts";
 
 function EventPageContent() {
   const { id } = useParams<{ id: string }>();
@@ -55,7 +58,13 @@ function EventPageContent() {
     enabled: !!id,
   });
 
-  const isLoading = isLoadingPossessions || isLoadingPoints || isLoadingEvent;
+  // Fetch player team mapping
+  const { data: playerTeamMapping, isLoading: isLoadingTeamPlayer } = useQuery({
+    queryFn: fetchTeamMapping,
+    queryKey: ["teamPlayer"]
+  })
+
+  const isLoading = isLoadingPossessions || isLoadingPoints || isLoadingEvent || isLoadingTeamPlayer;
   const hasPoints = points?.length != 0;
 
   // STATS
@@ -98,6 +107,20 @@ function EventPageContent() {
     return calculateGameStats(points, possessions, event);
     }, [points, possessions, event]);
 
+  // Player table
+  // Player stat lines
+  const allPlayerStats = useMemo(() =>
+      calculatePlayerStats(possessions ?? [], playerTeamMapping ?? []),
+    [possessions, playerTeamMapping]
+  );
+
+  const filteredPlayerStats = useMemo(() => {
+    if (!allPlayerStats) {
+      return [];
+    }
+    // Filter for players with >0 points
+    return allPlayerStats.filter(player => player.points_played > 0);
+  }, [allPlayerStats]);
 
   const PointsContent = () => {
     const sortedPoints = [...(points ?? [])].sort(
@@ -263,6 +286,12 @@ function EventPageContent() {
               />
             ))}
           </VStack>
+          <HStack mb={4} mt={8} width="100%">
+            <Separator flex="1" size="sm"></Separator>
+            <Text flexShrink="0" fontSize="xl">Player Stats</Text>
+            <Separator flex="1" size="sm"></Separator>
+          </HStack>
+          <PlayerStatsTable data={filteredPlayerStats} />
         </VStack>
       </>
     )
