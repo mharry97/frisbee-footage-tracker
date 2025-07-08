@@ -47,18 +47,6 @@ type AddPoint = Omit<Point, "point_id"|"created_at"|"offence_team_players"|"defe
 
 // READING
 
-// Fetch all points
-export async function fetchAllPoints(): Promise<PointDetailed[]> {
-    const { data, error } = await supabase
-      .from("view_point_detail")
-      .select("*")
-      .order("event_date", { ascending: false })
-      .order("timestamp_seconds", { ascending: false });
-
-  if (error) throw error;
-  return data ?? [];
-}
-
 // Fetch specific point info
 export async function fetchPoint(point:string): Promise<PointDetailed> {
   const { data, error } = await supabase
@@ -109,16 +97,6 @@ export async function addPoint(input: AddPoint): Promise<string> {
 
   if (error) throw error;
   return data.point_id || ""
-}
-
-// Update point
-export async function editPoint(data: Point): Promise<void> {
-  const { error } = await supabase
-    .from("points")
-    .upsert(data)
-    .eq("event_id", data.event_id);
-
-  if (error) throw error;
 }
 
 //Update players in a point

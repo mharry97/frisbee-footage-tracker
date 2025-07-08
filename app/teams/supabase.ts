@@ -42,17 +42,6 @@ export async function fetchTeams(): Promise<TeamDetailed[]> {
   return data ?? [];
 }
 
-// Fetch teams for event
-export async function fetchEventTeams(event_id: string): Promise<TeamDetailed[]> {
-  const { data, error } = await supabase
-    .from("view_team_detail")
-    .select("*")
-    .eq("event_id", event_id)
-    .order("team_name", { ascending: true });
-  if (error) throw error;
-  return data ?? [];
-}
-
 // Get specific team info fetchBaseTeamInfo BaseTeamInfo
 export async function fetchTeam(id: string): Promise<TeamDetailed> {
   const { data, error } = await supabase
@@ -74,27 +63,4 @@ export async function addTeam(data: InsertTeam): Promise<void> {
     .insert(data);
 
   if (error) throw error;
-}
-
-// Update team
-export async function updateTeam({ team_name, team_id }: Team): Promise<void> {
-  const { error } = await supabase
-    .from("teams")
-    .upsert(team_name)
-    .eq("team_id", team_id)
-
-  if (error) throw error
-}
-
-// Add new team to table
-export async function upsertTeam(teamName: string): Promise<Team> {
-  const { data, error } = await supabase
-    .from('teams')
-    .upsert(teamName)
-    .select('team_id, team_name')
-    .select("*").single()
-
-  if (error) throw error
-  if (!data) throw new Error('Upsert did not return a row')
-  return data
 }
