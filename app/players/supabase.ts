@@ -40,6 +40,7 @@ export async function getPlayersForTeam(team_id: string): Promise<PlayerDetailed
     .from("view_player_detail")
     .select("*")
     .eq("team_id", team_id)
+    .order("is_active", {ascending: false})
     .order("player_name", {ascending: true})
 
   if (error) throw error;
