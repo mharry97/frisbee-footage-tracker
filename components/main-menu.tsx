@@ -5,8 +5,7 @@ import { FiDatabase } from "react-icons/fi";
 import { FaRegCalendarAlt } from "react-icons/fa";
 import { TbPlaylistAdd } from "react-icons/tb";
 import { MdOutlineAdminPanelSettings, MdOutlineScoreboard } from "react-icons/md";
-import { IoPeopleOutline } from "react-icons/io5";
-import { IoHomeOutline } from "react-icons/io5";
+import { IoPeopleOutline, IoSearch, IoHomeOutline } from "react-icons/io5";
 import { PiStrategy } from "react-icons/pi";
 
 interface MainMenuProps {
@@ -71,6 +70,7 @@ export default function MainMenu({ is_admin, is_home }: MainMenuProps) {
     { title: "Strategies", href: "/strategies", iconComponent: PiStrategy },
     { title: "Possessions", href: "/possessions", iconComponent: MdOutlineScoreboard },
     { title: "Teams", href: "/teams", iconComponent: IoPeopleOutline },
+    { title: "Player Search", href: "/playersearch", iconComponent: IoSearch },
     ...(is_admin
       ? [{ title: "Admin", href: "/admin", iconComponent: MdOutlineAdminPanelSettings }]
       : []),
