@@ -70,7 +70,7 @@ export default function MainMenu({ is_admin, is_home }: MainMenuProps) {
     { title: "Strategies", href: "/strategies", iconComponent: PiStrategy },
     { title: "Possessions", href: "/possessions", iconComponent: MdOutlineScoreboard },
     { title: "Teams", href: "/teams", iconComponent: IoPeopleOutline },
-    { title: "Player Search", href: "/playerSearch", iconComponent: IoSearch },
+    { title: "Player Search", href: "/playersearch", iconComponent: IoSearch },
     ...(is_admin
       ? [{ title: "Admin", href: "/admin", iconComponent: MdOutlineAdminPanelSettings }]
       : []),

@@ -32,6 +32,8 @@ interface PlayerModalProps {
   mode: 'add' | 'edit';
   playerToEdit?: Player;
   teamId?: string;
+  playerName?: string;
+  playerNumber?: number;
 }
 
 export function PlayerModal({
@@ -40,6 +42,8 @@ export function PlayerModal({
                               mode,
                               playerToEdit,
                               teamId,
+                              playerName,
+                              playerNumber
                             }: PlayerModalProps) {
   const queryClient = useQueryClient();
 
@@ -54,8 +58,8 @@ export function PlayerModal({
     resolver: zodResolver(schema),
     // Set defaults based on the mode
     defaultValues: {
-      player_name: mode === 'edit' ? playerToEdit?.player_name : '',
-      number: mode === 'edit' ? playerToEdit?.number : undefined,
+      player_name: mode === 'edit' ? playerToEdit?.player_name : (playerName ?? ''),
+      number: mode === 'edit' ? playerToEdit?.number : (playerNumber ?? undefined),
       is_active: mode === 'edit' ? playerToEdit?.is_active : true,
       team_id: mode === 'edit' ? [playerToEdit?.team_id] : (teamId ? [teamId] : []),
       notes: mode === 'edit' ? (playerToEdit?.notes ?? '') : '',

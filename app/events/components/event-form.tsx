@@ -215,7 +215,7 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
                               ({ value }) => {field.onChange(value)}}
                             onInteractOutside={() => field.onBlur()}
                             collection={collection}
-                            disabled={mode === "edit"}
+                            disabled={mode === "edit" || isGameFieldsDisabled}
                           >
                             <Select.HiddenSelect />
                             <Select.Label>Teams</Select.Label>
