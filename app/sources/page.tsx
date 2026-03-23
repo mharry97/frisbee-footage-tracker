@@ -4,6 +4,8 @@ import { fetchSources } from "@/app/sources/supabase"
 import { AuthWrapper } from "@/components/auth-wrapper"
 import NextLink from "next/link"
 import SourceForm from "@/app/sources/components/source-form"
+import { CardGrid } from "@/components/card-grid"
+import { Card, CardHeader, CardBody, CardFooter } from "@/components/card"
 import { useAuth } from "@/lib/auth-context"
 import StandardHeader from "@/components/standard-header"
 import { useQuery } from "@tanstack/react-query"
@@ -30,25 +32,27 @@ function SourcesPageContent() {
       {!sources || sources.length === 0 ? (
         <p>No sources yet!</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <CardGrid>
           {sources.map((item) => (
-            <div key={item.source_id} className="bg-neutral-900 rounded-lg border border-neutral-700 overflow-hidden">
-              <div className="p-4 border-b border-neutral-700">
+            <Card key={item.source_id}>
+              <CardHeader>
                 <h3 className="font-medium">{item.title}</h3>
                 <p className="text-neutral-400 text-sm">{item.recorded_date}</p>
-              </div>
-              <div className="p-4">
+              </CardHeader>
+              <CardBody>
                 <p className="text-neutral-400 text-sm truncate">{item.url}</p>
-              </div>
-              <div className="p-4 pt-0 flex gap-2">
-                <NextLink href={item.url} target="_blank" className="px-3 py-1.5 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors">
-                  View
-                </NextLink>
-                <SourceForm mode="edit" currentSourceData={item} />
-              </div>
-            </div>
+              </CardBody>
+              <CardFooter>
+                <div className="flex gap-2">
+                  <NextLink href={item.url} target="_blank" className="px-3 py-1.5 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors">
+                    View
+                  </NextLink>
+                  <SourceForm mode="edit" currentSourceData={item} />
+                </div>
+              </CardFooter>
+            </Card>
           ))}
-        </div>
+        </CardGrid>
       )}
       <SourceForm mode="add" />
     </div>

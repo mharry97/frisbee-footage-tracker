@@ -88,6 +88,7 @@ export function PlayerStatsTable({ data }: PlayerStatsTableProps) {
   };
 
   return (
+    <div className="w-full overflow-x-auto">
     <DataTable
       columns={columns}
       data={data}
@@ -97,5 +98,6 @@ export function PlayerStatsTable({ data }: PlayerStatsTableProps) {
       pointerOnHover
       onRowClicked={handleRowClicked}
     />
+    </div>
   );
 }

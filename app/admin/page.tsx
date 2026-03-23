@@ -10,6 +10,8 @@ import EditUserDetailsPortal from "@/app/admin/component/edit-user-details"
 import StandardHeader from "@/components/standard-header"
 import { PlayerDetailed } from "@/app/players/supabase"
 import { CustomModal } from "@/components/modal"
+import { CardGrid } from "@/components/card-grid"
+import { Card, CardHeader, CardBody } from "@/components/card"
 
 function PlayersPageContent() {
   const { player } = useAuth()
@@ -46,14 +48,14 @@ function PlayersPageContent() {
   return (
     <div>
       <StandardHeader text="Admin" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <CardGrid>
         {players.map((item, index) => (
-          <div key={index} className="bg-neutral-900 rounded-lg border border-neutral-700 overflow-hidden">
-            <div className="p-4 border-b border-neutral-700">
+          <Card key={index}>
+            <CardHeader>
               <h3 className="font-medium">{item.player_name}</h3>
               <p className="text-neutral-400 text-sm">{item.username || "No account"}</p>
-            </div>
-            <div className="p-4">
+            </CardHeader>
+            <CardBody>
               <div className="flex gap-2 mb-3">
                 <span className={`px-2 py-0.5 rounded-full text-xs ${item.is_active ? "bg-green-900/50 text-green-400" : "bg-red-900/50 text-red-400"}`}>
                   {item.is_active ? "Active" : "Inactive"}
@@ -71,10 +73,10 @@ function PlayersPageContent() {
               >
                 Update User
               </button>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
         ))}
-      </div>
+      </CardGrid>
 
       <FloatingActionButton iconType="add" onClick={() => setAddOpen(true)} />
 

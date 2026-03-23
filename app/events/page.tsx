@@ -7,6 +7,8 @@ import StandardHeader from "@/components/standard-header.tsx";
 import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import EventForm from "@/app/events/components/event-form.tsx";
+import { CardGrid } from "@/components/card-grid";
+import { Card, CardHeader, CardBody } from "@/components/card";
 
 function EventsPageContent() {
   const { player } = useAuth()
@@ -36,21 +38,17 @@ function EventsPageContent() {
   return (
     <div>
       <StandardHeader text="Events" />
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+      <CardGrid>
         {events.map((item) => (
-          <div
+          <Card
             key={item.event_id}
-            className={`bg-neutral-900 rounded-lg overflow-hidden border ${
-              item.team_1_scores + item.team_2_scores > 0
-                ? "border-neutral-500"
-                : "border-neutral-700"
-            }`}
+            className={item.team_1_scores + item.team_2_scores > 0 ? "border-neutral-500" : ""}
           >
-            <div className="p-4 border-b border-neutral-700">
+            <CardHeader>
               <h3 className="font-medium">{item.event_name}</h3>
               <p className="text-neutral-400 text-sm">{item.event_date}</p>
-            </div>
-            <div className="p-4">
+            </CardHeader>
+            <CardBody>
               {item.type === "Game" && (
                 <p className="text-sm mb-3">
                   {item.team_1_scores + item.team_1_scores === 0
@@ -68,10 +66,10 @@ function EventsPageContent() {
                 </a>
                 <EventForm mode="edit" currentData={item} />
               </div>
-            </div>
-          </div>
+            </CardBody>
+          </Card>
         ))}
-      </div>
+      </CardGrid>
       <EventForm mode="add" />
     </div>
   )

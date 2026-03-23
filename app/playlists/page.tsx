@@ -9,6 +9,8 @@ import { AuthWrapper } from "@/components/auth-wrapper"
 import { useAuth } from "@/lib/auth-context"
 import StandardHeader from "@/components/standard-header"
 import { useQuery } from "@tanstack/react-query"
+import { CardGrid } from "@/components/card-grid"
+import { Card, CardHeader, CardBody } from "@/components/card"
 
 function PlaylistsPageContent() {
   const { player } = useAuth()
@@ -34,10 +36,10 @@ function PlaylistsPageContent() {
       {!playlists || playlists.length === 0 ? (
         <p>No playlists added yet.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <CardGrid>
           {playlists.map((item) => (
-            <div key={item.playlist_id} className="bg-neutral-900 rounded-lg border border-neutral-700 overflow-hidden">
-              <div className="p-4 border-b border-neutral-700">
+            <Card key={item.playlist_id}>
+              <CardHeader>
                 <div className="flex items-center justify-between">
                   <h3 className="font-medium">{item.title}</h3>
                   {!item.is_public && (
@@ -49,16 +51,16 @@ function PlaylistsPageContent() {
                     day: "2-digit", month: "2-digit", year: "numeric",
                   }).format(new Date(item.created_at))}
                 </p>
-              </div>
-              <div className="p-4">
+              </CardHeader>
+              <CardBody>
                 <p className="text-neutral-400 text-sm mb-3">{item.description}</p>
                 <NextLink href={`/playlists/${item.playlist_id}`} className="px-3 py-1.5 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors">
                   View Playlist
                 </NextLink>
-              </div>
-            </div>
+              </CardBody>
+            </Card>
           ))}
-        </div>
+        </CardGrid>
       )}
       <FloatingActionButton onClick={() => setOpen(true)} iconType="add" />
       <AddPlaylistModal isOpen={open} onClose={() => setOpen(false)} />

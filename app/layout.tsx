@@ -9,7 +9,9 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { QueryClient } from "@tanstack/react-query"
 import { Sidebar } from "@/components/sidebar"
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { refetchOnWindowFocus: false } },
+});
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -24,9 +26,9 @@ export default function RootLayout({
         <Provider>
           <AuthProvider>
             <QueryClientProvider client={queryClient}>
-              <div className="flex min-h-screen bg-neutral-950 text-neutral-100">
+              <div className="flex min-h-screen bg-neutral-950 text-neutral-100 overflow-x-hidden">
                 <Sidebar />
-                <main className="flex-1 md:ml-60 p-6">
+                <main className="flex-1 min-w-0 md:ml-60 p-6">
                   {children}
                 </main>
               </div>

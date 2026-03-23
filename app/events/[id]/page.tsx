@@ -25,6 +25,8 @@ import {PlayerStatsTable} from "@/app/stats/player/components/player-stat-table.
 import {calculatePlayerStats} from "@/app/stats/player/player-base-stats.ts";
 import {fetchTeamMapping} from "@/app/players/supabase.ts";
 import { CustomModal } from "@/components/modal";
+import { CardGrid } from "@/components/card-grid";
+import { Card, CardHeader, CardBody } from "@/components/card";
 
 function SectionDivider({ label }: { label: string }) {
   return (
@@ -117,45 +119,49 @@ function EventPageContent() {
     }
     return (
       <>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <CardGrid>
           {sortedPoints.map((item, index) => (
-            <div key={index} className="bg-neutral-800 rounded-lg p-4 flex flex-col gap-3">
-              <div className="flex justify-between items-center">
-                <p className="font-medium">Offence: {item.offence_team_name}</p>
-                {item.point_outcome === "break" ? (
-                  <span className="px-2 py-0.5 rounded text-xs bg-red-900 text-red-200">Break</span>
-                ) : item.point_outcome === "hold" ? (
-                  <span className="px-2 py-0.5 rounded text-xs bg-green-900 text-green-200">Hold</span>
-                ) : null}
-              </div>
-              <p className="text-sm text-neutral-400">{item.timestamp}</p>
-              {item.point_outcome === "unknown" ? (
-                <p className="text-sm text-neutral-400">Point has not been fully statted.</p>
-              ) : (
-                <div className="text-sm">
-                  <p>Assist: {item.assist_player_name || "Unknown"}</p>
-                  <p>Score: {item.score_player_name || "Unknown"}</p>
-                  <p className="text-neutral-400 mt-1">
-                    {item.possession_number - 1}{item.possession_number === 2 ? " Turn" : " Turns"}
-                  </p>
+            <Card key={index}>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <p className="font-medium">Offence: {item.offence_team_name}</p>
+                  {item.point_outcome === "break" ? (
+                    <span className="px-2 py-0.5 rounded text-xs bg-red-900 text-red-200">Break</span>
+                  ) : item.point_outcome === "hold" ? (
+                    <span className="px-2 py-0.5 rounded text-xs bg-green-900 text-green-200">Hold</span>
+                  ) : null}
                 </div>
-              )}
-              <div className="flex gap-2 mt-auto pt-2">
-                <NextLink href={`/events/${item.event_id}/${item.point_id}/view`} passHref>
-                  <button className="px-3 py-1.5 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors">
-                    Details
+                <p className="text-sm text-neutral-400 mt-1">{item.timestamp}</p>
+              </CardHeader>
+              <CardBody>
+                {item.point_outcome === "unknown" ? (
+                  <p className="text-sm text-neutral-400">Point has not been fully statted.</p>
+                ) : (
+                  <div className="text-sm mb-3">
+                    <p>Assist: {item.assist_player_name || "Unknown"}</p>
+                    <p>Score: {item.score_player_name || "Unknown"}</p>
+                    <p className="text-neutral-400 mt-1">
+                      {item.possession_number - 1}{item.possession_number === 2 ? " Turn" : " Turns"}
+                    </p>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <NextLink href={`/events/${item.event_id}/${item.point_id}/view`} passHref>
+                    <button className="px-3 py-1.5 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors">
+                      Details
+                    </button>
+                  </NextLink>
+                  <button
+                    className="px-3 py-1.5 rounded bg-transparent hover:bg-neutral-700 text-sm transition-colors"
+                    onClick={() => setQuickViewUrl(baseUrlToTimestampUrl(item.base_url, item.timestamp))}
+                  >
+                    Quick View
                   </button>
-                </NextLink>
-                <button
-                  className="px-3 py-1.5 rounded bg-transparent hover:bg-neutral-700 text-sm transition-colors"
-                  onClick={() => setQuickViewUrl(baseUrlToTimestampUrl(item.base_url, item.timestamp))}
-                >
-                  Quick View
-                </button>
-              </div>
-            </div>
+                </div>
+              </CardBody>
+            </Card>
           ))}
-        </div>
+        </CardGrid>
         <PointForm event_id={id} />
       </>
     );
@@ -176,16 +182,16 @@ function EventPageContent() {
             <p className="mt-0 mb-4 text-neutral-400 text-sm">*Note: {event.notes}</p>
           )}
           <p className="text-xl mb-4">Score</p>
-          <div className="grid w-full max-w-lg px-4 py-4" style={{ gridTemplateColumns: '1fr auto 1fr', gap: '3rem' }}>
-            <div className="flex flex-col items-end gap-4">
+          <div className="grid w-full max-w-lg px-4 py-4 gap-6" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
+            <div className="flex flex-col items-end gap-4 min-w-0">
               {scoreData.map((team) => (
-                <h2 key={team.name} className="text-lg font-semibold">{team.name}</h2>
+                <h2 key={team.name} className="text-base font-semibold text-right truncate w-full">{team.name}</h2>
               ))}
             </div>
             <div className="w-px bg-yellow-400" />
-            <div className="flex flex-col items-start gap-4">
+            <div className="flex flex-col items-start gap-4 min-w-0">
               {scoreData.map((team) => (
-                <h2 key={team.name + "-score"} className="text-lg font-semibold">{team.value}</h2>
+                <h2 key={team.name + "-score"} className="text-base font-semibold">{team.value}</h2>
               ))}
             </div>
           </div>
@@ -202,10 +208,10 @@ function EventPageContent() {
 
         <SectionDivider label="Team Stats" />
         <div className="flex flex-col gap-6 w-full">
-          <div className="grid w-full" style={{ gridTemplateColumns: '1fr 1fr 1fr' }}>
-            <h2 className="text-left font-semibold">{event?.team_1}</h2>
+          <div className="grid w-full grid-cols-3">
+            <h2 className="text-left font-semibold truncate">{event?.team_1}</h2>
             <div />
-            <h2 className="text-right font-semibold">{event?.team_2}</h2>
+            <h2 className="text-right font-semibold truncate">{event?.team_2}</h2>
           </div>
           {(gameStats ?? []).map((stat) => (
             <StatRow

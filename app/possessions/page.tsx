@@ -11,6 +11,8 @@ import OnPageVideoLink from "@/components/on-page-video-link.tsx";
 import { baseUrlToTimestampUrl } from "@/lib/utils.ts";
 import { PossessionFilters } from "@/app/possessions/components/PossessionFilters.tsx";
 import { CustomModal } from "@/components/modal";
+import { CardGrid } from "@/components/card-grid";
+import { Card, CardHeader, CardBody } from "@/components/card";
 
 function EventsPageContent() {
   const { player } = useAuth();
@@ -40,14 +42,14 @@ function EventsPageContent() {
         onClearFilters={() => setActiveFilters({})}
       />
       {possessions ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 mt-8">
+        <CardGrid className="mt-8">
           {possessions.map((item) => (
-            <div key={item.possession_id} className="bg-neutral-900 rounded-lg border border-neutral-700 overflow-hidden">
-              <div className="p-4 border-b border-neutral-700">
+            <Card key={item.possession_id}>
+              <CardHeader>
                 <h3 className="font-medium">{item.event_name}</h3>
                 <p className="text-neutral-400 text-sm">Possession {item.possession_number}</p>
-              </div>
-              <div className="p-4">
+              </CardHeader>
+              <CardBody>
                 <div className="mb-2">
                   <p className="font-medium text-sm">Offence: {item.offence_team_name}</p>
                   <p className="text-neutral-400 text-xs">{item.offence_init_name || "None"} &gt; {item.offence_main_name || "None"}</p>
@@ -77,10 +79,10 @@ function EventsPageContent() {
                     Quick View
                   </button>
                 </div>
-              </div>
-            </div>
+              </CardBody>
+            </Card>
           ))}
-        </div>
+        </CardGrid>
       ) : (
         <div className="flex items-center justify-center min-h-[20vh] p-4">
           <p className="text-neutral-400">No possessions found.</p>

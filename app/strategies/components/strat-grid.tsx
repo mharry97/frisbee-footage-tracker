@@ -3,17 +3,19 @@
 import React, { useState } from "react";
 import { Strategy } from "@/app/strategies/supabase.ts";
 import { AddStratModal } from "@/app/strategies/components/strategy-modal.tsx";
+import { CardGrid } from "@/components/card-grid";
+import { Card, CardHeader, CardBody } from "@/components/card";
 
 function StratCard({ strat }: { strat: Strategy }) {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <div className="bg-neutral-900 rounded-lg border border-neutral-700 overflow-hidden">
-        <div className="p-4 border-b border-neutral-700">
+      <Card>
+        <CardHeader>
           <h3 className="font-medium">{strat.strategy}</h3>
-        </div>
-        <div className="p-4">
+        </CardHeader>
+        <CardBody>
           <p className="text-neutral-400 text-sm mb-3">{strat.description}</p>
           <button
             onClick={() => setOpen(true)}
@@ -21,8 +23,8 @@ function StratCard({ strat }: { strat: Strategy }) {
           >
             Edit
           </button>
-        </div>
-      </div>
+        </CardBody>
+      </Card>
 
       <AddStratModal
         isOpen={open}
@@ -48,10 +50,10 @@ export function StratGrid({ strats }: StratGridProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 w-full">
+    <CardGrid>
       {strats.map((item) => (
         <StratCard key={item.strategy_id} strat={item} />
       ))}
-    </div>
+    </CardGrid>
   );
 }

@@ -75,7 +75,7 @@ export function Sidebar() {
               style={{ paddingLeft: "1rem", paddingRight: "1rem", fontSize: "1rem" }}
             className={`flex items-center gap-3 py-4 rounded-md text-base transition-colors ${
                 isActive(item.href)
-                  ? "bg-yellow-400/10 text-yellow-400"
+                  ? "bg-neutral-800 text-neutral-100"
                   : "text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800"
               }`}
             >
