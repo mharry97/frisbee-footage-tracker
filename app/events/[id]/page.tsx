@@ -348,7 +348,7 @@ function EventPageContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text={event?.event_name ?? ""} is_admin={player.is_admin} />
+      <StandardHeader text={event?.event_name ?? ""} />
       {isLoading ? (
         <LoadingSpinner text="Loading..." />
       ) : (

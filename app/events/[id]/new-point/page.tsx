@@ -160,7 +160,7 @@ function EventPageContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text="Point Form" is_admin={player.is_admin} />
+      <StandardHeader text="Point Form" />
       {/* Source Dropdown */}
       <Field.Root mb={4}>
         <Field.Label>Source</Field.Label>

@@ -1,14 +1,19 @@
-import { useRouter } from 'next/navigation'
-import {Button} from "@chakra-ui/react";
-import {FiArrowLeft} from "react-icons/fi";
-import React from "react";
+"use client"
+
+import { useRouter } from "next/navigation"
+import { FiArrowLeft } from "react-icons/fi"
 
 export default function BackButton() {
   const router = useRouter()
 
   return (
-    <Button mt={4} variant='ghost' type="button" onClick={() => router.back()}>
-      <FiArrowLeft style={{ marginRight: '8px', verticalAlign: 'middle' }} />Back
-    </Button>
+    <button
+      type="button"
+      onClick={() => router.back()}
+      className="mt-4 flex items-center gap-2 text-sm text-gray-400 hover:text-gray-100 transition-colors"
+    >
+      <FiArrowLeft className="w-4 h-4" />
+      Back
+    </button>
   )
 }

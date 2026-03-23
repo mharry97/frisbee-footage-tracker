@@ -9,12 +9,12 @@ Colour palette (Tailwind classes throughout):
 
 | Role | Class | Hex |
 |------|-------|-----|
-| Page background | `bg-gray-950` | #030712 |
-| Surface (cards, modals, sidebar) | `bg-gray-900` | #111827 |
-| Elevated surface (inputs, dropdowns) | `bg-gray-800` | #1f2937 |
-| Border | `border-gray-700` | #374151 |
-| Primary text | `text-gray-100` | #f3f4f6 |
-| Muted text | `text-gray-400` | #9ca3af |
+| Page background | `bg-neutral-950` | #030712 |
+| Surface (cards, modals, sidebar) | `bg-neutral-900` | #111827 |
+| Elevated surface (inputs, dropdowns) | `bg-neutral-800` | #1f2937 |
+| Border | `border-neutral-700` | #374151 |
+| Primary text | `text-neutral-100` | #f3f4f6 |
+| Muted text | `text-neutral-400` | #9ca3af |
 | Accent | `text-yellow-400` / `bg-yellow-400` | #facc15 |
 | Accent hover | `bg-yellow-300` | #fde047 |
 | Danger | `text-red-400` | #f87171 |
@@ -43,7 +43,7 @@ On mobile (`< md`), the sidebar collapses — replaced by a hamburger button tha
 
 ```tsx
 // app/layout.tsx — wraps all pages
-<div className="flex min-h-screen bg-gray-950 text-gray-100">
+<div className="flex min-h-screen bg-neutral-950 text-neutral-100">
   <Sidebar />  {/* fixed left, hidden on mobile */}
   <main className="flex-1 md:ml-60 p-6">
     {children}
@@ -169,7 +169,7 @@ These pages use Chakra only for layout (`Box`, `Text`, `Container`, `HStack`, et
 | `<SimpleGrid columns={2}>` | `<div className="grid grid-cols-2 gap-4">` |
 | `<Button>` | `<button className="px-4 py-2 rounded bg-...">` |
 | `<Input>` | `<input className="border rounded px-3 py-2 w-full">` |
-| `<Separator>` | `<hr className="border-t border-gray-700">` |
+| `<Separator>` | `<hr className="border-t border-neutral-700">` |
 | `<Center>` | `<div className="flex items-center justify-center">` |
 | `<Stack>` | `<div className="flex flex-col gap-4">` or `<div className="flex gap-4">` |
 
@@ -226,7 +226,11 @@ Once all pages are migrated:
 
 1. Delete `components/ui/provider.tsx` and `components/ui/color-mode.tsx`
 2. Update `app/layout.tsx` to remove `<Provider>` wrapper (Tailwind needs no provider)
-3. Remove from `package.json`:
+3. Remove inline styles that were added to override Chakra's CSS reset — these were necessary during migration but Tailwind classes will work on their own once Chakra is gone. Known locations:
+   - `components/sidebar.tsx` — `style={{ paddingLeft, paddingRight, fontSize }}` on nav links
+   - `components/sidebar.tsx` — `style={{ fontSize, fontWeight }}` on the app title
+   - `app/globals.css` — `nav a:hover` override for sidebar hover states
+4. Remove from `package.json`:
    - `@chakra-ui/react`
    - `@chakra-ui/toast`
    - `@chakra-ui/cli`

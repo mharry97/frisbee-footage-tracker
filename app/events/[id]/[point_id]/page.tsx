@@ -190,7 +190,7 @@ function PossessionPageContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text={point.event_name} is_admin={player.is_admin} />
+      <StandardHeader text={point.event_name} />
       <Text mt={4} fontSize="lg" color="gray.400" mb={4}>{`${point.offence_team_name} on O starting ${point.timestamp}`}</Text>
       <OnPageVideoLink url={baseUrlToTimestampUrl(point.base_url, point.timestamp)}/>
       <HStack mb={4} mt={4}>

@@ -44,7 +44,7 @@ function PlayerSearchContent() {
   if (!searchPlayerData) {
     return (
       <Container maxW="4xl">
-        <StandardHeader text="Teams" is_admin={player.is_admin} />
+        <StandardHeader text="Teams" />
         <Text color="white" fontSize="lg">No data.</Text>
       </Container>
     )
@@ -52,7 +52,7 @@ function PlayerSearchContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text="Search for players" is_admin={player.is_admin} />
+      <StandardHeader text="Search for players" />
       <PlayerSearchTable
         data={searchPlayerData}
         onRowClick={handleRowClick}

@@ -28,7 +28,7 @@ function TeamsPageContent() {
   if (!teams) {
     return (
       <Container maxW="4xl">
-        <StandardHeader text="Teams" is_admin={player.is_admin} />
+        <StandardHeader text="Teams" />
         <Text color="white" fontSize="lg">No teams yet!</Text>
       </Container>
     )
@@ -36,7 +36,7 @@ function TeamsPageContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text="Teams" is_admin={player.is_admin} />
+      <StandardHeader text="Teams" />
       <SimpleGrid columns={{ base: 2, md: 3 }} gap={8} mb={8}>
         {teams.map((item, index) => (
           <Card.Root key={index} variant="elevated">

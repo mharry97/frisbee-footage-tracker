@@ -101,7 +101,7 @@ function StrategyPageContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text="Strategies" is_admin={player.is_admin} />
+      <StandardHeader text="Strategies" />
       <CustomTabs defaultValue="defence" tabs={tabs} />
       <FloatingActionButton onClick={onOpen} iconType="add" />
       <AddStratModal

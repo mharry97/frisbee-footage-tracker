@@ -20,7 +20,7 @@ export default function PlayersPage() {
 
   return (
     <Container maxW="4xl" py={8}>
-      <StandardHeader text="Clips" is_admin={player.is_admin} />
+      <StandardHeader text="Clips" />
       <Text>Still working this bit out</Text>
     </Container>
   );

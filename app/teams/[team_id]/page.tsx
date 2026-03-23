@@ -85,7 +85,7 @@ function TeamPageContent() {
   if (!teamData) {
     return (
       <Container maxW="4xl">
-        <StandardHeader text="Teams" is_admin={player.is_admin} />
+        <StandardHeader text="Teams" />
         <Text color="white" fontSize="lg">Team does not exist</Text>
       </Container>
     )
@@ -209,7 +209,7 @@ function TeamPageContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text={teamData.team_name} is_admin={player.is_admin} />
+      <StandardHeader text={teamData.team_name} />
       <CustomTabs defaultValue="overview" tabs={tabs} />
     </Container>
   )

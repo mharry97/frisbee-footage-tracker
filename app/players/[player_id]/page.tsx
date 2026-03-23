@@ -158,7 +158,7 @@ function PlayerPageContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text={`${playerData.team_name} - ${playerData.player_name}`} is_admin={player.is_admin} />
+      <StandardHeader text={`${playerData.team_name} - ${playerData.player_name}`} />
       <CustomTabs defaultValue="overview" tabs={tabs} />
       <FloatingActionButton onClick={onOpen} iconType="edit" />
       <PlayerModal

@@ -34,7 +34,7 @@ function EventsPageContent() {
   if (!events) {
     return (
       <Container maxW="4xl">
-        <StandardHeader text="Events" is_admin={player.is_admin} />
+        <StandardHeader text="Events" />
         <Text color="white" fontSize="lg">No events yet!</Text>
       </Container>
     )
@@ -42,7 +42,7 @@ function EventsPageContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text="Events" is_admin={player.is_admin} />
+      <StandardHeader text="Events" />
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
         {events.map((item) => (
             <Card.Root

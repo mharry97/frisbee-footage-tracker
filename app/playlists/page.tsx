@@ -43,7 +43,7 @@ function PlaylistsPageContent() {
   return (
     <>
       <Container maxW="4xl">
-        <StandardHeader text="Playlists" is_admin={player.is_admin} />
+        <StandardHeader text="Playlists" />
         <SimpleGrid columns={{base: 1, md: 2}} gap={8} mb={8}>
           {playlists.map((item) => (
             <Card.Root key={item.playlist_id} variant="elevated">

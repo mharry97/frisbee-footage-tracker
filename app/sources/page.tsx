@@ -27,7 +27,7 @@ function SourcesPageContent() {
   if (!sources) {
     return (
       <Container maxW="4xl">
-        <StandardHeader text="Teams" is_admin={player.is_admin} />
+        <StandardHeader text="Teams" />
         <Text color="white" fontSize="lg">No sources yet!</Text>
       </Container>
     )
@@ -35,7 +35,7 @@ function SourcesPageContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text="Sources" is_admin={player.is_admin} />
+      <StandardHeader text="Sources" />
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
         {sources.map((item) => (
           <Card.Root key={item.source_id} variant="elevated">

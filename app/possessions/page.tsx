@@ -49,7 +49,7 @@ function EventsPageContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text="Possession Search" is_admin={player.is_admin} />
+      <StandardHeader text="Possession Search" />
       <PossessionFilters
         onApplyFilters={setActiveFilters}
         onClearFilters={handleClear}

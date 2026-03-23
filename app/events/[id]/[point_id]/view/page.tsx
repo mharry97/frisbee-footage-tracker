@@ -112,7 +112,7 @@ function PointViewContent() {
   if (possessions.length === 0) {
     return (
           <Container maxW="4xl" py={8}>
-            <StandardHeader text="Point Info" is_admin={player.is_admin} />
+            <StandardHeader text="Point Info" />
             <Text mt={8} color="white">
               {isLoading ? "Loading point data" : "No data found for this point yet."}
             </Text>
@@ -207,7 +207,7 @@ function PointViewContent() {
 
   return (
     <Container maxW="4xl" py={8}>
-      <StandardHeader text={point.event_name} is_admin={player.is_admin} />
+      <StandardHeader text={point.event_name} />
       <Text mt={4} fontSize="lg" color="gray.400">
         {`Offence: ${point.offence_team_name}`}
       </Text>

@@ -13,7 +13,6 @@ import React, {useEffect, useState} from "react";
 import {getPlayerPointsPlayed, PointsByPlayer} from "@/app/teams/[team_id]/[player_id]/supabase.ts";
 import {getPlayerStatsFromPossessions, PlayerStats} from "@/app/teams/[team_id]/[player_id]/utils.ts";
 import { fetchAllPossessions } from "@/app/possessions/supabase.ts";
-import MainMenu from "@/components/main-menu.tsx";
 import StatTile from "@/components/stat-tile.tsx";
 import {PointGrid} from "@/app/points/components/point-grid.tsx";
 
@@ -62,7 +61,6 @@ function HomepageContent() {
       <Heading as="h1" fontWeight="light" size='4xl' mb={4} mt={4}>
         Hello, {player.player_name}
       </Heading>
-      <MainMenu is_admin={player.is_admin} is_home />
       <HStack mb={6}>
         <Separator flex="1" size="sm" colorPalette='yellow'></Separator>
         <Text flexShrink="0" fontSize="2xl" >Player Overview</Text>

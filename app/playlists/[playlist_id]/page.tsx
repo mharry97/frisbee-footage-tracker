@@ -63,7 +63,7 @@ function PointPageContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text={playlist?.title || ""} is_admin={player.is_admin} />
+      <StandardHeader text={playlist?.title || ""} />
       <Text textStyle="xl" mb={4} mt ={4}>{playlist?.description}</Text>
       <Separator mb={8} />
       <ClipGrid clips={clips ?? []} playerId={player.player_id}/>

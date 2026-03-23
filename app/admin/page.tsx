@@ -58,7 +58,7 @@ function PlayersPageContent() {
 
   return (
     <Container maxW="4xl">
-      <StandardHeader text="Admin" is_admin={player.is_admin} />
+      <StandardHeader text="Admin" />
       <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
         {players.map((item, index) => (
           <Card.Root key={index} variant="elevated">
