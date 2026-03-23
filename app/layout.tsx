@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { Inter } from "next/font/google"
+import "./globals.css"
 import { Provider } from "@/components/ui/provider"
 import { AuthProvider } from "@/lib/auth-context"
 import { QueryClientProvider } from '@tanstack/react-query'
