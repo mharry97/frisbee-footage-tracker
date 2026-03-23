@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, type Resolver } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { z } from "zod";
@@ -47,7 +47,7 @@ export function PlayerModal({
     reset,
     formState: { isSubmitting, errors },
   } = useForm<PlayerFormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as Resolver<PlayerFormData>,
     defaultValues: {
       player_name: mode === 'edit' ? playerToEdit?.player_name : (playerName ?? ''),
       number: mode === 'edit' ? playerToEdit?.number : (playerNumber ?? undefined),

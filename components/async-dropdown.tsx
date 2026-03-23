@@ -124,7 +124,7 @@ export function AsyncDropdown<TItem, TFormValues extends FieldValues>({
                 styles={selectStyles as object}
                 onChange={(chosen) => {
                   if (multiple) {
-                    const vals = (chosen as { value: string }[]).map((o) => o.value);
+                    const vals = (chosen as unknown as { value: string }[]).map((o) => o.value);
                     field.onChange(vals);
                   } else {
                     const val = (chosen as { value: string } | null)?.value;
