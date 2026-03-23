@@ -1,125 +1,81 @@
 "use client"
-import {
-  Container,
-  Box,
-  Text, VStack, useDisclosure,
-} from "@chakra-ui/react";
-import { AuthWrapper } from "@/components/auth-wrapper";
-import { useAuth } from "@/lib/auth-context.tsx";
-import React, {useMemo} from "react";
 
-import StandardHeader from "@/components/standard-header.tsx";
-import CustomTabs from "@/components/tabbed-page.tsx";
-import {useQuery} from "@tanstack/react-query";
-import {fetchStrategies} from "@/app/strategies/supabase.ts";
-import {StratGrid} from "@/app/strategies/components/strat-grid.tsx";
-import LoadingSpinner from "@/components/ui/loading-spinner.tsx";
-import FloatingActionButton from "@/components/ui/floating-plus.tsx";
-import {AddStratModal} from "@/app/strategies/components/strategy-modal.tsx";
+import { useState, useMemo } from "react"
+import { AuthWrapper } from "@/components/auth-wrapper"
+import { useAuth } from "@/lib/auth-context"
+import StandardHeader from "@/components/standard-header"
+import CustomTabs from "@/components/tabbed-page"
+import { useQuery } from "@tanstack/react-query"
+import { fetchStrategies } from "@/app/strategies/supabase"
+import { StratGrid } from "@/app/strategies/components/strat-grid"
+import LoadingSpinner from "@/components/ui/loading-spinner"
+import FloatingActionButton from "@/components/ui/floating-plus"
+import { AddStratModal } from "@/app/strategies/components/strategy-modal"
 
 function StrategyPageContent() {
-  const { player } = useAuth();
-  const { open, onOpen, onClose } = useDisclosure();
+  const { player } = useAuth()
+  const [open, setOpen] = useState(false)
 
   const { data: strats, isLoading } = useQuery({
     queryFn: fetchStrategies,
-    queryKey: ["strats"]
+    queryKey: ["strats"],
   })
 
-  const {
-    offenceInitiationStrats,
-    offenceMainStrats,
-    defenceInitiationStrats,
-    defenceMainStrats
-  } = useMemo(() => {
-    const allStrats = strats ?? [];
+  const { offenceInitiationStrats, offenceMainStrats, defenceInitiationStrats, defenceMainStrats } = useMemo(() => {
+    const all = strats ?? []
     return {
-      offenceInitiationStrats: allStrats.filter(s => s.play_type === 'offence_initiation'),
-      offenceMainStrats: allStrats.filter(s => s.play_type === 'offence_main'),
-      defenceInitiationStrats: allStrats.filter(s => s.play_type === 'defence_initiation'),
-      defenceMainStrats: allStrats.filter(s => s.play_type === 'defence_main'),
-    };
-  }, [strats]);
-
+      offenceInitiationStrats: all.filter((s) => s.play_type === "offence_initiation"),
+      offenceMainStrats: all.filter((s) => s.play_type === "offence_main"),
+      defenceInitiationStrats: all.filter((s) => s.play_type === "defence_initiation"),
+      defenceMainStrats: all.filter((s) => s.play_type === "defence_main"),
+    }
+  }, [strats])
 
   if (!player || isLoading) {
     return (
-      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading strategies...</Text>
-      </Box>
-    );
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading...</p>
+      </div>
+    )
   }
 
-  // Offence
-  const OffenceContent = () => {
-    if (isLoading) {
-      return <LoadingSpinner text="Loading strats..." />;
-    }
-    return (
-      <>
-        <VStack gap={2}>
-          <Text mb={4} mt={4} textStyle="2xl">Initiation Plays</Text>
-          <StratGrid strats={offenceInitiationStrats ?? []} />
-          <Text mb={4} mt={4} textStyle="2xl">Main Plays</Text>
-          <StratGrid strats={offenceMainStrats ?? []} />
-        </VStack>
-      </>
-    );
-  };
-
-  // Defence
-  const DefenceContent = () => {
-    if (isLoading) {
-      return <LoadingSpinner text="Loading strats..." />;
-    }
-    return (
-      <>
-        <VStack gap={2}>
-          <Text mb={4} mt={4} textStyle="2xl">Initiation Plays</Text>
-          <StratGrid strats={defenceInitiationStrats ?? []} />
-          <Text mb={4} mt={4} textStyle="2xl">Main Plays</Text>
-          <StratGrid strats={defenceMainStrats ?? []} />
-        </VStack>
-      </>
-    );
-  };
-
-
-  const tabs = [
-    {
-      value: "defence",
-      label: "Defence",
-      content: <DefenceContent />,
-    },
-    {
-      value: "offence",
-      label: "Offence",
-      content: <OffenceContent />,
-    },
-  ];
-
-
-  return (
-    <Container maxW="4xl">
-      <StandardHeader text="Strategies" />
-      <CustomTabs defaultValue="defence" tabs={tabs} />
-      <FloatingActionButton onClick={onOpen} iconType="add" />
-      <AddStratModal
-        isOpen={open}
-        onClose={onClose}
-        mode="add"
-      />
-    </Container>
+  const offenceContent = (
+    <div className="flex flex-col gap-2">
+      <p className="text-xl my-4">Initiation Plays</p>
+      <StratGrid strats={offenceInitiationStrats} />
+      <p className="text-xl my-4">Main Plays</p>
+      <StratGrid strats={offenceMainStrats} />
+    </div>
   )
 
-}
+  const defenceContent = (
+    <div className="flex flex-col gap-2">
+      <p className="text-xl my-4">Initiation Plays</p>
+      {isLoading ? <LoadingSpinner text="Loading strats..." /> : <StratGrid strats={defenceInitiationStrats} />}
+      <p className="text-xl my-4">Main Plays</p>
+      {isLoading ? <LoadingSpinner text="Loading strats..." /> : <StratGrid strats={defenceMainStrats} />}
+    </div>
+  )
 
+  const tabs = [
+    { value: "defence", label: "Defence", content: defenceContent },
+    { value: "offence", label: "Offence", content: offenceContent },
+  ]
+
+  return (
+    <div>
+      <StandardHeader text="Strategies" />
+      <CustomTabs defaultValue="defence" tabs={tabs} />
+      <FloatingActionButton onClick={() => setOpen(true)} iconType="add" />
+      <AddStratModal isOpen={open} onClose={() => setOpen(false)} mode="add" />
+    </div>
+  )
+}
 
 export default function StrategyPage() {
   return (
     <AuthWrapper>
       <StrategyPageContent />
     </AuthWrapper>
-  );
+  )
 }
-

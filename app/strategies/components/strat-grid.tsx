@@ -1,43 +1,32 @@
 "use client";
 
-import React from "react";
-import {
-  Box,
-  Button,
-  Card,
-  HStack,
-  SimpleGrid,
-  Text,
-  useDisclosure,
-} from "@chakra-ui/react";
+import React, { useState } from "react";
 import { Strategy } from "@/app/strategies/supabase.ts";
 import { AddStratModal } from "@/app/strategies/components/strategy-modal.tsx";
 
-
 function StratCard({ strat }: { strat: Strategy }) {
-  const { open, onOpen, onClose } = useDisclosure();
+  const [open, setOpen] = useState(false);
 
   return (
     <>
-      <Card.Root variant="elevated">
-        <Card.Header>
-          <Card.Title>{strat.strategy}</Card.Title>
-        </Card.Header>
-        <Card.Body>
-          <Card.Description>{strat.description}</Card.Description>
-        </Card.Body>
-        <Card.Footer gap="2">
-          <HStack>
-            <Button variant="ghost" colorPalette="gray" onClick={onOpen}>
-              Edit
-            </Button>
-          </HStack>
-        </Card.Footer>
-      </Card.Root>
+      <div className="bg-neutral-900 rounded-lg border border-neutral-700 overflow-hidden">
+        <div className="p-4 border-b border-neutral-700">
+          <h3 className="font-medium">{strat.strategy}</h3>
+        </div>
+        <div className="p-4">
+          <p className="text-neutral-400 text-sm mb-3">{strat.description}</p>
+          <button
+            onClick={() => setOpen(true)}
+            className="px-3 py-1.5 rounded hover:bg-neutral-800 text-sm transition-colors text-neutral-400"
+          >
+            Edit
+          </button>
+        </div>
+      </div>
 
       <AddStratModal
         isOpen={open}
-        onClose={onClose}
+        onClose={() => setOpen(false)}
         mode="edit"
         stratToEdit={strat}
       />
@@ -45,7 +34,6 @@ function StratCard({ strat }: { strat: Strategy }) {
   );
 }
 
-// 2. The main StratGrid component becomes much simpler.
 interface StratGridProps {
   strats: Strategy[];
 }
@@ -53,19 +41,17 @@ interface StratGridProps {
 export function StratGrid({ strats }: StratGridProps) {
   if (!strats || strats.length === 0) {
     return (
-      <Box p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">
-          No strats found.
-        </Text>
-      </Box>
+      <div className="flex items-center justify-center p-4">
+        <p className="text-neutral-400">No strats found.</p>
+      </div>
     );
   }
 
   return (
-    <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8} width="100%">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 w-full">
       {strats.map((item) => (
         <StratCard key={item.strategy_id} strat={item} />
       ))}
-    </SimpleGrid>
+    </div>
   );
 }

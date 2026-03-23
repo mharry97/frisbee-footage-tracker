@@ -2,19 +2,7 @@
 
 import {useAuth} from "@/lib/auth-context.tsx";
 import {AuthWrapper} from "@/components/auth-wrapper.tsx";
-import React, {useMemo} from "react";
-import {
-  Box,
-  Container,
-  createListCollection,
-  Field,
-  HStack,
-  Separator,
-  Stack,
-  Text,
-  Image,
-  Center, Button, useDisclosure
-} from "@chakra-ui/react";
+import React, {useMemo, useState} from "react";
 import StandardHeader from "@/components/standard-header.tsx";
 import {useParams } from "next/navigation";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
@@ -32,13 +20,21 @@ import {AddClipModal} from "@/app/clips/components/add-clip-modal.tsx";
 import {PlayerModal} from "@/app/players/components/player-modal.tsx";
 import AddPlayerButton from "@/components/ui/add-player-button.tsx"
 
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-4 mb-4 mt-4">
+      <hr className="flex-1 border-neutral-700" />
+      <span className="text-xl shrink-0">{label}</span>
+      <hr className="flex-1 border-neutral-700" />
+    </div>
+  );
+}
+
 function PossessionPageContent() {
   const { player } = useAuth();
   const { id, point_id } = useParams<{ id: string, point_id: string }>();
-  // Clip modal disclosure
-  const { open, onOpen, onClose } = useDisclosure();
-  // Player modal disclosure
-  const { open:playerOpen, onOpen:playerOnOpen, onClose:playerOnClose } = useDisclosure();
+  const [clipOpen, setClipOpen] = useState(false);
+  const [playerOpen, setPlayerOpen] = useState(false);
 
   const {
     handleSubmit,
@@ -64,10 +60,8 @@ function PossessionPageContent() {
     onSuccess: () => {
       const { offence_team_players, defence_team_players } = getValues();
       reset({
-        // Keep selected players
         offence_team_players: offence_team_players,
         defence_team_players: defence_team_players,
-        // Reset everything else
         possession_outcome: [],
         throws: 0,
         offence_init: [],
@@ -99,106 +93,70 @@ function PossessionPageContent() {
   const availableOnDefenceCollection = useMemo(() => {
     const allDefencePlayers = dropdownLists?.defencePlayers ?? [];
     const selectedIds = new Set(selectedDefencePlayerIds ?? []);
-
-    if (selectedIds.size === 0) {
-      return createListCollection<PlayerDetailed>({ items: [] });
-    }
-
-    const availablePlayers = allDefencePlayers.filter((player) =>
-      selectedIds.has(player.player_id)
-    );
-
-    return createListCollection({
-      items: availablePlayers,
-      itemToString: (player) => player.player_name,
-      itemToValue: (player) => player.player_id,
-    });
+    if (selectedIds.size === 0) return { items: [] as PlayerDetailed[] };
+    return { items: allDefencePlayers.filter((p) => selectedIds.has(p.player_id)) };
   }, [selectedDefencePlayerIds, dropdownLists?.defencePlayers]);
 
   const availableOnOffenceCollection = useMemo(() => {
     const allOffencePlayers = dropdownLists?.offencePlayers ?? [];
     const selectedIds = new Set(selectedOffencePlayerIds ?? []);
-
-    if (selectedIds.size === 0) {
-      return createListCollection<PlayerDetailed>({ items: [] });
-    }
-
-    const availablePlayers = allOffencePlayers.filter((player) =>
-      selectedIds.has(player.player_id)
-    );
-
-    return createListCollection({
-      items: availablePlayers,
-      itemToString: (player) => player.player_name,
-      itemToValue: (player) => player.player_id,
-    });
+    if (selectedIds.size === 0) return { items: [] as PlayerDetailed[] };
+    return { items: allOffencePlayers.filter((p) => selectedIds.has(p.player_id)) };
   }, [selectedOffencePlayerIds, dropdownLists?.offencePlayers]);
-
 
   const { activeOffenceCollection, activeDefenceCollection } = useMemo(() => {
     const isPointDefenceTeamOnOffence = possessionNumber % 2 === 0;
-
     if (isPointDefenceTeamOnOffence) {
       return {
         activeOffenceCollection: availableOnDefenceCollection,
         activeDefenceCollection: availableOnOffenceCollection,
       };
-    } else {
-      // The O-line is still on Offence
-      return {
-        activeOffenceCollection: availableOnOffenceCollection,
-        activeDefenceCollection: availableOnDefenceCollection,
-      };
     }
+    return {
+      activeOffenceCollection: availableOnOffenceCollection,
+      activeDefenceCollection: availableOnDefenceCollection,
+    };
   }, [possessionNumber, availableOnOffenceCollection, availableOnDefenceCollection]);
 
   const currentOffenceTeam = useMemo(() => {
     if (!point) return null;
-
     const nextPossessionNumber = (possessions?.length ?? 0) + 1;
-
     if (nextPossessionNumber % 2 === 0) {
-      return {
-        id: point.defence_team,
-        name: point.defence_team_name,
-      };
+      return { id: point.defence_team, name: point.defence_team_name };
     }
-    return {
-      id: point.offence_team,
-      name: point.offence_team_name,
-    };
+    return { id: point.offence_team, name: point.offence_team_name };
   }, [possessions, point]);
-
 
   const watchedOutcome = watch("possession_outcome");
 
   if (!player || isLoading) {
     return (
-      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading point data...</Text>
-      </Box>
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading point data...</p>
+      </div>
     );
   }
 
-    if (!point || !possessions) {
-      return (
-        <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-          <Text color="white" fontSize="lg">No point data found</Text>
-        </Box>
-      )
-    }
+  if (!point || !possessions) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">No point data found</p>
+      </div>
+    );
+  }
+
+  const playerRenderItem = (item: PlayerDetailed) =>
+    `${item.player_name}${item.number ? ` (#${item.number})` : ""}`;
 
   return (
-    <Container maxW="4xl">
+    <div className="py-8">
       <StandardHeader text={point.event_name} />
-      <Text mt={4} fontSize="lg" color="gray.400" mb={4}>{`${point.offence_team_name} on O starting ${point.timestamp}`}</Text>
+      <p className="mt-4 text-lg text-neutral-400 mb-4">{`${point.offence_team_name} on O starting ${point.timestamp}`}</p>
       <OnPageVideoLink url={baseUrlToTimestampUrl(point.base_url, point.timestamp)}/>
-      <HStack mb={4} mt={4}>
-        <Separator flex="1" size="sm"></Separator>
-        <Text flexShrink="0" fontSize="xl">Players</Text>
-        <Separator flex="1" size="sm"></Separator>
-      </HStack>
+
       <form onSubmit={handleSubmit(submitPossession)}>
+        <SectionDivider label="Players" />
+
         <AsyncDropdown
           name="offence_team_players"
           control={control}
@@ -208,12 +166,7 @@ function PossessionPageContent() {
           isLoading={isLoading}
           multiple={true}
           itemToKey={(item) => item.player_id}
-          renderItem={(item) => (
-            <Stack gap={0}>
-              <Text>{item.player_name}</Text>
-              <Text textStyle="xs" color="fg.muted">{item.number ? "#"+item.number+" - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
-            </Stack>
-          )}
+          renderItem={playerRenderItem}
         />
         <AsyncDropdown
           name="defence_team_players"
@@ -224,26 +177,20 @@ function PossessionPageContent() {
           isLoading={isLoading}
           multiple={true}
           itemToKey={(item) => item.player_id}
-          renderItem={(item) => (
-            <Stack gap={0}>
-              <Text>{item.player_name}</Text>
-              <Text textStyle="xs" color="fg.muted">{item.number ? "#"+item.number+" - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
-            </Stack>
-          )}
+          renderItem={playerRenderItem}
         />
-        <AddPlayerButton onClick={playerOnOpen} />
+        <AddPlayerButton onClick={() => setPlayerOpen(true)} />
         <PlayerModal
           isOpen={playerOpen}
-          onClose={playerOnClose}
+          onClose={() => setPlayerOpen(false)}
           mode="add"
         />
-        <HStack mb={4} mt={4}>
-          <Separator flex="1" size="sm"></Separator>
-          <Text flexShrink="0" fontSize="2xl">{`Possession #${(possessions.length ?? 0) +1}`}</Text>
-          <Separator flex="1" size="sm"></Separator>
-        </HStack>
-        <Text textStyle="xl" mb={4} color="gray.400">{`Offence: ${currentOffenceTeam?.name}`}</Text>
-        <HStack>
+
+        <SectionDivider label={`Possession #${(possessions.length ?? 0) + 1}`} />
+
+        <p className="text-lg mb-4 text-neutral-400">{`Offence: ${currentOffenceTeam?.name}`}</p>
+
+        <div className="grid grid-cols-2 gap-4">
           <AsyncDropdown
             name="defence_init"
             control={control}
@@ -252,14 +199,7 @@ function PossessionPageContent() {
             collection={collections.stratCollections.dInitCollection}
             isLoading={isLoading}
             itemToKey={(item) => item.strategy_id}
-            renderItem={(item) => (
-              <Stack gap={0}>
-                <Text>{item.strategy}</Text>
-                <Text color="fg.muted" fontSize="xs">
-                  {item.strategy_type}
-                </Text>
-              </Stack>
-            )}
+            renderItem={(item) => item.strategy}
           />
           <AsyncDropdown
             name="defence_main"
@@ -269,17 +209,11 @@ function PossessionPageContent() {
             collection={collections.stratCollections.dMainCollection}
             isLoading={isLoading}
             itemToKey={(item) => item.strategy_id}
-            renderItem={(item) => (
-              <Stack gap={0}>
-                <Text>{item.strategy}</Text>
-                <Text color="fg.muted" fontSize="xs">
-                  {item.strategy_type}
-                </Text>
-              </Stack>
-            )}
+            renderItem={(item) => item.strategy}
           />
-        </HStack>
-        <HStack>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
           <AsyncDropdown
             name="offence_init"
             control={control}
@@ -288,14 +222,7 @@ function PossessionPageContent() {
             collection={collections.stratCollections.oInitCollection}
             isLoading={isLoading}
             itemToKey={(item) => item.strategy_id}
-            renderItem={(item) => (
-              <Stack gap={0}>
-                <Text>{item.strategy}</Text>
-                <Text color="fg.muted" fontSize="xs">
-                  {item.strategy_type}
-                </Text>
-              </Stack>
-            )}
+            renderItem={(item) => item.strategy}
           />
           <AsyncDropdown
             name="offence_main"
@@ -305,30 +232,22 @@ function PossessionPageContent() {
             collection={collections.stratCollections.oMainCollection}
             isLoading={isLoading}
             itemToKey={(item) => item.strategy_id}
-            renderItem={(item) => (
-              <Stack gap={0}>
-                <Text>{item.strategy}</Text>
-                <Text color="fg.muted" fontSize="xs">
-                  {item.strategy_type}
-                </Text>
-              </Stack>
-            )}
+            renderItem={(item) => item.strategy}
           />
-        </HStack>
+        </div>
+
         <Controller
           name="throws"
           control={control}
           defaultValue={0}
           render={({ field }) => (
-            <ThrowCounter
-              value={field.value}
-              onChange={field.onChange}
-            />
+            <ThrowCounter value={field.value} onChange={field.onChange} />
           )}
         />
         {errors.throws && (
-          <Field.ErrorText>{errors.throws.message}</Field.ErrorText>
+          <p className="text-red-400 text-xs mt-1">{errors.throws.message}</p>
         )}
+
         <AsyncDropdown
           name="possession_outcome"
           control={control}
@@ -339,20 +258,14 @@ function PossessionPageContent() {
           itemToKey={(item) => item}
           renderItem={(item) => item}
         />
-        <Box width="100%" height="10px">
 
-        </Box>
         {watchedOutcome?.[0] === "Turnover" && (
           <>
-            <HStack mb={4} mt={4}>
-              <Separator flex="1" size="sm"></Separator>
-              <Text flexShrink="0" fontSize="xl">Turnover Info</Text>
-              <Separator flex="1" size="sm"></Separator>
-            </HStack>
-            <Center>
-              <Image src="/pitch-zoned.png" mb={4} alt="Pitch Zoned" />
-            </Center>
-            <HStack>
+            <SectionDivider label="Turnover Info" />
+            <div className="flex justify-center mb-4">
+              <img src="/pitch-zoned.png" alt="Pitch Zoned" className="max-w-full" />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <AsyncDropdown
                 name="turn_throw_zone"
                 control={control}
@@ -373,8 +286,8 @@ function PossessionPageContent() {
                 itemToKey={(zoneNumber) => zoneNumber}
                 renderItem={(zoneNumber) => `Zone ${zoneNumber}`}
               />
-            </HStack>
-            <HStack>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <AsyncDropdown
                 name="turn_thrower"
                 control={control}
@@ -383,12 +296,7 @@ function PossessionPageContent() {
                 collection={activeOffenceCollection}
                 isLoading={isLoading}
                 itemToKey={(item) => item.player_id}
-                renderItem={(item) => (
-                  <Stack gap={0}>
-                    <Text>{item.player_name}</Text>
-                    <Text textStyle="xs" color="fg.muted">{item.number ? "#"+item.number+" - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
-                  </Stack>
-                )}
+                renderItem={playerRenderItem}
               />
               <AsyncDropdown
                 name="turn_intended_receiver"
@@ -398,16 +306,10 @@ function PossessionPageContent() {
                 collection={activeOffenceCollection}
                 isLoading={isLoading}
                 itemToKey={(item) => item.player_id}
-                renderItem={(item) => (
-                  <Stack gap={0}>
-                    <Text>{item.player_name}</Text>
-                    <Text textStyle="xs"
-                          color="fg.muted">{item.number ? "#" + item.number + " - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
-                  </Stack>
-                )}
+                renderItem={playerRenderItem}
               />
-            </HStack>
-            <HStack>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <AsyncDropdown
                 name="turnover_reason"
                 control={control}
@@ -426,27 +328,22 @@ function PossessionPageContent() {
                 collection={activeDefenceCollection}
                 isLoading={isLoading}
                 itemToKey={(item) => item.player_id}
-                renderItem={(item) => (
-                  <Stack gap={0}>
-                    <Text>{item.player_name}</Text>
-                    <Text textStyle="xs"
-                          color="fg.muted">{item.number ? "#" + item.number + " - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
-                  </Stack>
-                )}
+                renderItem={playerRenderItem}
               />
-            </HStack>
-            <Button type="submit" disabled={!isValid || isSubmitting} mt={8} mb={8}>
+            </div>
+            <button
+              type="submit"
+              disabled={!isValid || isSubmitting}
+              className="mt-8 mb-8 px-6 py-2 rounded bg-yellow-600 hover:bg-yellow-500 text-white font-medium transition-colors disabled:opacity-50"
+            >
               Add Possession
-            </Button>
+            </button>
           </>
         )}
+
         {watchedOutcome?.[0] === "Score" && (
           <>
-            <HStack mb={4} mt={4}>
-              <Separator flex="1" size="sm"></Separator>
-              <Text flexShrink="0" fontSize="xl">Score Info</Text>
-              <Separator flex="1" size="sm"></Separator>
-            </HStack>
+            <SectionDivider label="Score Info" />
             <AsyncDropdown
               name="assist_player"
               control={control}
@@ -455,12 +352,7 @@ function PossessionPageContent() {
               collection={activeOffenceCollection}
               isLoading={isLoading}
               itemToKey={(item) => item.player_id}
-              renderItem={(item) => (
-                <Stack gap={0}>
-                  <Text>{item.player_name}</Text>
-                  <Text textStyle="xs" color="fg.muted">{item.number ? "#"+item.number+" - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
-                </Stack>
-              )}
+              renderItem={playerRenderItem}
             />
             <AsyncDropdown
               name="score_player"
@@ -470,12 +362,7 @@ function PossessionPageContent() {
               collection={activeOffenceCollection}
               isLoading={isLoading}
               itemToKey={(item) => item.player_id}
-              renderItem={(item) => (
-                <Stack gap={0}>
-                  <Text>{item.player_name}</Text>
-                  <Text textStyle="xs" color="fg.muted">{item.number ? "#"+item.number+" - " : ""}{item.is_active ? "Active" : "Inactive"}</Text>
-                </Stack>
-              )}
+              renderItem={playerRenderItem}
             />
             <AsyncDropdown
               name="score_method"
@@ -487,26 +374,30 @@ function PossessionPageContent() {
               itemToKey={(item) => item}
               renderItem={(item) => item}
             />
-            <HStack mb={8} mt={8}>
-              <Button type="submit" disabled={!isValid || isSubmitting}>
+            <div className="mt-8 mb-8">
+              <button
+                type="submit"
+                disabled={!isValid || isSubmitting}
+                className="px-6 py-2 rounded bg-green-700 hover:bg-green-600 text-white font-medium transition-colors disabled:opacity-50"
+              >
                 Add Point
-              </Button>
-            </HStack>
+              </button>
+            </div>
           </>
         )}
       </form>
-      <FloatingActionButton onClick={onOpen} iconType="clip" />
+
+      <FloatingActionButton onClick={() => setClipOpen(true)} iconType="clip" />
       <AddClipModal
-        isOpen={open}
-        onClose={onClose}
+        isOpen={clipOpen}
+        onClose={() => setClipOpen(false)}
         eventId={id}
-        sourceId = {point.source_id}
+        sourceId={point.source_id}
         playerId={player.player_id}
         mode="add"
       />
-    </Container>
-  )
-
+    </div>
+  );
 }
 
 export default function PossessionPage() {
@@ -516,4 +407,3 @@ export default function PossessionPage() {
     </AuthWrapper>
   )
 }
-

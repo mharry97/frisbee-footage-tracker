@@ -1,5 +1,4 @@
 import React from "react";
-import { Box, Container, HStack, VStack, Text } from "@chakra-ui/react";
 
 type PointOverviewProps = {
   last_possession_type: string;
@@ -9,38 +8,35 @@ type PointOverviewProps = {
 };
 
 export default function PointOverview({
-                                        last_possession_type,
-                                        possessions,
-                                        scorer,
-                                        outcome,
-                                      }: PointOverviewProps) {
+  last_possession_type,
+  possessions,
+  scorer,
+  outcome,
+}: PointOverviewProps) {
   const turns = possessions - 1;
 
   return (
-    <Container maxW="4xl" py={8} px={0}>
-      <Box w="full">
-        {last_possession_type === "Turnover" ? (
-          <Text color="gray.400">
-            No scoring possession has been added yet. Currently {possessions} possessions have been recorded.
-          </Text>
-        ) : (
-          <HStack gap={6} w="80%" mx="auto" justify="space-between">
-            <VStack>
-              <Text fontWeight="bold">Outcome</Text>
-              <Text color="yellow.400" fontWeight="bold">{outcome}</Text>
-            </VStack>
-            <VStack>
-              <Text fontWeight="bold">Turns</Text>
-              <Text color="yellow.400" fontWeight="bold">{turns}</Text>
-            </VStack>
-            <VStack>
-              <Text fontWeight="bold">Scorer</Text>
-              <Text color="yellow.400" fontWeight="bold">{scorer}</Text>
-            </VStack>
-          </HStack>
-        )}
-      </Box>
-    </Container>
-
+    <div className="py-8 px-0">
+      {last_possession_type === "Turnover" ? (
+        <p className="text-neutral-400">
+          No scoring possession has been added yet. Currently {possessions} possessions have been recorded.
+        </p>
+      ) : (
+        <div className="flex justify-between w-4/5 mx-auto gap-6">
+          <div className="flex flex-col items-center gap-1">
+            <span className="font-bold">Outcome</span>
+            <span className="text-yellow-400 font-bold">{outcome}</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <span className="font-bold">Turns</span>
+            <span className="text-yellow-400 font-bold">{turns}</span>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <span className="font-bold">Scorer</span>
+            <span className="text-yellow-400 font-bold">{scorer}</span>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

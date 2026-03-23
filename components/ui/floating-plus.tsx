@@ -1,44 +1,29 @@
-"use client";
+"use client"
 
-import React from "react";
-import { IconButton, IconButtonProps } from "@chakra-ui/react";
-import { IoMdAdd } from "react-icons/io";
-import { FiEdit } from "react-icons/fi";
-import { FaScissors } from "react-icons/fa6";
+import { IoMdAdd } from "react-icons/io"
+import { FiEdit } from "react-icons/fi"
+import { FaScissors } from "react-icons/fa6"
 
-interface ActionButtonProps extends Omit<IconButtonProps, "icon" | "children"> {
-  iconType: "add" | "edit" | "clip";
+interface FloatingActionButtonProps {
+  iconType: "add" | "edit" | "clip"
+  onClick?: () => void
 }
 
-const FloatingActionButton = React.forwardRef<
-  HTMLButtonElement,
-  ActionButtonProps
->(({ iconType, ...props }, ref) => {
-  const iconMap = {
-    add: <IoMdAdd />,
-    edit: <FiEdit />,
-    clip: <FaScissors />,
-  };
+const iconMap = {
+  add: IoMdAdd,
+  edit: FiEdit,
+  clip: FaScissors,
+}
 
+export default function FloatingActionButton({ iconType, onClick }: FloatingActionButtonProps) {
+  const Icon = iconMap[iconType]
   return (
-    <IconButton
-      ref={ref}
-      position="fixed"
-      bottom={4}
-      right={4}
-      zIndex={9999}
-      colorPalette = 'gray'
-      rounded="full"
-      size="lg"
-      boxShadow="lg"
-      aria-label="Floating Button"
-      {...props}
+    <button
+      onClick={onClick}
+      className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-neutral-700 hover:bg-neutral-600 text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
+      aria-label="Floating action button"
     >
-      {iconMap[iconType]}
-    </IconButton>
-  );
-});
-
-FloatingActionButton.displayName = "FloatingActionButton";
-
-export default FloatingActionButton;
+      <Icon className="w-6 h-6" />
+    </button>
+  )
+}

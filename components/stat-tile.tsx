@@ -1,26 +1,15 @@
-import {Box, Center, VStack, Text} from "@chakra-ui/react";
-
 interface StatTileProps {
-  title: string;
-  value: number;
+  title: string
+  value: number
 }
 
 export default function StatTile({ title, value }: StatTileProps) {
   return (
-    <Center>
-      <Box
-        width={110}
-        height={110}
-      >
-        <VStack>
-          <Text mt={2} color="gray.400">
-            {title}
-          </Text>
-          <Text color="yellow.400" fontSize="3xl">
-            {value}
-          </Text>
-        </VStack>
-      </Box>
-    </Center>
+    <div className="flex justify-center">
+      <div className="w-[110px] h-[110px] flex flex-col items-center pt-2">
+        <p className="text-neutral-400 text-sm text-center">{title}</p>
+        <p className="text-yellow-400 text-3xl mt-2">{value}</p>
+      </div>
+    </div>
   )
 }

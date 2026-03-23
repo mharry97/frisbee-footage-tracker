@@ -1,67 +1,58 @@
-"use client";
+"use client"
 
-import {Box, Button, Card, Container, SimpleGrid, Text} from "@chakra-ui/react";
-import { fetchSources } from "@/app/sources/supabase";
-import {AuthWrapper} from "@/components/auth-wrapper";
-import NextLink from "next/link";
-import SourceForm from "@/app/sources/components/source-form.tsx";
-import {useAuth} from "@/lib/auth-context.tsx";
-import StandardHeader from "@/components/standard-header.tsx";
-import {useQuery} from "@tanstack/react-query";
+import { fetchSources } from "@/app/sources/supabase"
+import { AuthWrapper } from "@/components/auth-wrapper"
+import NextLink from "next/link"
+import SourceForm from "@/app/sources/components/source-form"
+import { useAuth } from "@/lib/auth-context"
+import StandardHeader from "@/components/standard-header"
+import { useQuery } from "@tanstack/react-query"
 
 function SourcesPageContent() {
   const { player } = useAuth()
 
   const { data: sources, isLoading } = useQuery({
     queryFn: () => fetchSources(),
-    queryKey: ["sources"]
+    queryKey: ["sources"],
   })
 
   if (!player || isLoading) {
     return (
-      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading player data...</Text>
-      </Box>
-    )
-  }
-  if (!sources) {
-    return (
-      <Container maxW="4xl">
-        <StandardHeader text="Teams" />
-        <Text color="white" fontSize="lg">No sources yet!</Text>
-      </Container>
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading...</p>
+      </div>
     )
   }
 
   return (
-    <Container maxW="4xl">
+    <div>
       <StandardHeader text="Sources" />
-      <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
-        {sources.map((item) => (
-          <Card.Root key={item.source_id} variant="elevated">
-            <Card.Header>
-              <Card.Title>{item.title}</Card.Title>
-              <Card.Description>{item.recorded_date}</Card.Description>
-            </Card.Header>
-            <Card.Body>
-              <Card.Description>
-                {item.url}
-              </Card.Description>
-            </Card.Body>
-            <Card.Footer gap="2">
-              <NextLink href={item.url} passHref>
-                <Button variant="solid">
+      {!sources || sources.length === 0 ? (
+        <p>No sources yet!</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {sources.map((item) => (
+            <div key={item.source_id} className="bg-neutral-900 rounded-lg border border-neutral-700 overflow-hidden">
+              <div className="p-4 border-b border-neutral-700">
+                <h3 className="font-medium">{item.title}</h3>
+                <p className="text-neutral-400 text-sm">{item.recorded_date}</p>
+              </div>
+              <div className="p-4">
+                <p className="text-neutral-400 text-sm truncate">{item.url}</p>
+              </div>
+              <div className="p-4 pt-0 flex gap-2">
+                <NextLink href={item.url} target="_blank" className="px-3 py-1.5 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors">
                   View
-                </Button>
-              </NextLink>
-              <SourceForm mode="edit" currentSourceData={item} />
-            </Card.Footer>
-          </Card.Root>
-        ))}
-      </SimpleGrid>
+                </NextLink>
+                <SourceForm mode="edit" currentSourceData={item} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
       <SourceForm mode="add" />
-    </Container>
-  );
+    </div>
+  )
 }
 
 export default function SourcesPage() {

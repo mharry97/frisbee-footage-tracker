@@ -1,13 +1,11 @@
 import React, { useMemo } from "react";
-import {Button, SimpleGrid, HStack, createListCollection} from "@chakra-ui/react";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { AsyncDropdown } from "@/components/async-dropdown";
-import {fetchTeams, TeamDetailed} from "@/app/teams/supabase";
-import {fetchPlayers, PlayerDetailed} from "@/app/players/supabase";
-import {fetchStrategies, Strategy} from "@/app/strategies/supabase";
+import { fetchTeams, TeamDetailed } from "@/app/teams/supabase";
+import { fetchPlayers, PlayerDetailed } from "@/app/players/supabase";
+import { fetchStrategies, Strategy } from "@/app/strategies/supabase";
 
-// This interface defines the shape of our filter form
 interface PossessionFilters {
   offenceTeamId?: string[];
   defenceTeamId?: string[];
@@ -19,15 +17,12 @@ interface PossessionFilters {
   offenceMain?: string[];
 }
 
-// The component receives functions from its parent to call when filters are applied or cleared
 interface PossessionFiltersProps {
   onApplyFilters: (filters: Partial<PossessionFilters>) => void;
   onClearFilters: () => void;
 }
 
 export function PossessionFilters({ onApplyFilters, onClearFilters }: PossessionFiltersProps) {
-  // Set up a local form instance to manage all the filter inputs
-  // console.log("EventPageContent is rendering at:", new Date().toLocaleTimeString());
   const { control, handleSubmit, reset } = useForm<PossessionFilters>({
     defaultValues: {
       offenceTeamId: [],
@@ -37,11 +32,10 @@ export function PossessionFilters({ onApplyFilters, onClearFilters }: Possession
       defenceInit: [],
       defenceMain: [],
       offenceInit: [],
-      offenceMain: []
+      offenceMain: [],
     },
   });
 
-  // Fetch data needed for the dropdowns
   const { data: teamsData, isLoading: isLoadingTeams } = useQuery({
     queryKey: ['teams'],
     queryFn: fetchTeams,
@@ -57,68 +51,33 @@ export function PossessionFilters({ onApplyFilters, onClearFilters }: Possession
     queryFn: fetchStrategies,
   });
 
-  // Create the collections for the dropdowns
-  const teamCollection = useMemo(() => {
-    return createListCollection<TeamDetailed>({
-      items: teamsData ?? [],
-      itemToString: (team) => team.team_name,
-      itemToValue: (team) => team.team_id,
-    });
-  }, [teamsData]);
-
-  const playerCollection = useMemo(() => {
-    return createListCollection<PlayerDetailed>({
-      items: playersData ?? [],
-      itemToString: (player) => player.player_name,
-      itemToValue: (player) => player.player_id,
-    });
-  }, [playersData]);
+  const teamCollection = useMemo(() => ({ items: teamsData ?? [] }), [teamsData]);
+  const playerCollection = useMemo(() => ({ items: playersData ?? [] }), [playersData]);
 
   const { dInitCollection, dMainCollection, oInitCollection, oMainCollection } = useMemo(() => {
-    const allStrategies = strategyData ?? [];
-
-    // Filter the strategies by their type
-    const dInit = allStrategies.filter(s => s.play_type === 'defence_initiation');
-    const dMain = allStrategies.filter(s => s.play_type === 'defence_main');
-    const oInit = allStrategies.filter(s => s.play_type === 'offence_initiation');
-    const oMain = allStrategies.filter(s => s.play_type === 'offence_main');
-
-    const createStrategyCollection = (strats: Strategy[]) => createListCollection({
-      items: strats,
-      itemToString: (strat) => strat.strategy,
-      itemToValue: (strat) => strat.strategy_id,
-    });
-
+    const all = strategyData ?? [];
     return {
-      dInitCollection: createStrategyCollection(dInit),
-      dMainCollection: createStrategyCollection(dMain),
-      oInitCollection: createStrategyCollection(oInit),
-      oMainCollection: createStrategyCollection(oMain),
+      dInitCollection: { items: all.filter(s => s.play_type === 'defence_initiation') },
+      dMainCollection: { items: all.filter(s => s.play_type === 'defence_main') },
+      oInitCollection: { items: all.filter(s => s.play_type === 'offence_initiation') },
+      oMainCollection: { items: all.filter(s => s.play_type === 'offence_main') },
     };
   }, [strategyData]);
 
-  const outcomeCollection = useMemo(() => {
-    return createListCollection({
-      items: ["Score", "Turnover"],
-      itemToString: (item) => item,
-      itemToValue: (item) => item,
-    });
-  }, []);
+  const outcomeCollection = useMemo(() => ({ items: ["Score", "Turnover"] }), []);
 
-  // Define the submission and clear handlers
   const handleApply = (formData: PossessionFilters) => {
-    // Pass the raw form data object up to the parent page
     onApplyFilters(formData);
   };
 
   const handleClear = () => {
     reset();
-    onClearFilters(); // Tell the parent to clear its filters too
+    onClearFilters();
   };
 
   return (
     <form onSubmit={handleSubmit(handleApply)}>
-      <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} gap={4} mb={4}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
         <AsyncDropdown
           name="offenceTeamId"
           control={control}
@@ -198,12 +157,22 @@ export function PossessionFilters({ onApplyFilters, onClearFilters }: Possession
           itemToKey={(item) => item}
           renderItem={(item) => item}
         />
-
-      </SimpleGrid>
-      <HStack>
-        <Button type="submit" colorScheme="blue">Apply Filters</Button>
-        <Button variant="ghost" onClick={handleClear}>Clear</Button>
-      </HStack>
+      </div>
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors"
+        >
+          Apply Filters
+        </button>
+        <button
+          type="button"
+          onClick={handleClear}
+          className="px-4 py-2 rounded hover:bg-neutral-800 text-sm transition-colors text-neutral-400"
+        >
+          Clear
+        </button>
+      </div>
     </form>
   );
 }

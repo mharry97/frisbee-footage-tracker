@@ -1,4 +1,3 @@
-import {Flex, Heading, Table, Text} from "@chakra-ui/react";
 import {
   Cell,
   LabelList,
@@ -21,22 +20,11 @@ export type PieDataItem = {
 };
 
 export const myPieChart = (title: string, data: PieDataItem[]) => {
-  if (!data.length) return <Text>No data available</Text>;
-  const colorPalette = [
-    "#facc15",
-    "#a1a1aa"
-  ]
+  if (!data.length) return <p>No data available</p>;
+  const colorPalette = ["#facc15", "#a1a1aa"];
   return (
-    <Flex
-      width="100%"
-      maxW="360px"
-      flexDirection="column"
-      alignItems="center"
-      mx="auto"
-    >
-      <Heading size="md" textAlign="center" mb={-2} width="100%">
-        {title}
-      </Heading>
+    <div className="w-full max-w-sm flex flex-col items-center mx-auto">
+      <h2 className="text-center font-semibold mb-0 w-full">{title}</h2>
       <PieChart width={300} height={300}>
         <Legend verticalAlign="bottom" height={36} />
         <Pie
@@ -54,7 +42,7 @@ export const myPieChart = (title: string, data: PieDataItem[]) => {
           ))}
         </Pie>
       </PieChart>
-    </Flex>
+    </div>
   );
 };
 
@@ -64,25 +52,11 @@ export type StackedBarItem = {
   [key: string]: string | number;
 };
 export const myStackedBarChart = (title: string, data: StackedBarItem[], keys: string[]) => {
-  if (!data.length) return <Text>No data available</Text>;
-  const colorPalette = [
-    "#facc15",
-    "#a1a1aa",
-    "#ffffff",
-  ]
+  if (!data.length) return <p>No data available</p>;
+  const colorPalette = ["#facc15", "#a1a1aa", "#ffffff"];
   return (
-    <Flex
-      width="100%"
-      maxW="400px"
-      flexDirection="column"
-      alignItems="center"
-      mx="auto"
-      mb={12}
-    >
-      <Heading size="md" textAlign="center" width="100%">
-        {title}
-      </Heading>
-
+    <div className="w-full max-w-sm flex flex-col items-center mx-auto mb-12">
+      <h2 className="text-center font-semibold w-full">{title}</h2>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart
           data={data}
@@ -92,7 +66,6 @@ export const myStackedBarChart = (title: string, data: StackedBarItem[], keys: s
           <XAxis type="number" />
           <YAxis type="category" dataKey="name" />
           <Legend />
-
           {keys.map((key, i) => (
             <Bar
               key={key}
@@ -104,7 +77,7 @@ export const myStackedBarChart = (title: string, data: StackedBarItem[], keys: s
           ))}
         </BarChart>
       </ResponsiveContainer>
-    </Flex>
+    </div>
   );
 };
 
@@ -121,51 +94,39 @@ interface DynamicTableProps {
 }
 
 export const MyDynamicTable = ({ title, data, keys }: DynamicTableProps) => {
-  if (!data.length) return <Text>No data available</Text>;
+  if (!data.length) return <p>No data available</p>;
 
   return (
-    <Flex
-      width="100%"
-      maxW="600px"
-      flexDirection="column"
-      alignItems="center"
-      mx="auto"
-      mb={12}
-    >
-      {title && (
-        <Heading size="md" textAlign="center" mb={4} width="100%">
-          {title}
-        </Heading>
-      )}
-      <Table.Root size="sm">
-        <Table.Header>
-          <Table.Row>
+    <div className="w-full max-w-xl flex flex-col items-center mx-auto mb-12">
+      {title && <h2 className="text-center font-semibold mb-4 w-full">{title}</h2>}
+      <table className="w-full text-sm">
+        <thead>
+          <tr>
             {keys.map((key, idx) => (
-              <Table.ColumnHeader
+              <th
                 key={key}
-                textTransform="capitalize"
-                textAlign={idx === keys.length - 1 ? "end" : "start"}
+                className={`py-2 px-3 capitalize font-medium text-neutral-300 border-b border-neutral-700 ${idx === keys.length - 1 ? "text-right" : "text-left"}`}
               >
                 {key}
-              </Table.ColumnHeader>
+              </th>
             ))}
-          </Table.Row>
-        </Table.Header>
-        <Table.Body>
+          </tr>
+        </thead>
+        <tbody>
           {data.map((item, rowIdx) => (
-            <Table.Row key={rowIdx}>
+            <tr key={rowIdx} className="border-b border-neutral-800">
               {keys.map((key, idx) => (
-                <Table.Cell
+                <td
                   key={key}
-                  textAlign={idx === keys.length - 1 ? "end" : "start"}
+                  className={`py-2 px-3 ${idx === keys.length - 1 ? "text-right" : "text-left"}`}
                 >
                   {String(item[key])}
-                </Table.Cell>
+                </td>
               ))}
-            </Table.Row>
+            </tr>
           ))}
-        </Table.Body>
-      </Table.Root>
-    </Flex>
+        </tbody>
+      </table>
+    </div>
   );
 };

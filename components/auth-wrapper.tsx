@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-import { Box, Text } from "@chakra-ui/react"
 import { useRequireAuth } from "@/lib/auth-context"
 
 interface AuthWrapperProps {
@@ -14,28 +13,20 @@ export function AuthWrapper({ children, requireAdmin = false, fallback }: AuthWr
   const { player, loading } = useRequireAuth()
 
   if (loading) {
-    return (
-      fallback || (
-        <Box minH="100vh" bg="black" p={4} display="flex" alignItems="center" justifyContent="center">
-          <Text color="white" fontSize="xl">
-            Authenticating...
-          </Text>
-        </Box>
-      )
+    return fallback || (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-lg">Authenticating...</p>
+      </div>
     )
   }
 
-  if (!player) {
-    return null
-  }
+  if (!player) return null
 
   if (requireAdmin && !player.is_admin) {
     return (
-      <Box minH="100vh" bg="black" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="red.500" fontSize="xl">
-          Access denied. Admin privileges required.
-        </Text>
-      </Box>
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-red-400 text-lg">Access denied. Admin privileges required.</p>
+      </div>
     )
   }
 

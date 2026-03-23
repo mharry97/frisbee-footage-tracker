@@ -1,19 +1,12 @@
-import {Box, Spinner, Text} from "@chakra-ui/react";
-import React from "react";
-
 type LoadingSpinnerProps = {
-  text: string;
+  text: string
 }
 
-const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ text }) => {
+export default function LoadingSpinner({ text }: LoadingSpinnerProps) {
   return (
-    <Box display="flex" minH="50vh">
-      <Spinner size="md" color="yellow" mr={2} />
-      <Text color="white" fontSize="lg">
-        {text}
-      </Text>
-    </Box>
+    <div className="flex items-center min-h-[50vh]">
+      <div className="w-5 h-5 border-2 border-yellow-400 border-t-transparent rounded-full animate-spin mr-3" />
+      <p className="text-lg">{text}</p>
+    </div>
   )
 }
-
-export default LoadingSpinner;

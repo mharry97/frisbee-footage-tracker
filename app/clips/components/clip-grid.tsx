@@ -1,23 +1,11 @@
 "use client";
 
-import React from "react";
-import {
-  Badge,
-  Box,
-  Button,
-  Card,
-  CloseButton,
-  Dialog,
-  HStack,
-  Portal,
-  SimpleGrid,
-  Text,
-  useDisclosure,
-} from "@chakra-ui/react";
+import React, { useState } from "react";
 import OnPageVideoLink from "@/components/on-page-video-link";
 import { baseUrlToTimestampUrl } from "@/lib/utils";
 import type { ClipDetail } from "@/app/clips/supabase";
 import { AddClipModal } from "@/app/clips/components/add-clip-modal.tsx";
+import { CustomModal } from "@/components/modal";
 
 interface ClipCardProps {
   clip: ClipDetail;
@@ -25,55 +13,47 @@ interface ClipCardProps {
 }
 
 function ClipCard({ clip, playerId }: ClipCardProps) {
-  const { open, onOpen, onClose } = useDisclosure();
+  const [viewOpen, setViewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   return (
     <>
-      <Card.Root variant="elevated">
-        <Card.Header>
-          <HStack justify="space-between">
-            <Card.Title>{clip.title}</Card.Title>
-            <Card.Title>
-              {!clip.is_public && <Badge colorPalette="green">Private</Badge>}
-            </Card.Title>
-          </HStack>
-        </Card.Header>
-        <Card.Body>
-          <Card.Description>{clip.description}</Card.Description>
-        </Card.Body>
-        <Card.Footer gap="2">
-          <HStack>
-            <Dialog.Root size="xl">
-              <Dialog.Trigger asChild>
-                <Button colorPalette="gray">View Clip</Button>
-              </Dialog.Trigger>
-              <Portal>
-                <Dialog.Backdrop />
-                <Dialog.Positioner>
-                  <Dialog.Content>
-                    <Dialog.Body>
-                      <OnPageVideoLink
-                        url={baseUrlToTimestampUrl(clip.url, clip.timestamp)}
-                      />
-                    </Dialog.Body>
-                    <Dialog.CloseTrigger asChild>
-                      <CloseButton size="sm" />
-                    </Dialog.CloseTrigger>
-                  </Dialog.Content>
-                </Dialog.Positioner>
-              </Portal>
-            </Dialog.Root>
-            <Button variant="ghost" colorPalette="gray" onClick={onOpen}>
+      <div className="bg-neutral-900 rounded-lg border border-neutral-700 overflow-hidden">
+        <div className="p-4 border-b border-neutral-700">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium">{clip.title}</h3>
+            {!clip.is_public && (
+              <span className="px-2 py-0.5 rounded-full text-xs bg-green-900/50 text-green-400">Private</span>
+            )}
+          </div>
+        </div>
+        <div className="p-4">
+          <p className="text-neutral-400 text-sm mb-3">{clip.description}</p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setViewOpen(true)}
+              className="px-3 py-1.5 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors"
+            >
+              View Clip
+            </button>
+            <button
+              onClick={() => setEditOpen(true)}
+              className="px-3 py-1.5 rounded hover:bg-neutral-800 text-sm transition-colors text-neutral-400"
+            >
               Edit
-            </Button>
-          </HStack>
-        </Card.Footer>
-      </Card.Root>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <CustomModal isOpen={viewOpen} onClose={() => setViewOpen(false)} title={clip.title} width="700px">
+        <OnPageVideoLink url={baseUrlToTimestampUrl(clip.url, clip.timestamp)} />
+      </CustomModal>
 
       <AddClipModal
         playerId={playerId}
-        isOpen={open}
-        onClose={onClose}
+        isOpen={editOpen}
+        onClose={() => setEditOpen(false)}
         mode="edit"
         clipToEdit={clip}
       />
@@ -89,19 +69,17 @@ interface ClipGridProps {
 export function ClipGrid({ clips, playerId }: ClipGridProps) {
   if (!clips || clips.length === 0) {
     return (
-      <Box p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">
-          No clips found.
-        </Text>
-      </Box>
+      <div className="flex items-center justify-center p-4">
+        <p className="text-neutral-400">No clips found.</p>
+      </div>
     );
   }
 
   return (
-    <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8} width="100%">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 w-full">
       {clips.map((item) => (
         <ClipCard key={item.clip_id} clip={item} playerId={playerId} />
       ))}
-    </SimpleGrid>
+    </div>
   );
 }

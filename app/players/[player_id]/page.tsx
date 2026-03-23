@@ -1,30 +1,28 @@
 "use client";
 
-import {Box, Container, Heading, Text, useDisclosure, VStack} from "@chakra-ui/react";
-import {AuthWrapper} from "@/components/auth-wrapper.tsx";
-import React, {useMemo} from "react";
-import {useAuth} from "@/lib/auth-context.tsx";
+import { AuthWrapper } from "@/components/auth-wrapper.tsx";
+import React, { useMemo, useState } from "react";
+import { useAuth } from "@/lib/auth-context.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
-import {useParams} from "next/navigation";
-import {useQuery} from "@tanstack/react-query";
-import {fetchPlayer, fetchTeamMapping} from "@/app/players/supabase.ts";
+import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { fetchPlayer, fetchTeamMapping } from "@/app/players/supabase.ts";
 import CustomTabs from "@/components/tabbed-page.tsx";
 import LoadingSpinner from "@/components/ui/loading-spinner.tsx";
-import {ClipGrid} from "@/app/clips/components/clip-grid.tsx";
-import {fetchClipsCustom} from "@/app/clips/supabase.ts";
-import {PlayerModal} from "@/app/players/components/player-modal.tsx";
+import { ClipGrid } from "@/app/clips/components/clip-grid.tsx";
+import { fetchClipsCustom } from "@/app/clips/supabase.ts";
+import { PlayerModal } from "@/app/players/components/player-modal.tsx";
 import FloatingActionButton from "@/components/ui/floating-plus.tsx";
-import {fetchPlayerPossessions} from "@/app/possessions/supabase.ts";
-import {calculatePlayerStats} from "@/app/stats/player/player-base-stats.ts";
+import { fetchPlayerPossessions } from "@/app/possessions/supabase.ts";
+import { calculatePlayerStats } from "@/app/stats/player/player-base-stats.ts";
 import StatTile from "@/components/stat-tile.tsx";
-import {fetchPlayerPoints} from "@/app/points/supabase.ts";
-import {PointGrid} from "@/app/points/components/point-grid.tsx";
-
+import { fetchPlayerPoints } from "@/app/points/supabase.ts";
+import { PointGrid } from "@/app/points/components/point-grid.tsx";
 
 function PlayerPageContent() {
   const { player } = useAuth();
   const { player_id } = useParams<{ player_id: string }>();
-  const { open, onOpen, onClose } = useDisclosure();
+  const [editOpen, setEditOpen] = useState(false);
 
   const { data: playerData, isLoading } = useQuery({
     queryFn: () => fetchPlayer(player_id),
@@ -44,133 +42,83 @@ function PlayerPageContent() {
   })
 
   const playerStats = useMemo(() => {
-    // Guard against running before data is ready
-    if (!possessions || !playerTeamMapping) {
-      return null;
-    }
-
+    if (!possessions || !playerTeamMapping) return null;
     const allInvolvedPlayerStats = calculatePlayerStats(possessions, playerTeamMapping);
-
-    // Find the specific player's stats
-    return allInvolvedPlayerStats.find(
-      (p) => p.player_id === player_id
-    );
+    return allInvolvedPlayerStats.find((p) => p.player_id === player_id);
   }, [possessions, playerTeamMapping, player_id]);
 
   if (!player || !playerData || isLoading || isLoadingTeamPlayer) {
     return (
-      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading data...</Text>
-      </Box>
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading data...</p>
+      </div>
     )
   }
 
-  // OVERVIEW
-  const OverviewContent = () => {
-    return (
-      <>
-        <VStack>
-          <Heading size="lg" mt={4} mb={4}>Overview</Heading>
-          {isLoadingPossessions ? (
-            <LoadingSpinner text="Loading data..." />
-          ) : playerStats ? (
-            <Box
-              display="grid"
-              gap="4"
-              gridTemplateColumns="repeat(3, 1fr)"
-              w="full"
-            >
-              <StatTile title="+/-" value={playerStats?.plus_minus ?? 0} />
-              <StatTile title="Points Played" value={playerStats?.points_played ?? 0} />
-              <StatTile title="Scores" value={playerStats?.scores ?? 0} />
-              <StatTile title="Assists" value={playerStats?.assists ?? 0} />
-              <StatTile title="Ds" value={playerStats?.ds ?? 0} />
-              <StatTile title="Turns" value={playerStats.turnovers} />
-            </Box>
-          ) : (
-            <Text>No stats available for this player.</Text>
-          )}
-        </VStack>
-      </>
-    )
-  }
+  const OverviewContent = () => (
+    <>
+      <h2 className="text-xl font-medium mt-4 mb-4 text-center">Overview</h2>
+      {isLoadingPossessions ? (
+        <LoadingSpinner text="Loading data..." />
+      ) : playerStats ? (
+        <div className="grid grid-cols-3 gap-4 w-full">
+          <StatTile title="+/-" value={playerStats?.plus_minus ?? 0} />
+          <StatTile title="Points Played" value={playerStats?.points_played ?? 0} />
+          <StatTile title="Scores" value={playerStats?.scores ?? 0} />
+          <StatTile title="Assists" value={playerStats?.assists ?? 0} />
+          <StatTile title="Ds" value={playerStats?.ds ?? 0} />
+          <StatTile title="Turns" value={playerStats.turnovers} />
+        </div>
+      ) : (
+        <p>No stats available for this player.</p>
+      )}
+    </>
+  );
 
-  // INFO
-  const InfoContent = () => {
-    return (
-      <>
-        <Text textStyle="xl">{playerData.notes || "No notes for this player yet"}</Text>
-      </>
-    );
-  }
+  const InfoContent = () => (
+    <p className="text-xl">{playerData.notes || "No notes for this player yet"}</p>
+  );
 
-  // CLIPS
   const ClipsContent = () => {
     const { data: clips, isLoading } = useQuery({
       queryKey: ["clips", { clipPlayer: player_id, requestPlayer: player?.auth_user_id }],
-      queryFn: () => fetchClipsCustom({
-        clipPlayer: player_id,
-        requestPlayer: player!.auth_user_id
-      }),
+      queryFn: () => fetchClipsCustom({ clipPlayer: player_id, requestPlayer: player!.auth_user_id }),
       enabled: !!player_id && !!player,
     });
-    if (isLoading) {
-      return <LoadingSpinner text="Loading clips..." />;
-    }
+    if (isLoading) return <LoadingSpinner text="Loading clips..." />;
     return <ClipGrid clips={clips ?? []} playerId={player_id} />;
   };
 
-  // POINTS
   const PointsContent = () => {
     const { data: playerPoints, isLoading } = useQuery({
       queryKey: ["playerPoints", player_id],
       queryFn: () => fetchPlayerPoints(player_id),
     })
-    if (isLoading) {
-      return <LoadingSpinner text="Loading points..." />;
-    }
+    if (isLoading) return <LoadingSpinner text="Loading points..." />;
     return <PointGrid points={playerPoints ?? []} />
-
   }
 
   const tabs = [
-    {
-      value: "overview",
-      label: "Overview",
-      content: <OverviewContent />,
-    },
-    {
-      value: "info",
-      label: "Info",
-      content: <InfoContent />,
-    },
-    {
-      value: "points",
-      label: "Points",
-      content: <PointsContent />,
-    },
-    {
-      value: "clips",
-      label: "Clips",
-      content: <ClipsContent />,
-    },
+    { value: "overview", label: "Overview", content: <OverviewContent /> },
+    { value: "info", label: "Info", content: <InfoContent /> },
+    { value: "points", label: "Points", content: <PointsContent /> },
+    { value: "clips", label: "Clips", content: <ClipsContent /> },
   ];
 
   return (
-    <Container maxW="4xl">
+    <div>
       <StandardHeader text={`${playerData.team_name} - ${playerData.player_name}`} />
       <CustomTabs defaultValue="overview" tabs={tabs} />
-      <FloatingActionButton onClick={onOpen} iconType="edit" />
+      <FloatingActionButton onClick={() => setEditOpen(true)} iconType="edit" />
       <PlayerModal
-        isOpen={open}
-        onClose={onClose}
+        isOpen={editOpen}
+        onClose={() => setEditOpen(false)}
         mode="edit"
         playerToEdit={playerData}
       />
-    </Container>
+    </div>
   )
 }
-
 
 export default function PlayerPage() {
   return (

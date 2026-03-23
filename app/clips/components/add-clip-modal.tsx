@@ -1,26 +1,15 @@
 import React, { useMemo } from "react";
-import {
-  Dialog,
-  Button,
-  Portal,
-  Field,
-  Input,
-  Textarea,
-  createListCollection,
-  Stack,
-  Text,
-  Checkbox
-} from "@chakra-ui/react";
 import { fetchVisiblePlaylists } from "@/app/playlists/supabase";
-import {ClipDetail, upsertClip} from "@/app/clips/supabase";
-import {AsyncDropdown} from "@/components/async-dropdown.tsx";
-import {z} from "zod";
-import {Controller, useForm} from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {fetchSources} from "@/app/sources/supabase.ts";
-import {fetchPlayers} from "@/app/players/supabase.ts";
-import {fetchTeams} from "@/app/teams/supabase.ts";
+import { ClipDetail, upsertClip } from "@/app/clips/supabase";
+import { AsyncDropdown } from "@/components/async-dropdown.tsx";
+import { z } from "zod";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchSources } from "@/app/sources/supabase.ts";
+import { fetchPlayers } from "@/app/players/supabase.ts";
+import { fetchTeams } from "@/app/teams/supabase.ts";
+import { CustomModal } from "@/components/modal";
 
 const schema = z.object({
   title: z.string(),
@@ -47,23 +36,26 @@ interface AddClipModalProps {
   mode: 'add' | 'edit';
 }
 
-export function AddClipModal({ eventId,
-                               sourceId,
-                               playerId,
-                               isOpen,
-                               onClose,
-                               playlists,
-                               players,
-                               mode,
-                               clipToEdit}: AddClipModalProps) {
-  // console.log(sourceId);
+export function AddClipModal({
+  eventId,
+  sourceId,
+  playerId,
+  isOpen,
+  onClose,
+  playlists,
+  players,
+  mode,
+  clipToEdit,
+}: AddClipModalProps) {
   const {
     control,
     register,
     handleSubmit,
     setError,
     reset,
-    formState: {errors, isSubmitting, isValid}} = useForm<AddClip>({ resolver: zodResolver(schema),
+    formState: { errors, isSubmitting, isValid },
+  } = useForm<AddClip>({
+    resolver: zodResolver(schema),
     mode: 'onChange',
     defaultValues: {
       title: mode === 'edit' ? clipToEdit?.title : '',
@@ -77,29 +69,20 @@ export function AddClipModal({ eventId,
   });
   const queryClient = useQueryClient()
 
-  // Fetch data for dropdowns
-
-  // Playlists
   const { data: playlistsData, isLoading: isLoadingPlaylists } = useQuery({
     queryFn: () => fetchVisiblePlaylists(playerId),
     queryKey: ["playlists"]
-  })
-
-  // Sources
+  });
 
   const { data: sourcesData, isLoading: isLoadingSources } = useQuery({
     queryKey: ["sources"],
     queryFn: fetchSources,
   });
 
-  // Players
-
   const { data: playersData, isLoading: isLoadingPlayers } = useQuery({
     queryKey: ["players"],
     queryFn: fetchPlayers,
   });
-
-  // Teams
 
   const { data: teamsData, isLoading: isLoadingTeams } = useQuery({
     queryKey: ["teams"],
@@ -108,52 +91,19 @@ export function AddClipModal({ eventId,
 
   const isLoading = isLoadingSources || isLoadingPlaylists || isLoadingPlayers || isLoadingTeams;
 
-  // Form collections for dropdowns
-
-  const sourceCollection = useMemo(() =>
-      createListCollection({
-        items: sourcesData ?? [],
-        itemToString: (item) => item.title,
-        itemToValue: (item) => item.source_id,
-      }),
-    [sourcesData]
-  );
-
-  const playersCollection = useMemo(() =>
-      createListCollection({
-        items: playersData ?? [],
-        itemToString: (item) => item.player_name,
-        itemToValue: (item) => item.player_id,
-      }),
-    [playersData]
-  );
-
-  const teamsCollection = useMemo(() =>
-      createListCollection({
-        items: teamsData ?? [],
-        itemToString: (item) => item.team_name,
-        itemToValue: (item) => item.team_id,
-      }),
-    [teamsData]
-  );
-
-  const playlistCollection = useMemo(() =>
-      createListCollection({
-        items: playlistsData ?? [],
-        itemToString: (item) => item.title,
-        itemToValue: (item) => item.playlist_id,
-      }),
-    [playlistsData]
-  );
+  const sourceCollection = useMemo(() => ({ items: sourcesData ?? [] }), [sourcesData]);
+  const playersCollection = useMemo(() => ({ items: playersData ?? [] }), [playersData]);
+  const teamsCollection = useMemo(() => ({ items: teamsData ?? [] }), [teamsData]);
+  const playlistCollection = useMemo(() => ({ items: playlistsData ?? [] }), [playlistsData]);
 
   const { mutateAsync: upsertClipMutation } = useMutation({
     mutationFn: upsertClip,
-    onSuccess: () => {queryClient.invalidateQueries({ queryKey: ["clips"] })}
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["clips"] }) }
   });
 
   const onSubmit = async (formData: AddClip) => {
     try {
-      const clipPayload = {
+      await upsertClipMutation({
         title: formData.title,
         source_id: formData.source[0],
         event_id: eventId ?? clipToEdit?.event_id ?? null,
@@ -164,9 +114,7 @@ export function AddClipModal({ eventId,
         teams: formData.teams || [],
         players: formData.players || [],
         clip_id: clipToEdit?.clip_id ?? undefined,
-      };
-
-      await upsertClipMutation(clipPayload);
+      });
       await queryClient.invalidateQueries({ queryKey: ["clips", eventId] });
       reset();
       onClose();
@@ -176,147 +124,111 @@ export function AddClipModal({ eventId,
   };
 
   return (
-    <Dialog.Root
-      open={isOpen}
-      onOpenChange={(details) => {
-        if (!details.open) {
-          onClose();
-        }
-      }}
-    >
-      <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <Dialog.Header>
-                <Dialog.Title>
-                  {mode==="edit" ? 'Edit Clip' : 'Add New Clip'}
-                </Dialog.Title>
-              </Dialog.Header>
-              <Dialog.Body>
-                <Field.Root mb={4}>
-                  <Field.Label>Title</Field.Label>
-                  <Input {...register("title", { required: "Title is required" })} />
-                  {errors.title && (
-                    <Field.ErrorText>{errors.title.message}</Field.ErrorText>
-                  )}
-                </Field.Root>
-                <AsyncDropdown
-                  name="source"
-                  control={control}
-                  label="Source"
-                  placeholder="Select source"
-                  collection={sourceCollection}
-                  isLoading={isLoading}
-                  itemToKey={(item) => item.source_id}
-                  disabled={mode==="edit"}
-                  renderItem={(item) => (
-                    <Stack gap={0}>
-                      <Text>{item.title}</Text>
-                      <Text textStyle="xs" color="fg.muted">{item.url}</Text>
-                    </Stack>
-                  )}
-                />
-                <Field.Root mb={4}>
-                  <Field.Label>Timestamp</Field.Label>
-                  <Input {...register("timestamp", { required: "Timestamp is required" })} />
-                  {errors.timestamp && (
-                    <Field.ErrorText>{errors.timestamp.message}</Field.ErrorText>
-                  )}
-                </Field.Root>
-                <Field.Root mb={4}>
-                  <Field.Label>Description</Field.Label>
-                  <Textarea
-                    placeholder="Brief description"
-                    {...register("description", { required: "Description is required" })}
-                    size="xl"
-                    variant="outline"
-                  />
-                  {errors.description && (
-                    <Field.ErrorText>{errors.description.message}</Field.ErrorText>
-                  )}
-                </Field.Root>
-                <AsyncDropdown
-                  name="playlists"
-                  control={control}
-                  label="Playlist/s"
-                  placeholder="Select playlist/s"
-                  collection={playlistCollection}
-                  isLoading={isLoading}
-                  multiple={true}
-                  itemToKey={(item) => item.playlist_id}
-                  renderItem={(item) => (
-                    <Stack gap={0}>
-                      <Text>{item.title}</Text>
-                      <Text textStyle="xs" color="fg.muted">{item.created_by_name}</Text>
-                    </Stack>
-                  )}
-                />
-                <AsyncDropdown
-                  name="players"
-                  control={control}
-                  label="Player/s"
-                  placeholder="Select player/s"
-                  collection={playersCollection}
-                  isLoading={isLoading}
-                  multiple={true}
-                  itemToKey={(item) => item.player_id}
-                  renderItem={(item) => (
-                    <Stack gap={0}>
-                      <Text>{item.player_name}</Text>
-                      <Text textStyle="xs" color="fg.muted">{item.team_name}{item.number && ` - #${item.number}`}</Text>
-                    </Stack>
-                  )}
-                />
-                <AsyncDropdown
-                  name="teams"
-                  control={control}
-                  label="Team/s"
-                  placeholder="Team/s"
-                  collection={teamsCollection}
-                  isLoading={isLoading}
-                  multiple={true}
-                  itemToKey={(item) => item.team_id}
-                  renderItem={(item) => (
-                    <Stack gap={0}>
-                      <Text>{item.team_name}</Text>
-                    </Stack>
-                  )}
-                />
-                <Controller
-                  control={control}
-                  name="is_public"
-                  render={({ field }) => (
-                    <Field.Root>
-                      <Checkbox.Root
-                        checked={field.value}
-                        onCheckedChange={({ checked }) => field.onChange(checked)}
-                      >
-                        <Checkbox.HiddenInput />
-                        <Checkbox.Control />
-                        <Checkbox.Label>Public Clip?</Checkbox.Label>
-                      </Checkbox.Root>
-                    </Field.Root>
-                  )}
-                />
-              </Dialog.Body>
-              <Dialog.Footer display="flex" justifyContent="space-between">
-                <Button
-                  type="submit"
-                  loading={isSubmitting}
-                  disabled={!isValid || isSubmitting}
-                >
-                  {mode === "edit" ? 'Update' : 'Add'}
-                </Button>
-                <Button variant="ghost" onClick={onClose} mt={4}>
-                  Cancel
-                </Button>
-              </Dialog.Footer>
-            </form>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Portal>
-    </Dialog.Root>
+    <CustomModal isOpen={isOpen} onClose={onClose} title={mode === "edit" ? "Edit Clip" : "Add New Clip"} width="600px">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-neutral-300 mb-1">Title</label>
+          <input
+            {...register("title", { required: "Title is required" })}
+            className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none focus:border-neutral-500"
+          />
+          {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title.message}</p>}
+        </div>
+        <AsyncDropdown
+          name="source"
+          control={control}
+          label="Source"
+          placeholder="Select source"
+          collection={sourceCollection}
+          isLoading={isLoading}
+          itemToKey={(item) => item.source_id}
+          disabled={mode === "edit"}
+          renderItem={(item) => item.title}
+        />
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-neutral-300 mb-1">Timestamp</label>
+          <input
+            {...register("timestamp", { required: "Timestamp is required" })}
+            className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none focus:border-neutral-500"
+          />
+          {errors.timestamp && <p className="text-red-400 text-xs mt-1">{errors.timestamp.message}</p>}
+        </div>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-neutral-300 mb-1">Description</label>
+          <textarea
+            {...register("description", { required: "Description is required" })}
+            placeholder="Brief description"
+            rows={3}
+            className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none focus:border-neutral-500 resize-none"
+          />
+          {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description.message}</p>}
+        </div>
+        <AsyncDropdown
+          name="playlists"
+          control={control}
+          label="Playlist/s"
+          placeholder="Select playlist/s"
+          collection={playlistCollection}
+          isLoading={isLoading}
+          multiple={true}
+          itemToKey={(item) => item.playlist_id}
+          renderItem={(item) => item.title}
+        />
+        <AsyncDropdown
+          name="players"
+          control={control}
+          label="Player/s"
+          placeholder="Select player/s"
+          collection={playersCollection}
+          isLoading={isLoading}
+          multiple={true}
+          itemToKey={(item) => item.player_id}
+          renderItem={(item) => item.player_name}
+        />
+        <AsyncDropdown
+          name="teams"
+          control={control}
+          label="Team/s"
+          placeholder="Team/s"
+          collection={teamsCollection}
+          isLoading={isLoading}
+          multiple={true}
+          itemToKey={(item) => item.team_id}
+          renderItem={(item) => item.team_name}
+        />
+        <Controller
+          control={control}
+          name="is_public"
+          render={({ field }) => (
+            <label className="flex items-center gap-2 mb-4 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={field.value}
+                onChange={(e) => field.onChange(e.target.checked)}
+                className="rounded border-neutral-700"
+              />
+              <span className="text-sm">Public Clip?</span>
+            </label>
+          )}
+        />
+        <div className="flex justify-between">
+          <button
+            type="submit"
+            disabled={!isValid || isSubmitting}
+            className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors disabled:opacity-50"
+          >
+            {mode === "edit" ? "Update" : "Add"}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded hover:bg-neutral-800 text-sm transition-colors text-neutral-400"
+          >
+            Cancel
+          </button>
+        </div>
+        {errors.root && <p className="text-red-400 text-xs mt-2">{errors.root.message}</p>}
+      </form>
+    </CustomModal>
   );
 }

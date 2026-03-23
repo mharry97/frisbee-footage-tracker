@@ -1,33 +1,22 @@
 "use client"
 
-import React, {useState, useEffect, useCallback} from "react"
-import {
-  Container,
-  Badge,
-  HStack,
-  Text,
-  Box,
-  Card,
-  Dialog,
-  Portal,
-  CloseButton,
-  SimpleGrid,
-  Button,
-} from "@chakra-ui/react"
+import React, { useState, useEffect, useCallback } from "react"
 import { AuthWrapper } from "@/components/auth-wrapper"
 import { getHomeTeamPlayerInfo } from "@/app/admin/supabase"
 import { useAuth } from "@/lib/auth-context"
 import FloatingActionButton from "@/components/ui/floating-plus"
 import NewUserDetailsPortal from "@/app/admin/component/new-user-details"
 import EditUserDetailsPortal from "@/app/admin/component/edit-user-details"
-import StandardHeader from "@/components/standard-header.tsx";
-import {PlayerDetailed} from "@/app/players/supabase.ts";
+import StandardHeader from "@/components/standard-header"
+import { PlayerDetailed } from "@/app/players/supabase"
+import { CustomModal } from "@/components/modal"
 
 function PlayersPageContent() {
   const { player } = useAuth()
   const [players, setPlayers] = useState<PlayerDetailed[]>([])
   const [loading, setLoading] = useState(true)
   const [editingPlayer, setEditingPlayer] = useState<PlayerDetailed | null>(null)
+  const [addOpen, setAddOpen] = useState(false)
 
   const refreshPlayers = useCallback(async () => {
     if (!player) return
@@ -43,105 +32,73 @@ function PlayersPageContent() {
   }, [player])
 
   useEffect(() => {
-    (async () => {
-      await refreshPlayers()
-    })()
+    refreshPlayers()
   }, [refreshPlayers])
 
   if (!player || loading) {
     return (
-      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading player data...</Text>
-      </Box>
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading...</p>
+      </div>
     )
   }
 
   return (
-    <Container maxW="4xl">
+    <div>
       <StandardHeader text="Admin" />
-      <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         {players.map((item, index) => (
-          <Card.Root key={index} variant="elevated">
-            <Card.Header>
-              <Card.Title>{item.player_name}</Card.Title>
-              <Card.Description>{item.username || "No account"}</Card.Description>
-            </Card.Header>
-            <Card.Body>
-              <HStack gap={2}>
-                <Badge colorPalette={item.is_active ? "green" : "red"}>
+          <div key={index} className="bg-neutral-900 rounded-lg border border-neutral-700 overflow-hidden">
+            <div className="p-4 border-b border-neutral-700">
+              <h3 className="font-medium">{item.player_name}</h3>
+              <p className="text-neutral-400 text-sm">{item.username || "No account"}</p>
+            </div>
+            <div className="p-4">
+              <div className="flex gap-2 mb-3">
+                <span className={`px-2 py-0.5 rounded-full text-xs ${item.is_active ? "bg-green-900/50 text-green-400" : "bg-red-900/50 text-red-400"}`}>
                   {item.is_active ? "Active" : "Inactive"}
-                </Badge>
-                <Badge colorPalette={item.is_editor ? "green" : "red"}>
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-xs ${item.is_editor ? "bg-green-900/50 text-green-400" : "bg-red-900/50 text-red-400"}`}>
                   {item.is_editor ? "Editor" : "Non-Editor"}
-                </Badge>
-                <Badge colorPalette={item.is_admin ? "green" : "red"}>
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-xs ${item.is_admin ? "bg-green-900/50 text-green-400" : "bg-red-900/50 text-red-400"}`}>
                   {item.is_admin ? "Admin" : "Non-Admin"}
-                </Badge>
-              </HStack>
-            </Card.Body>
-            <Card.Footer gap={2}>
-              <Dialog.Root>
-                <Dialog.Trigger asChild>
-                  <Button
-                    variant="solid"
-                    onClick={() => setEditingPlayer(item)}
-                  >
-                    Update User
-                  </Button>
-                </Dialog.Trigger>
-                <Portal>
-                  <Dialog.Backdrop />
-                  <Dialog.Positioner>
-                    <Dialog.Content>
-                      <Dialog.Header>Edit User</Dialog.Header>
-                      <Dialog.Body>
-                        {editingPlayer && (
-                          <EditUserDetailsPortal
-                            onSuccess={refreshPlayers}
-                            defaultValues={{
-                              player_name: editingPlayer.player_name,
-                              email: editingPlayer.username ?? "",
-                              is_active: editingPlayer.is_active,
-                              is_admin: editingPlayer.is_admin,
-                              is_editor: editingPlayer.is_editor,
-                            }}
-                            playerId={editingPlayer.player_id}
-                            auth_user_id={editingPlayer.auth_user_id}
-                          />
-                        )}
-                      </Dialog.Body>
-                      <Dialog.CloseTrigger asChild>
-                        <CloseButton />
-                      </Dialog.CloseTrigger>
-                    </Dialog.Content>
-                  </Dialog.Positioner>
-                </Portal>
-              </Dialog.Root>
-            </Card.Footer>
-          </Card.Root>
+                </span>
+              </div>
+              <button
+                onClick={() => setEditingPlayer(item)}
+                className="px-3 py-1.5 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors"
+              >
+                Update User
+              </button>
+            </div>
+          </div>
         ))}
-      </SimpleGrid>
+      </div>
 
-      <Dialog.Root>
-        <Dialog.Trigger asChild>
-          <FloatingActionButton iconType="add" />
-        </Dialog.Trigger>
-        <Portal>
-          <Dialog.Backdrop />
-          <Dialog.Positioner>
-            <Dialog.Content>
-              <Dialog.Header>Add User</Dialog.Header>
-              <Dialog.Body>
-                <NewUserDetailsPortal onSuccess={refreshPlayers} />
-              </Dialog.Body>
-              <Dialog.CloseTrigger asChild>
-                <CloseButton />
-              </Dialog.CloseTrigger>
-            </Dialog.Content>
-          </Dialog.Positioner>
-        </Portal>
-      </Dialog.Root>
-    </Container>
+      <FloatingActionButton iconType="add" onClick={() => setAddOpen(true)} />
+
+      <CustomModal isOpen={!!editingPlayer} onClose={() => setEditingPlayer(null)} title="Edit User">
+        {editingPlayer && (
+          <EditUserDetailsPortal
+            onSuccess={() => { refreshPlayers(); setEditingPlayer(null) }}
+            defaultValues={{
+              player_name: editingPlayer.player_name,
+              email: editingPlayer.username ?? "",
+              is_active: editingPlayer.is_active,
+              is_admin: editingPlayer.is_admin,
+              is_editor: editingPlayer.is_editor,
+            }}
+            playerId={editingPlayer.player_id}
+            auth_user_id={editingPlayer.auth_user_id}
+          />
+        )}
+      </CustomModal>
+
+      <CustomModal isOpen={addOpen} onClose={() => setAddOpen(false)} title="Add User">
+        <NewUserDetailsPortal onSuccess={() => { refreshPlayers(); setAddOpen(false) }} />
+      </CustomModal>
+    </div>
   )
 }
 

@@ -12,9 +12,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@chakra-ui/react": "^3.15.1",
-    "@chakra-ui/toast": "^7.0.2",
-    "@emotion/react": "^11.14.0",
     "@hookform/resolvers": "^5.0.1",
     "@tanstack/react-query": "^5.80.6",
     "next": "^16.1.1",
@@ -30,7 +27,6 @@
     "styled-components": "^6.1.19"
   },
   "devDependencies": {
-    "@chakra-ui/cli": "^3.15.1",
     "@eslint/eslintrc": "^3",
     "@supabase/supabase-js": "^2.49.10",
     "@tailwindcss/postcss": "^4",

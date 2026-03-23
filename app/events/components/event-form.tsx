@@ -1,29 +1,20 @@
-import {z} from 'zod'
-import {
-  Button,
-  Field,
-  Input,
-  VStack,
-  Text,
-  useDisclosure,
-  Dialog,
-  Portal,
-  HStack, Select, Spinner, createListCollection, Textarea
-} from "@chakra-ui/react";
-import {Controller, SubmitHandler, useForm} from "react-hook-form";
-import React, {useMemo} from "react";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {addEvent, editEvent, EventDetail} from "@/app/events/supabase";
-import {useMutation, useQueryClient} from "@tanstack/react-query";
-import {useAsync} from "react-use";
-import {fetchTeams} from "@/app/teams/supabase.ts";
+import { z } from 'zod'
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import React, { useMemo, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { addEvent, editEvent, EventDetail } from "@/app/events/supabase";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAsync } from "react-use";
+import { fetchTeams } from "@/app/teams/supabase.ts";
 import FloatingActionButton from "@/components/ui/floating-plus.tsx";
+import { CustomModal } from "@/components/modal";
 
 interface PortalProps {
   mode: "add" | "edit";
   currentData?: EventDetail;
   onSuccess?: () => void;
 }
+
 const game_types = z.enum(["Game", "Training"])
 
 const schema = z.object({
@@ -37,25 +28,15 @@ const schema = z.object({
 type EventData = z.infer<typeof schema>;
 
 const EventForm = ({ mode, currentData }: PortalProps) => {
-  // Fetch for team dropdowns
+  const [open, setOpen] = useState(false)
   const state = useAsync(fetchTeams)
 
-  const collection = useMemo(() => {
-    return createListCollection({
-      items: state.value ?? [],
-      itemToString: (team) => team.team_name,
-      itemToValue: (team) => team.team_id,
-    })
-  }, [state.value])
-
-  const typeCollection = createListCollection({
-    items: ["Game", "Training"],
-    itemToString: (item) => item,
-    itemToValue: (item) => item,
-  })
+  const teamsCollection = useMemo(
+    () => ({ items: state.value ?? [] }),
+    [state.value]
+  );
 
   const queryClient = useQueryClient()
-  const { open, onOpen, onClose } = useDisclosure()
   const {
     register,
     handleSubmit,
@@ -63,62 +44,41 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
     control,
     reset,
     watch,
-    formState: {errors, isSubmitting}} = useForm<EventData>({
-    resolver:zodResolver(schema),
+    formState: { errors, isSubmitting },
+  } = useForm<EventData>({
+    resolver: zodResolver(schema),
     defaultValues: currentData
       ? {
-        event_name: currentData.event_name,
-        event_date: currentData.event_date?.split("T")[0] || "",
-        type: currentData.type ? [currentData.type] : [],
-        teams: [currentData.team_1_id,currentData.team_2_id],
-        notes: currentData.notes,
-      }
-      : {
-        // Set defaults for "add" mode to empty arrays
-        event_name: "",
-        event_date: "",
-        type: [],
-        teams: [],
-        notes: ""
-      },
+          event_name: currentData.event_name,
+          event_date: currentData.event_date?.split("T")[0] || "",
+          type: currentData.type ? [currentData.type] : [],
+          teams: [currentData.team_1_id, currentData.team_2_id],
+          notes: currentData.notes,
+        }
+      : { event_name: "", event_date: "", type: [], teams: [], notes: "" },
   })
 
   const { mutateAsync: addEventMutation } = useMutation({
     mutationFn: addEvent,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["events"] })
-      onClose();
-    }
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["events"] }); setOpen(false); }
   })
 
   const { mutateAsync: editEventMutation } = useMutation({
     mutationFn: editEvent,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["events"] })
-      onClose();
-    }
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["events"] }); setOpen(false); }
   })
 
-  const handleOpenPortal = () => {
-      reset();
-      onOpen()
-  }
-
+  const handleOpen = () => { reset(); setOpen(true); }
   const gameType = watch("type");
-
-  // Create a boolean variable for the disabled state.
-  // Optional chaining (?.) makes it safe if the array is empty.
   const isGameFieldsDisabled = gameType?.[0] !== "Game";
 
   const onSubmit: SubmitHandler<EventData> = async (data) => {
-    console.log("Data received by onSubmit:", JSON.stringify(data, null, 2));
     const payload = {
       ...data,
       type: data.type[0],
       team_1_id: data.teams[0],
       team_2_id: data.teams[1],
     };
-
     try {
       if (mode === "add") {
         await addEventMutation(payload);
@@ -126,154 +86,120 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
         await editEventMutation({ ...payload, event_id: currentData!.event_id });
       }
     } catch (error) {
-      if (error instanceof Error) {
-        setError("root", {
-          message: error.message,
-        });
-      } else {
-        setError("root", {
-          message: "An unknown error occurred",
-        });
-      }
+      setError("root", {
+        message: error instanceof Error ? error.message : "An unknown error occurred",
+      });
     }
   }
 
-  return(
+  return (
     <>
-      {mode === "add" ? <FloatingActionButton onClick={handleOpenPortal} iconType="add"/> : <Button variant="ghost" onClick={handleOpenPortal}>Edit</Button>}
-      <Dialog.Root open={open} onOpenChange={(open) => (open ? onOpen() : onClose())}>
-        <Portal>
-          <Dialog.Backdrop />
-          <Dialog.Positioner>
-            <Dialog.Content>
-              <Dialog.Header>{mode === "add" ? "New Event" : "Edit Event"}</Dialog.Header>
-              <Dialog.Body>
-                <form onSubmit={handleSubmit(onSubmit)}>
-                  <VStack gap={4}>
-                    <Field.Root>
-                      <Field.Label>Game Type</Field.Label>
-                      <Controller
-                        name="type"
-                        control={control}
-                        render={({ field }) => (
-                          <Select.Root
-                            name={field.name}
-                            value={field.value}
-                            onValueChange={({ value }) => {field.onChange(value)}}
-                            onInteractOutside={field.onBlur}
-                            collection={typeCollection}
-                            disabled={mode === "edit"}
-                          >
-                            <Select.HiddenSelect />
-                            <Select.Control>
-                              <Select.Trigger>
-                                <Select.ValueText placeholder="Select game type" />
-                              </Select.Trigger>
-                              <Select.IndicatorGroup>
-                                <Select.Indicator />
-                              </Select.IndicatorGroup>
-                            </Select.Control>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {["Game", "Training"].map((item) => (
-                                  <Select.Item item={item} key={item}>
-                                    {item}
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Select.Root>
-                        )}
-                      />
-                      {errors.type && <Field.ErrorText>{errors.type.message}</Field.ErrorText>}
-                    </Field.Root>
-                    <Field.Root>
-                      <Field.Label>Event Name</Field.Label>
-                      <Input {...register("event_name")} disabled={isGameFieldsDisabled} />
-                      {errors.event_name && (
-                        <Field.ErrorText>{errors.event_name.message}</Field.ErrorText>
-                      )}
-                    </Field.Root>
-                    <Field.Root >
-                      <Field.Label>Event Date</Field.Label>
-                      <Input {...register("event_date")} type="date" />
-                      {errors.event_date && (
-                        <Field.ErrorText>{errors.event_date.message}</Field.ErrorText>
-                      )}
-                    </Field.Root>
-                    <Field.Root>
-                      <Controller
-                        control={control}
-                        name = "teams"
-                        render={({ field }) => (
-                          <Select.Root
-                            name={field.name}
-                            value={field.value}
-                            multiple
-                            onValueChange={
-                              ({ value }) => {field.onChange(value)}}
-                            onInteractOutside={() => field.onBlur()}
-                            collection={collection}
-                            disabled={mode === "edit" || isGameFieldsDisabled}
-                          >
-                            <Select.HiddenSelect />
-                            <Select.Label>Teams</Select.Label>
-                            <Select.Control>
-                              <Select.Trigger>
-                                <Select.ValueText placeholder="Select teams" />
-                              </Select.Trigger>
-                              <Select.IndicatorGroup>
-                                {state.loading && (
-                                  <Spinner />
-                                )}
-                                <Select.Indicator />
-                              </Select.IndicatorGroup>
-                            </Select.Control>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {collection.items.map((team) => (
-                                  <Select.Item item={team} key={team.team_id}>
-                                    {team.team_name}
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Select.Root>
-                        )}
-                      />
-                      {errors.teams && (
-                        <Field.ErrorText>{errors.teams.message}</Field.ErrorText>
-                      )}
-                    </Field.Root>
-                    <Field.Root mb={4}>
-                      <Field.Label>Notes</Field.Label>
-                      <Textarea
-                        placeholder="Any notes on the event"
-                        {...register("notes")}
-                        size="xl"
-                        variant="outline"
-                      />
-                    </Field.Root>
-                  </VStack>
-                  <HStack justify="space-between">
-                    <Button type="submit" disabled={isSubmitting} mt={4}>
-                      {mode === "add" ? "Add" : "Update"}
-                    </Button>
-                    {errors.root && (
-                      <Text color="red" mt={4}>{errors.root.message}</Text>
-                    )}
-                    <Button variant="ghost" onClick={onClose} mt={4}>
-                      Cancel
-                    </Button>
-                  </HStack>
-                </form>
-              </Dialog.Body>
-            </Dialog.Content>
-          </Dialog.Positioner>
-        </Portal>
-      </Dialog.Root>
+      {mode === "add" ? (
+        <FloatingActionButton onClick={handleOpen} iconType="add" />
+      ) : (
+        <button
+          onClick={handleOpen}
+          className="px-3 py-1.5 rounded hover:bg-neutral-800 text-sm transition-colors text-neutral-400"
+        >
+          Edit
+        </button>
+      )}
+      <CustomModal isOpen={open} onClose={() => setOpen(false)} title={mode === "add" ? "New Event" : "Edit Event"} width="500px">
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-1">Game Type</label>
+              <Controller
+                name="type"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    disabled={mode === "edit"}
+                    value={field.value?.[0] ?? ""}
+                    onChange={(e) => field.onChange(e.target.value ? [e.target.value] : [])}
+                    className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none disabled:opacity-50"
+                  >
+                    <option value="">Select game type</option>
+                    <option value="Game">Game</option>
+                    <option value="Training">Training</option>
+                  </select>
+                )}
+              />
+              {errors.type && <p className="text-red-400 text-xs mt-1">{errors.type.message}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-1">Event Name</label>
+              <input
+                {...register("event_name")}
+                disabled={isGameFieldsDisabled}
+                className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none disabled:opacity-50"
+              />
+              {errors.event_name && <p className="text-red-400 text-xs mt-1">{errors.event_name.message}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-1">Event Date</label>
+              <input
+                {...register("event_date")}
+                type="date"
+                className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-1">Teams</label>
+              <Controller
+                control={control}
+                name="teams"
+                render={({ field }) => (
+                  <select
+                    multiple
+                    disabled={mode === "edit" || isGameFieldsDisabled}
+                    value={field.value ?? []}
+                    onChange={(e) => {
+                      const selected = Array.from(e.target.selectedOptions, (opt) => opt.value);
+                      field.onChange(selected);
+                    }}
+                    className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none disabled:opacity-50"
+                    size={Math.min(4, teamsCollection.items.length + 1)}
+                  >
+                    {teamsCollection.items.map((team) => (
+                      <option key={team.team_id} value={team.team_id}>
+                        {team.team_name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+              {errors.teams && <p className="text-red-400 text-xs mt-1">{errors.teams.message}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-1">Notes</label>
+              <textarea
+                {...register("notes")}
+                placeholder="Any notes on the event"
+                rows={3}
+                className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none resize-none"
+              />
+            </div>
+            <div className="flex justify-between">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors disabled:opacity-50"
+              >
+                {mode === "add" ? "Add" : "Update"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="px-4 py-2 rounded hover:bg-neutral-800 text-sm transition-colors text-neutral-400"
+              >
+                Cancel
+              </button>
+            </div>
+            {errors.root && <p className="text-red-400 text-xs mt-2">{errors.root.message}</p>}
+          </div>
+        </form>
+      </CustomModal>
     </>
   )
 }

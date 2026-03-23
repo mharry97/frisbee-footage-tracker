@@ -1,10 +1,4 @@
 import React from "react";
-import {
-  createListCollection,
-  Field,
-  Select,
-  Spinner,
-} from "@chakra-ui/react";
 import { Controller, Control, FieldValues, Path } from "react-hook-form";
 
 interface AsyncDropdownProps<TItem, TFormValues extends FieldValues> {
@@ -12,8 +6,8 @@ interface AsyncDropdownProps<TItem, TFormValues extends FieldValues> {
   control: Control<TFormValues>;
   label: string;
   placeholder: string;
-  collection: ReturnType<typeof createListCollection<TItem>>;
-  renderItem: (item: TItem) => React.ReactNode;
+  collection: { items: TItem[] };
+  renderItem: (item: TItem) => string;
   itemToKey: (item: TItem) => string | number;
   isLoading?: boolean;
   multiple?: boolean;
@@ -21,61 +15,64 @@ interface AsyncDropdownProps<TItem, TFormValues extends FieldValues> {
 }
 
 export function AsyncDropdown<TItem, TFormValues extends FieldValues>({
-                                                                        name,
-                                                                        control,
-                                                                        label,
-                                                                        placeholder,
-                                                                        collection,
-                                                                        renderItem,
-                                                                        itemToKey,
-                                                                        isLoading = false,
-                                                                        multiple = false,
-                                                                        disabled = false,
-                                                                      }: AsyncDropdownProps<TItem, TFormValues>) {
+  name,
+  control,
+  label,
+  placeholder,
+  collection,
+  renderItem,
+  itemToKey,
+  isLoading = false,
+  multiple = false,
+  disabled = false,
+}: AsyncDropdownProps<TItem, TFormValues>) {
   return (
-    <Field.Root mb={4}>
-      <Field.Label>{label}</Field.Label>
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-neutral-300 mb-1">{label}</label>
       <Controller
         name={name}
         control={control}
-        render={({ field, fieldState }) => (
-          <>
-            <Select.Root
-              name={field.name}
-              value={field.value}
-              onValueChange={({ value }) => field.onChange(value)}
-              onInteractOutside={() => field.onBlur()}
-              multiple={multiple}
-              collection={collection}
-              disabled={disabled}
-            >
-              <Select.HiddenSelect />
-              <Select.Control>
-                <Select.Trigger>
-                  <Select.ValueText placeholder={placeholder} />
-                </Select.Trigger>
-                <Select.IndicatorGroup>
-                  {isLoading && <Spinner />}
-                  <Select.Indicator />
-                </Select.IndicatorGroup>
-              </Select.Control>
-              <Select.Positioner>
-                <Select.Content>
-                  {collection.items.map((item) => (
-                    <Select.Item item={item} key={itemToKey(item)}>
+        render={({ field, fieldState }) => {
+          const currentValues: string[] = Array.isArray(field.value)
+            ? field.value.map(String)
+            : [];
+          return (
+            <>
+              <select
+                disabled={disabled || isLoading}
+                multiple={multiple}
+                value={multiple ? currentValues : (currentValues[0] ?? "")}
+                onChange={(e) => {
+                  if (multiple) {
+                    const selected = Array.from(
+                      e.target.selectedOptions,
+                      (opt) => opt.value
+                    );
+                    field.onChange(selected);
+                  } else {
+                    const val = e.target.value;
+                    field.onChange(val ? [val] : []);
+                  }
+                }}
+                className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none focus:border-neutral-500 disabled:opacity-50"
+              >
+                {!multiple && <option value="">{placeholder}</option>}
+                {collection.items.map((item) => {
+                  const value = String(itemToKey(item));
+                  return (
+                    <option key={value} value={value}>
                       {renderItem(item)}
-                      <Select.ItemIndicator />
-                    </Select.Item>
-                  ))}
-                </Select.Content>
-              </Select.Positioner>
-            </Select.Root>
-            {fieldState.error && (
-              <Field.ErrorText>{fieldState.error.message}</Field.ErrorText>
-            )}
-          </>
-        )}
+                    </option>
+                  );
+                })}
+              </select>
+              {fieldState.error && (
+                <p className="text-red-400 text-xs mt-1">{fieldState.error.message}</p>
+              )}
+            </>
+          );
+        }}
       />
-    </Field.Root>
+    </div>
   );
 }

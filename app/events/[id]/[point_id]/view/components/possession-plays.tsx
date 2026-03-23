@@ -1,5 +1,4 @@
 import React from "react";
-import { Text, GridItem, Box } from "@chakra-ui/react";
 
 export type PossessionPlayProps = {
   d_init: string;
@@ -8,48 +7,20 @@ export type PossessionPlayProps = {
   o_main: string;
 };
 
-export default function PossessionPlays({
-                                          d_init,
-                                          d_main,
-                                          o_init,
-                                          o_main,
-                                        }: PossessionPlayProps) {
+export default function PossessionPlays({ d_init, d_main, o_init, o_main }: PossessionPlayProps) {
   return (
-    <Box
-      display="grid"
-      gridTemplateColumns="auto auto auto"
-      gap={4}
-      p={4}
-      rounded="md"
-      justifyContent="center"
-    >
-      <GridItem />
-      <GridItem>
-        <Text fontWeight="bold" color="gray.300">Initiation</Text>
-      </GridItem>
-      <GridItem>
-        <Text fontWeight="bold" color="gray.300">Main</Text>
-      </GridItem>
+    <div className="grid p-4 rounded-md justify-center" style={{ gridTemplateColumns: "auto auto auto", gap: "1rem" }}>
+      <div />
+      <span className="font-bold text-neutral-300">Initiation</span>
+      <span className="font-bold text-neutral-300">Main</span>
 
-      <GridItem>
-        <Text fontWeight="bold">O</Text>
-      </GridItem>
-      <GridItem>
-        <Text fontWeight="bold" color="yellow.400">{o_init}</Text>
-      </GridItem>
-      <GridItem>
-        <Text fontWeight="bold" color="yellow.400">{o_main}</Text>
-      </GridItem>
+      <span className="font-bold">O</span>
+      <span className="font-bold text-yellow-400">{o_init}</span>
+      <span className="font-bold text-yellow-400">{o_main}</span>
 
-      <GridItem>
-        <Text fontWeight="bold">D</Text>
-      </GridItem>
-      <GridItem>
-        <Text fontWeight="bold" color="yellow.400">{d_init}</Text>
-      </GridItem>
-      <GridItem>
-        <Text fontWeight="bold" color="yellow.400">{d_main}</Text>
-      </GridItem>
-    </Box>
+      <span className="font-bold">D</span>
+      <span className="font-bold text-yellow-400">{d_init}</span>
+      <span className="font-bold text-yellow-400">{d_main}</span>
+    </div>
   );
 }

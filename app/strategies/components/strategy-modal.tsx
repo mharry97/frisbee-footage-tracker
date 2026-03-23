@@ -1,21 +1,11 @@
 import React, { useMemo } from "react";
-import {
-  Dialog,
-  Button,
-  Portal,
-  Field,
-  Input,
-  Textarea,
-  createListCollection,
-  Stack,
-  Text,
-} from "@chakra-ui/react";
-import {AsyncDropdown} from "@/components/async-dropdown.tsx";
-import {z} from "zod";
-import {useForm} from "react-hook-form";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {fetchStratTypes, Strategy, upsertStrat} from "@/app/strategies/supabase.ts";
+import { AsyncDropdown } from "@/components/async-dropdown.tsx";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchStratTypes, Strategy, upsertStrat } from "@/app/strategies/supabase.ts";
+import { CustomModal } from "@/components/modal";
 
 const schema = z.object({
   strategy: z.string(),
@@ -40,17 +30,15 @@ const playTypes = [
   { name: "Offence Main", id: "offence_main" },
 ];
 
-export function AddStratModal({ isOpen,
-                               onClose,
-                               mode,
-                               stratToEdit}: AddStratModalProps) {
-  // console.log(sourceId);
+export function AddStratModal({ isOpen, onClose, mode, stratToEdit }: AddStratModalProps) {
   const {
     control,
     register,
     handleSubmit,
     setError,
-    formState: {errors, isSubmitting, isValid}} = useForm<AddStrat>({ resolver: zodResolver(schema),
+    formState: { errors, isSubmitting, isValid },
+  } = useForm<AddStrat>({
+    resolver: zodResolver(schema),
     mode: 'onChange',
     defaultValues: {
       strategy: mode === 'edit' ? stratToEdit?.strategy : '',
@@ -61,51 +49,32 @@ export function AddStratModal({ isOpen,
   });
   const queryClient = useQueryClient()
 
-  // Fetch data for dropdowns
-
-  // Strat types
-
   const { data: stratsData, isLoading } = useQuery({
     queryKey: ["stratTypes"],
     queryFn: fetchStratTypes,
   });
 
-  // Form collections for dropdowns
-
-  const stratTypeCollection = useMemo(() =>
-      createListCollection({
-        items: stratsData ?? [],
-        itemToString: (item) => item.strategy_type,
-        itemToValue: (item) => item.strategy_type,
-      }),
+  const stratTypeCollection = useMemo(
+    () => ({ items: stratsData ?? [] }),
     [stratsData]
   );
 
-  const playTypeCollection = useMemo(() =>
-      createListCollection({
-        items: playTypes,
-        itemToString: (item) => item.name,
-        itemToValue: (item) => item.id,
-      }),
-    []
-  );
+  const playTypeCollection = useMemo(() => ({ items: playTypes }), []);
 
   const { mutateAsync: upsertStratMutation } = useMutation({
     mutationFn: upsertStrat,
-    onSuccess: () => {queryClient.invalidateQueries({ queryKey: ["strats"] })}
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["strats"] }) }
   });
 
   const onSubmit = async (formData: AddStrat) => {
     try {
-      const clipPayload = {
+      await upsertStratMutation({
         strategy: formData.strategy,
         strategy_type: formData.strategy_type[0],
         play_type: formData.play_type[0],
         description: formData.description,
         strategy_id: stratToEdit?.strategy_id ?? undefined,
-      };
-
-      await upsertStratMutation(clipPayload);
+      });
       onClose();
     } catch (err) {
       setError("root", { message: err instanceof Error ? err.message : "Submission failed" });
@@ -113,91 +82,66 @@ export function AddStratModal({ isOpen,
   };
 
   return (
-    <Dialog.Root
-      open={isOpen}
-      onOpenChange={(details) => {
-        if (!details.open) {
-          onClose();
-        }
-      }}
-    >
-      <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <Dialog.Header>
-                <Dialog.Title>
-                  {mode==="edit" ? 'Edit Strategy' : 'Add New Strategy'}
-                </Dialog.Title>
-              </Dialog.Header>
-              <Dialog.Body>
-                <Field.Root mb={4}>
-                  <Field.Label>Strategy Name</Field.Label>
-                  <Input {...register("strategy", { required: "Name is required" })} />
-                  {errors.strategy && (
-                    <Field.ErrorText>{errors.strategy.message}</Field.ErrorText>
-                  )}
-                </Field.Root>
-                <AsyncDropdown
-                  name="play_type"
-                  control={control}
-                  label="Play Type"
-                  placeholder="Select play type"
-                  collection={playTypeCollection}
-                  isLoading={isLoading}
-                  itemToKey={(item) => item.id}
-                  disabled={mode==="edit"}
-                  renderItem={(item) => (
-                    <Stack gap={0}>
-                      <Text>{item.name}</Text>
-                    </Stack>
-                  )}
-                />
-                <AsyncDropdown
-                  name="strategy_type"
-                  control={control}
-                  label="Strategy Type"
-                  placeholder="Select strategy type"
-                  collection={stratTypeCollection}
-                  isLoading={isLoading}
-                  itemToKey={(item) => item.strategy_type}
-                  disabled={mode==="edit"}
-                  renderItem={(item) => (
-                    <Stack gap={0}>
-                      <Text>{item.strategy_type}</Text>
-                    </Stack>
-                  )}
-                />
-                <Field.Root mb={4}>
-                  <Field.Label>Description</Field.Label>
-                  <Textarea
-                    placeholder="Brief description"
-                    {...register("description", { required: "Description is required" })}
-                    size="xl"
-                    variant="outline"
-                  />
-                  {errors.description && (
-                    <Field.ErrorText>{errors.description.message}</Field.ErrorText>
-                  )}
-                </Field.Root>
-              </Dialog.Body>
-              <Dialog.Footer display="flex" justifyContent="space-between">
-                <Button
-                  type="submit"
-                  loading={isSubmitting}
-                  disabled={!isValid || isSubmitting}
-                >
-                  {mode === "edit" ? 'Update' : 'Add'}
-                </Button>
-                <Button variant="ghost" onClick={onClose} mt={4}>
-                  Cancel
-                </Button>
-              </Dialog.Footer>
-            </form>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Portal>
-    </Dialog.Root>
+    <CustomModal isOpen={isOpen} onClose={onClose} title={mode === "edit" ? "Edit Strategy" : "Add New Strategy"} width="500px">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-neutral-300 mb-1">Strategy Name</label>
+          <input
+            {...register("strategy", { required: "Name is required" })}
+            className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none focus:border-neutral-500"
+          />
+          {errors.strategy && <p className="text-red-400 text-xs mt-1">{errors.strategy.message}</p>}
+        </div>
+        <AsyncDropdown
+          name="play_type"
+          control={control}
+          label="Play Type"
+          placeholder="Select play type"
+          collection={playTypeCollection}
+          isLoading={isLoading}
+          itemToKey={(item) => item.id}
+          disabled={mode === "edit"}
+          renderItem={(item) => item.name}
+        />
+        <AsyncDropdown
+          name="strategy_type"
+          control={control}
+          label="Strategy Type"
+          placeholder="Select strategy type"
+          collection={stratTypeCollection}
+          isLoading={isLoading}
+          itemToKey={(item) => item.strategy_type}
+          disabled={mode === "edit"}
+          renderItem={(item) => item.strategy_type}
+        />
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-neutral-300 mb-1">Description</label>
+          <textarea
+            {...register("description", { required: "Description is required" })}
+            placeholder="Brief description"
+            rows={3}
+            className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none focus:border-neutral-500 resize-none"
+          />
+          {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description.message}</p>}
+        </div>
+        <div className="flex justify-between">
+          <button
+            type="submit"
+            disabled={!isValid || isSubmitting}
+            className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors disabled:opacity-50"
+          >
+            {mode === "edit" ? "Update" : "Add"}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded hover:bg-neutral-800 text-sm transition-colors text-neutral-400"
+          >
+            Cancel
+          </button>
+        </div>
+        {errors.root && <p className="text-red-400 text-xs mt-2">{errors.root.message}</p>}
+      </form>
+    </CustomModal>
   );
 }

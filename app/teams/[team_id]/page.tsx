@@ -1,30 +1,29 @@
 "use client";
 
-import {useAuth} from "@/lib/auth-context.tsx";
-import {AuthWrapper} from "@/components/auth-wrapper.tsx";
-import React, {useMemo} from "react";
-import {Box, Container, Heading, HStack, Separator, SimpleGrid, Text, useDisclosure, VStack} from "@chakra-ui/react";
+import { useAuth } from "@/lib/auth-context.tsx";
+import { AuthWrapper } from "@/components/auth-wrapper.tsx";
+import React, { useMemo, useState } from "react";
 import StandardHeader from "@/components/standard-header.tsx";
-import {useParams} from "next/navigation";
-import {useQuery} from "@tanstack/react-query";
+import { useParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { fetchTeam } from "@/app/teams/supabase.ts";
 import CustomTabs from "@/components/tabbed-page.tsx";
-import {fetchClipsCustom} from "@/app/clips/supabase.ts";
+import { fetchClipsCustom } from "@/app/clips/supabase.ts";
 import LoadingSpinner from "@/components/ui/loading-spinner.tsx";
-import {ClipGrid} from "@/app/clips/components/clip-grid.tsx";
-import {fetchTeamMapping, getPlayersForTeam} from "@/app/players/supabase.ts";
-import {PlayerGrid} from "@/components/ui/player-grid.tsx";
-import {PlayerModal} from "@/app/players/components/player-modal.tsx";
+import { ClipGrid } from "@/app/clips/components/clip-grid.tsx";
+import { fetchTeamMapping, getPlayersForTeam } from "@/app/players/supabase.ts";
+import { PlayerGrid } from "@/components/ui/player-grid.tsx";
+import { PlayerModal } from "@/app/players/components/player-modal.tsx";
 import FloatingActionButton from "@/components/ui/floating-plus.tsx";
-import {fetchTeamPossessions} from "@/app/possessions/supabase.ts";
-import {calculatePlayerStats, PlayerStatLine} from "@/app/stats/player/player-base-stats.ts";
-import {StatLeaderCard} from "@/app/stats/player/components/player-stat-card.tsx";
-import {PlayerStatsTable} from "@/app/stats/player/components/player-stat-table.tsx";
+import { fetchTeamPossessions } from "@/app/possessions/supabase.ts";
+import { calculatePlayerStats, PlayerStatLine } from "@/app/stats/player/player-base-stats.ts";
+import { StatLeaderCard } from "@/app/stats/player/components/player-stat-card.tsx";
+import { PlayerStatsTable } from "@/app/stats/player/components/player-stat-table.tsx";
 
 function TeamPageContent() {
-  const {player} = useAuth()
+  const { player } = useAuth()
   const { team_id } = useParams<{ team_id: string }>();
-  const { open, onOpen, onClose } = useDisclosure();
+  const [addPlayerOpen, setAddPlayerOpen] = useState(false);
 
   const { data: teamData, isLoading: isLoadingTeam } = useQuery({
     queryFn: () => fetchTeam(team_id),
@@ -36,34 +35,26 @@ function TeamPageContent() {
     queryKey: ["teamPlayer"]
   })
 
-  // Calculate stats
   const { data: possessionData, isLoading: isLoadingPossessions } = useQuery({
     queryKey: ["teamPossessions", team_id],
     queryFn: () => fetchTeamPossessions(team_id),
     enabled: !!team_id,
   });
 
-  // Player stat lines
-  const allPlayerStats = useMemo(() =>
-      calculatePlayerStats(possessionData ?? [], playerTeamMapping ?? [], team_id),
+  const allPlayerStats = useMemo(
+    () => calculatePlayerStats(possessionData ?? [], playerTeamMapping ?? [], team_id),
     [possessionData, team_id, playerTeamMapping]
   );
 
-  const filteredPlayerStats = useMemo(() => {
-    if (!allPlayerStats) {
-      return [];
-    }
-    // Filter for players with >0 points
-    return allPlayerStats.filter(player => player.points_played > 0);
-  }, [allPlayerStats]);
+  const filteredPlayerStats = useMemo(
+    () => (allPlayerStats ?? []).filter(p => p.points_played > 0),
+    [allPlayerStats]
+  );
 
-  // Find the leader for each category from the calculated stats
   const leaders = useMemo(() => {
     if (!filteredPlayerStats || filteredPlayerStats.length === 0) return {};
-
     const findLeader = (stat: keyof PlayerStatLine) =>
       filteredPlayerStats.reduce((top, current) => (current[stat] > top[stat] ? current : top));
-
     return {
       topScorer: findLeader('scores'),
       topAssister: findLeader('assists'),
@@ -72,148 +63,97 @@ function TeamPageContent() {
     };
   }, [filteredPlayerStats]);
 
-  const isLoading = isLoadingTeam || isLoadingPossessions || isLoadingTeamPlayer ;
-
+  const isLoading = isLoadingTeam || isLoadingPossessions || isLoadingTeamPlayer;
 
   if (!player || isLoading) {
     return (
-      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading team data...</Text>
-      </Box>
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading team data...</p>
+      </div>
     );
   }
+
   if (!teamData) {
     return (
-      <Container maxW="4xl">
+      <div>
         <StandardHeader text="Teams" />
-        <Text color="white" fontSize="lg">Team does not exist</Text>
-      </Container>
+        <p>Team does not exist</p>
+      </div>
     )
   }
 
-  // OVERVIEW
-  const OverviewContent = () => {
-    return (
-      <>
-        <VStack gap={8} align="stretch">
-          <Heading size="md" textAlign="center">Top Players</Heading>
-          <SimpleGrid columns={{ base: 2, md: 4 }} gap={6}>
-            <StatLeaderCard
-              label="Scores"
-              player={leaders.topScorer}
-              statValue={leaders.topScorer?.scores}
-            />
-            <StatLeaderCard
-              label="Assists"
-              player={leaders.topAssister}
-              statValue={leaders.topAssister?.assists}
-            />
-            <StatLeaderCard
-              label="Ds"
-              player={leaders.topDefender}
-              statValue={leaders.topDefender?.ds}
-            />
-            <StatLeaderCard
-              label="+/-"
-              player={leaders.topPlusMinus}
-              statValue={leaders.topPlusMinus?.plus_minus}
-            />
-          </SimpleGrid>
-          <HStack mb={4} mt={4}>
-            <Separator flex="1" size="sm"></Separator>
-            <Text flexShrink="0" fontSize="xl">Overview</Text>
-            <Separator flex="1" size="sm"></Separator>
-          </HStack>
-          <PlayerStatsTable data={filteredPlayerStats} />
-        </VStack>
-      </>
-    )
-  }
+  const OverviewContent = () => (
+    <div className="flex flex-col gap-8">
+      <h2 className="text-lg font-medium text-center">Top Players</h2>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <StatLeaderCard label="Scores" player={leaders.topScorer} statValue={leaders.topScorer?.scores} />
+        <StatLeaderCard label="Assists" player={leaders.topAssister} statValue={leaders.topAssister?.assists} />
+        <StatLeaderCard label="Ds" player={leaders.topDefender} statValue={leaders.topDefender?.ds} />
+        <StatLeaderCard label="+/-" player={leaders.topPlusMinus} statValue={leaders.topPlusMinus?.plus_minus} />
+      </div>
+      <div className="flex items-center gap-4 mb-4 mt-4">
+        <hr className="flex-1 border-neutral-700" />
+        <span className="text-xl shrink-0">Overview</span>
+        <hr className="flex-1 border-neutral-700" />
+      </div>
+      <PlayerStatsTable data={filteredPlayerStats} />
+    </div>
+  );
 
-  // PLAYERS
   const PlayersContent = () => {
     const { data: players, isLoading } = useQuery({
       queryKey: ["players", team_id],
       queryFn: () => getPlayersForTeam(team_id),
       enabled: !!team_id && !!player,
     });
-    // Filter for active/inactive
     const { activePlayers, inactivePlayers } = useMemo(() => {
-      if (!players) {
-        return { activePlayers: [], inactivePlayers: [] };
-      }
-      const active = players.filter(p => p.is_active);
-      const inactive = players.filter(p => !p.is_active);
-
-      return { activePlayers: active, inactivePlayers: inactive };
+      if (!players) return { activePlayers: [], inactivePlayers: [] };
+      return {
+        activePlayers: players.filter(p => p.is_active),
+        inactivePlayers: players.filter(p => !p.is_active),
+      };
     }, [players]);
 
-    if (isLoading) {
-      return <LoadingSpinner text="Loading clips..." />;
-    }
+    if (isLoading) return <LoadingSpinner text="Loading players..." />;
     return (
       <>
-        <Text mb={4} mt={4} textStyle="2xl">Active Players</Text>
+        <p className="mb-4 mt-4 text-2xl">Active Players</p>
         <PlayerGrid players={activePlayers ?? []} />
-        <Text mb={4} mt={4} textStyle="2xl">Inactive Players</Text>
+        <p className="mb-4 mt-4 text-2xl">Inactive Players</p>
         <PlayerGrid players={inactivePlayers ?? []} />
-        <FloatingActionButton onClick={onOpen} iconType="add" />
+        <FloatingActionButton onClick={() => setAddPlayerOpen(true)} iconType="add" />
         <PlayerModal
-          isOpen={open}
-          onClose={onClose}
+          isOpen={addPlayerOpen}
+          onClose={() => setAddPlayerOpen(false)}
           mode="add"
           teamId={team_id}
         />
-
       </>
-
     );
   }
 
-  // CLIPS
   const ClipsContent = () => {
     const { data: clips, isLoading } = useQuery({
       queryKey: ["customClips", { teamId: team_id, requestPlayerId: player?.auth_user_id }],
-      queryFn: () => fetchClipsCustom({
-        teamId: team_id,
-        requestPlayer: player!.auth_user_id
-      }),
+      queryFn: () => fetchClipsCustom({ teamId: team_id, requestPlayer: player!.auth_user_id }),
       enabled: !!team_id && !!player,
     });
-    if (isLoading) {
-      return <LoadingSpinner text="Loading clips..." />;
-    }
+    if (isLoading) return <LoadingSpinner text="Loading clips..." />;
     return <ClipGrid clips={clips ?? []} playerId={player.player_id} />;
   };
 
-
-
   const tabs = [
-    {
-      value: "overview",
-      label: "Overview",
-      content: <OverviewContent />,
-    },
-    {
-      value: "players",
-      label: "Players",
-      content: <PlayersContent />,
-    },
-    {
-      value: "clips",
-      label: "Clips",
-      content: <ClipsContent />,
-    },
+    { value: "overview", label: "Overview", content: <OverviewContent /> },
+    { value: "players", label: "Players", content: <PlayersContent /> },
+    { value: "clips", label: "Clips", content: <ClipsContent /> },
   ];
 
-
   return (
-    <Container maxW="4xl">
+    <div>
       <StandardHeader text={teamData.team_name} />
       <CustomTabs defaultValue="overview" tabs={tabs} />
-    </Container>
+    </div>
   )
-
 }
 
 export default function TeamsPage() {

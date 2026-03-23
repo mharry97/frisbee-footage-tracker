@@ -2,7 +2,6 @@
 
 import React, { useState } from "react"
 import { useAuth } from "@/lib/auth-context"
-import { Input, Button, VStack, Text, Container } from "@chakra-ui/react"
 import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
@@ -12,17 +11,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
 
-  // Redirect if already logged in
   React.useEffect(() => {
-    if (user) {
-      router.push("/")
-    }
+    if (user) router.push("/")
   }, [user, router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-
     try {
       await login(username, password)
       router.push("/")
@@ -34,36 +29,36 @@ export default function LoginPage() {
   }
 
   return (
-    <Container maxWidth="4xl" centerContent py={20}>
-      <VStack gap={6} align="center" maxW="sm" w="full">
-        <Text fontSize="4xl" fontWeight="light" color="white">
-          Footage Tracker
-        </Text>
-
-        <form onSubmit={handleLogin} style={{ width: "100%" }}>
-          <VStack gap={4} w="full">
-            <Input
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
-              required
-            />
-            <Input
-              placeholder="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-              required
-            />
-            <Button type="submit" colorScheme="green" loading={loading} disabled={loading} w="full">
-              Login
-            </Button>
-          </VStack>
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="w-full max-w-sm flex flex-col gap-6">
+        <h1 className="text-4xl font-light text-center">Footage Tracker</h1>
+        <form onSubmit={handleLogin} className="flex flex-col gap-4">
+          <input
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            autoComplete="username"
+            required
+            className="w-full px-3 py-2 rounded-md bg-neutral-800 border border-neutral-700 text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-yellow-400"
+          />
+          <input
+            placeholder="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            required
+            className="w-full px-3 py-2 rounded-md bg-neutral-800 border border-neutral-700 text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-yellow-400"
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-2 rounded-md bg-yellow-400 text-neutral-950 font-medium hover:bg-yellow-300 disabled:opacity-50 transition-colors"
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
         </form>
-      </VStack>
-    </Container>
+      </div>
+    </div>
   )
 }
-

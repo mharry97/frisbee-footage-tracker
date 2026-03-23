@@ -1,28 +1,14 @@
-import {z} from 'zod'
-import {
-  Button,
-  Field,
-  Input,
-  VStack,
-  Text,
-  useDisclosure,
-  Dialog,
-  Portal,
-  HStack,
-  Select,
-  Spinner,
-  createListCollection,
-  Stack
-} from "@chakra-ui/react";
-import {Controller, SubmitHandler, useForm} from "react-hook-form";
-import React, {useMemo} from "react";
-import {zodResolver} from "@hookform/resolvers/zod";
+import { z } from 'zod'
+import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import React, { useMemo, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { addPoint } from "@/app/points/supabase";
 import FloatingActionButton from "@/components/ui/floating-plus.tsx";
-import {useAsync} from "react-use";
-import {fetchSources} from "@/app/sources/supabase.ts";
-import {fetchEventTeams, fetchEventTeamsInfo } from "@/app/events/[id]/supabase.ts";
-import {useRouter} from "next/navigation";
+import { useAsync } from "react-use";
+import { fetchSources } from "@/app/sources/supabase.ts";
+import { fetchEventTeams, fetchEventTeamsInfo } from "@/app/events/[id]/supabase.ts";
+import { useRouter } from "next/navigation";
+import { CustomModal } from "@/components/modal";
 
 interface PortalProps {
   event_id: string;
@@ -38,7 +24,7 @@ type PointData = z.infer<typeof schema>;
 
 const PointForm = ({ event_id }: PortalProps) => {
   const router = useRouter();
-  const { open, onOpen, onClose } = useDisclosure()
+  const [open, setOpen] = useState(false)
   const {
     register,
     handleSubmit,
@@ -46,57 +32,28 @@ const PointForm = ({ event_id }: PortalProps) => {
     control,
     reset,
     watch,
-    formState: {errors, isSubmitting, isValid}} = useForm<PointData>({
-    resolver:zodResolver(schema),
+    formState: { errors, isSubmitting, isValid },
+  } = useForm<PointData>({
+    resolver: zodResolver(schema),
     mode: "onChange",
-    })
+  })
 
-
-  // Fetch sources for source dropdown and form collection
   const sourceState = useAsync(fetchSources)
 
-  const sourceCollection = useMemo(() => {
-    return createListCollection({
-      items: sourceState.value ?? [],
-      itemToString: (source) => source.title,
-      itemToValue: (source) => source.source_id,
-    })
-  }, [sourceState.value])
-
-  // Fetch both teams and form collection
   const teamsState = useAsync(async () => {
     if (!event_id) return [];
     const teamIds = await fetchEventTeams(event_id);
-    if (teamIds.length === 0) {
-      return [];
-    }
+    if (teamIds.length === 0) return [];
     return await fetchEventTeamsInfo(teamIds);
   }, [event_id]);
 
-  const teamsCollection = useMemo(() => {
-    return createListCollection({
-      items: teamsState.value ?? [],
-      itemToString: (team) => team.team_name,
-      itemToValue: (team) => team.team_id,
-    })
-  }, [teamsState.value])
-
   const selectedOffenceTeamId = watch("offence_team")?.[0];
   const defenceTeam = useMemo(() => {
-    if (!selectedOffenceTeamId || !teamsState.value) {
-      return undefined;
-    }
-    return teamsState.value.find(
-      (team) => team.team_id !== selectedOffenceTeamId
-    );
+    if (!selectedOffenceTeamId || !teamsState.value) return undefined;
+    return teamsState.value.find((team) => team.team_id !== selectedOffenceTeamId);
   }, [selectedOffenceTeamId, teamsState.value]);
 
-
-
-  const handleOpenPortal = () => {
-    reset();
-    onOpen()
-  }
+  const handleOpenPortal = () => { reset(); setOpen(true); }
 
   const onSubmit: SubmitHandler<PointData> = async (data) => {
     const defence_team_id = defenceTeam?.team_id;
@@ -104,152 +61,101 @@ const PointForm = ({ event_id }: PortalProps) => {
       setError("root", { message: "Could not determine the defence team." });
       return;
     }
-    const payload = {
-      ...data,
-      source_id: data.source_id[0],
-      offence_team: data.offence_team[0],
-      event_id,
-      defence_team: defence_team_id
-    };
     try {
-      const point_id = await addPoint(payload)
+      const point_id = await addPoint({
+        ...data,
+        source_id: data.source_id[0],
+        offence_team: data.offence_team[0],
+        event_id,
+        defence_team: defence_team_id,
+      });
       router.push(`/events/${event_id}/${point_id}`);
     } catch (error) {
-      if (error instanceof Error) {
-        setError("root", {
-          message: error.message,
-        });
-      } else {
-        setError("root", {
-          message: "An unknown error occurred",
-        });
-      }
+      setError("root", {
+        message: error instanceof Error ? error.message : "An unknown error occurred",
+      });
     }
-
   }
 
-  return(
+  return (
     <>
-      <FloatingActionButton onClick={handleOpenPortal} iconType="add"/>
-      <Dialog.Root open={open} onOpenChange={(open) => (open ? onOpen() : onClose())}>
-        <Portal>
-          <Dialog.Backdrop />
-          <Dialog.Positioner>
-            <Dialog.Content>
-              <Dialog.Header>Add Point</Dialog.Header>
-              <Dialog.Body>
-                <form onSubmit={handleSubmit(onSubmit)}>
-                  <VStack gap={4}>
-                    <Field.Root>
-                      <Field.Label>Source</Field.Label>
-                      <Controller
-                        name="source_id"
-                        control={control}
-                        render={({ field }) => (
-                          <Select.Root
-                            name={field.name}
-                            value={field.value}
-                            onValueChange={
-                              ({ value }) => {field.onChange(value)}}
-                            onInteractOutside={() => field.onBlur()}
-                            collection={sourceCollection}
-                          >
-                            <Select.HiddenSelect />
-                            <Select.Control>
-                              <Select.Trigger>
-                                <Select.ValueText placeholder="Select point source" />
-                              </Select.Trigger>
-                              <Select.IndicatorGroup>
-                                {sourceState.loading && (
-                                  <Spinner />
-                                )}
-                                <Select.Indicator />
-                              </Select.IndicatorGroup>
-                            </Select.Control>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {sourceCollection.items.map((source) => (
-                                  <Select.Item item={source} key={source.source_id}>
-                                    <Stack gap={0}>
-                                      <Text>{source.title}</Text>
-                                      <Text color="fg.muted" fontSize="xs">{source.recorded_date}</Text>
-                                    </Stack>
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Select.Root>
-                        )}
-                      />
-                      {errors.source_id && <Field.ErrorText>{errors.source_id.message}</Field.ErrorText>}
-                    </Field.Root>
-                    <Field.Root>
-                      <Field.Label>Timestamp</Field.Label>
-                      <Input {...register("timestamp")} placeholder="Enter timestamp" />
-                      {errors.timestamp && (
-                        <Field.ErrorText>{errors.timestamp.message}</Field.ErrorText>
-                      )}
-                    </Field.Root>
-                    <Field.Root>
-                      <Field.Label>Offence Team</Field.Label>
-                      <Controller
-                        name="offence_team"
-                        control={control}
-                        render={({ field }) => (
-                          <Select.Root
-                            name={field.name}
-                            value={field.value}
-                            onValueChange={
-                              ({ value }) => {field.onChange(value)}}
-                            onInteractOutside={() => field.onBlur()}
-                            collection={teamsCollection}
-                          >
-                            <Select.HiddenSelect />
-                            <Select.Control>
-                              <Select.Trigger>
-                                <Select.ValueText placeholder="Select team on offence" />
-                              </Select.Trigger>
-                              <Select.IndicatorGroup>
-                                {sourceState.loading && (
-                                  <Spinner />
-                                )}
-                                <Select.Indicator />
-                              </Select.IndicatorGroup>
-                            </Select.Control>
-                            <Select.Positioner>
-                              <Select.Content>
-                                {teamsCollection.items.map((team) => (
-                                  <Select.Item item={team} key={team.team_id}>
-                                    <Text>{team.team_name}</Text>
-                                    <Select.ItemIndicator />
-                                  </Select.Item>
-                                ))}
-                              </Select.Content>
-                            </Select.Positioner>
-                          </Select.Root>
-                        )}
-                      />
-                      {errors.offence_team && <Field.ErrorText>{errors.offence_team.message}</Field.ErrorText>}
-                    </Field.Root>
-                  </VStack>
-                  <HStack justify="space-between">
-                    <Button type="submit" disabled={!isValid || isSubmitting} mt={4}>
-                      Add
-                    </Button>
-                    {errors.root && (
-                      <Text color="red" mt={4}>{errors.root.message}</Text>
-                    )}
-                    <Button variant="ghost" onClick={onClose} mt={4}>
-                      Cancel
-                    </Button>
-                  </HStack>
-                </form>
-              </Dialog.Body>
-            </Dialog.Content>
-          </Dialog.Positioner>
-        </Portal>
-      </Dialog.Root>
+      <FloatingActionButton onClick={handleOpenPortal} iconType="add" />
+      <CustomModal isOpen={open} onClose={() => setOpen(false)} title="Add Point" width="500px">
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-1">Source</label>
+              <Controller
+                name="source_id"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    value={field.value?.[0] ?? ""}
+                    onChange={(e) => field.onChange(e.target.value ? [e.target.value] : [])}
+                    className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none"
+                  >
+                    <option value="">Select point source</option>
+                    {(sourceState.value ?? []).map((source) => (
+                      <option key={source.source_id} value={source.source_id}>
+                        {source.title}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+              {errors.source_id && <p className="text-red-400 text-xs mt-1">{errors.source_id.message}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-1">Timestamp</label>
+              <input
+                {...register("timestamp")}
+                placeholder="Enter timestamp"
+                className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none"
+              />
+              {errors.timestamp && <p className="text-red-400 text-xs mt-1">{errors.timestamp.message}</p>}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-neutral-300 mb-1">Offence Team</label>
+              <Controller
+                name="offence_team"
+                control={control}
+                render={({ field }) => (
+                  <select
+                    value={field.value?.[0] ?? ""}
+                    onChange={(e) => field.onChange(e.target.value ? [e.target.value] : [])}
+                    className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none"
+                  >
+                    <option value="">Select team on offence</option>
+                    {(teamsState.value ?? []).map((team) => (
+                      <option key={team.team_id} value={team.team_id}>
+                        {team.team_name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+              {errors.offence_team && <p className="text-red-400 text-xs mt-1">{errors.offence_team.message}</p>}
+            </div>
+            <div className="flex justify-between">
+              <button
+                type="submit"
+                disabled={!isValid || isSubmitting}
+                className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors disabled:opacity-50"
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="px-4 py-2 rounded hover:bg-neutral-800 text-sm transition-colors text-neutral-400"
+              >
+                Cancel
+              </button>
+            </div>
+            {errors.root && <p className="text-red-400 text-xs mt-2">{errors.root.message}</p>}
+          </div>
+        </form>
+      </CustomModal>
     </>
   )
 }

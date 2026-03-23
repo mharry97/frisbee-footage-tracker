@@ -1,33 +1,22 @@
 "use client"
 
-import React, {useState} from "react";
-import {
-  Badge,
-  Box,
-  Button,
-  Card, CloseButton,
-  Container,
-  Dialog, Portal,
-  SimpleGrid,
-  Text
-} from "@chakra-ui/react";
+import React, { useState } from "react";
 import NextLink from "next/link";
-
-import {AuthWrapper} from "@/components/auth-wrapper";
-import {useAuth} from "@/lib/auth-context.tsx";
+import { AuthWrapper } from "@/components/auth-wrapper";
+import { useAuth } from "@/lib/auth-context.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
-import {useQuery, keepPreviousData} from "@tanstack/react-query";
-import {fetchFilteredPossessions} from "@/app/possessions/supabase.ts";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { fetchFilteredPossessions } from "@/app/possessions/supabase.ts";
 import OnPageVideoLink from "@/components/on-page-video-link.tsx";
-import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
-import {PossessionFilters} from "@/app/possessions/components/PossessionFilters.tsx";
-
+import { baseUrlToTimestampUrl } from "@/lib/utils.ts";
+import { PossessionFilters } from "@/app/possessions/components/PossessionFilters.tsx";
+import { CustomModal } from "@/components/modal";
 
 function EventsPageContent() {
   const { player } = useAuth();
   const [activeFilters, setActiveFilters] = useState({});
+  const [quickViewUrl, setQuickViewUrl] = useState<string | null>(null);
 
-  // Fetch data
   const { data: possessions, isLoading } = useQuery({
     queryKey: ["possessions", activeFilters],
     queryFn: () => fetchFilteredPossessions(activeFilters),
@@ -35,88 +24,73 @@ function EventsPageContent() {
     placeholderData: keepPreviousData
   });
 
-  const handleClear = () => {
-    setActiveFilters({});
-  };
-
   if (!player || isLoading) {
     return (
-      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading player data...</Text>
-      </Box>
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading player data...</p>
+      </div>
     )
   }
 
   return (
-    <Container maxW="4xl">
+    <div>
       <StandardHeader text="Possession Search" />
       <PossessionFilters
         onApplyFilters={setActiveFilters}
-        onClearFilters={handleClear}
+        onClearFilters={() => setActiveFilters({})}
       />
-      { possessions ? (
-        <SimpleGrid columns={{base: 1, md: 2}} gap={8} mb={8} mt={8}>
+      {possessions ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 mt-8">
           {possessions.map((item) => (
-            <Card.Root key={item.possession_id} variant="elevated">
-              <Card.Header>
-                <Card.Title>{item.event_name}</Card.Title>
-                <Card.Description>
-                  Possession {item.possession_number}
-                </Card.Description>
-              </Card.Header>
-              <Card.Body>
-                <Card.Title mb={0}>
-                  Offence: {item.offence_team_name}
-                </Card.Title>
-                <Card.Description mb={1}>
-                  {item.offence_init_name || "None"} &gt; {item.offence_main_name || "None"}
-                </Card.Description>
-                <Card.Title mb={0}>
-                  Defence: {item.defence_team_name}
-                </Card.Title>
-                <Card.Description mb={4}>
-                  {item.defence_init_name || "None"} &gt; {item.defence_main_name || "None"}
-                </Card.Description>
-                <Card.Description>
+            <div key={item.possession_id} className="bg-neutral-900 rounded-lg border border-neutral-700 overflow-hidden">
+              <div className="p-4 border-b border-neutral-700">
+                <h3 className="font-medium">{item.event_name}</h3>
+                <p className="text-neutral-400 text-sm">Possession {item.possession_number}</p>
+              </div>
+              <div className="p-4">
+                <div className="mb-2">
+                  <p className="font-medium text-sm">Offence: {item.offence_team_name}</p>
+                  <p className="text-neutral-400 text-xs">{item.offence_init_name || "None"} &gt; {item.offence_main_name || "None"}</p>
+                </div>
+                <div className="mb-3">
+                  <p className="font-medium text-sm">Defence: {item.defence_team_name}</p>
+                  <p className="text-neutral-400 text-xs">{item.defence_init_name || "None"} &gt; {item.defence_main_name || "None"}</p>
+                </div>
+                <div className="mb-3">
                   {!item.is_score ? (
-                    <Badge colorPalette="red">Turn</Badge>
+                    <span className="px-2 py-0.5 rounded-full text-xs bg-red-900/50 text-red-400">Turn</span>
                   ) : (
-                    <Badge colorPalette="green">Score</Badge>
+                    <span className="px-2 py-0.5 rounded-full text-xs bg-green-900/50 text-green-400">Score</span>
                   )}
-                </Card.Description>
-              </Card.Body>
-              <Card.Footer gap="2">
-                <NextLink href={`/events/${item.event_id}/${item.point_id}/view`} passHref>
-                  <Button colorPalette='gray'>View Point</Button>
-                </NextLink>
-                <Dialog.Root size="xl">
-                  <Dialog.Trigger asChild>
-                    <Button variant="ghost">Quick View</Button>
-                  </Dialog.Trigger>
-                  <Portal>
-                    <Dialog.Backdrop />
-                    <Dialog.Positioner>
-                      <Dialog.Content>
-                        <Dialog.Body>
-                          <OnPageVideoLink url={baseUrlToTimestampUrl(item.base_url, item.timestamp)} />
-                        </Dialog.Body>
-                        <Dialog.CloseTrigger asChild>
-                          <CloseButton size="sm" />
-                        </Dialog.CloseTrigger>
-                      </Dialog.Content>
-                    </Dialog.Positioner>
-                  </Portal>
-                </Dialog.Root>
-              </Card.Footer>
-            </Card.Root>
+                </div>
+                <div className="flex gap-2">
+                  <NextLink
+                    href={`/events/${item.event_id}/${item.point_id}/view`}
+                    className="px-3 py-1.5 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors"
+                  >
+                    View Point
+                  </NextLink>
+                  <button
+                    onClick={() => setQuickViewUrl(baseUrlToTimestampUrl(item.base_url, item.timestamp))}
+                    className="px-3 py-1.5 rounded hover:bg-neutral-800 text-sm transition-colors text-neutral-400"
+                  >
+                    Quick View
+                  </button>
+                </div>
+              </div>
+            </div>
           ))}
-        </SimpleGrid>
+        </div>
       ) : (
-        <Box minH="20vh" p={4} display="flex" alignItems="center" justifyContent="center">
-          <Text color="white" fontSize="lg">No possessions found.</Text>
-        </Box>
-        )}
-    </Container>
+        <div className="flex items-center justify-center min-h-[20vh] p-4">
+          <p className="text-neutral-400">No possessions found.</p>
+        </div>
+      )}
+
+      <CustomModal isOpen={!!quickViewUrl} onClose={() => setQuickViewUrl(null)} title="Quick View" width="700px">
+        {quickViewUrl && <OnPageVideoLink url={quickViewUrl} />}
+      </CustomModal>
+    </div>
   );
 }
 
@@ -127,4 +101,3 @@ export default function EventsPage() {
     </AuthWrapper>
   )
 }
-

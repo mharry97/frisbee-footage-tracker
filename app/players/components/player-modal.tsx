@@ -1,20 +1,13 @@
-import React, {useMemo} from 'react';
-import {
-  Dialog,
-  Button,
-  Portal,
-  VStack,
-  Field,
-  Input, Stack, Text, createListCollection, Checkbox, Textarea,
-} from '@chakra-ui/react';
-import {Controller, useForm} from 'react-hook-form';
+import React, { useMemo } from 'react';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {z} from "zod";
-import {Player} from "@/app/players/supabase.ts";
-import {upsertPlayer} from "@/app/players/supabase.ts";
-import {AsyncDropdown} from "@/components/async-dropdown.tsx";
-import {fetchTeams} from "@/app/teams/supabase.ts";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { z } from "zod";
+import { Player } from "@/app/players/supabase.ts";
+import { upsertPlayer } from "@/app/players/supabase.ts";
+import { AsyncDropdown } from "@/components/async-dropdown.tsx";
+import { fetchTeams } from "@/app/teams/supabase.ts";
+import { CustomModal } from "@/components/modal";
 
 const schema = z.object({
   player_name: z.string(),
@@ -37,17 +30,16 @@ interface PlayerModalProps {
 }
 
 export function PlayerModal({
-                              isOpen,
-                              onClose,
-                              mode,
-                              playerToEdit,
-                              teamId,
-                              playerName,
-                              playerNumber
-                            }: PlayerModalProps) {
+  isOpen,
+  onClose,
+  mode,
+  playerToEdit,
+  teamId,
+  playerName,
+  playerNumber,
+}: PlayerModalProps) {
   const queryClient = useQueryClient();
 
-  // Set up the form with conditional default values
   const {
     register,
     handleSubmit,
@@ -56,7 +48,6 @@ export function PlayerModal({
     formState: { isSubmitting, errors },
   } = useForm<PlayerFormData>({
     resolver: zodResolver(schema),
-    // Set defaults based on the mode
     defaultValues: {
       player_name: mode === 'edit' ? playerToEdit?.player_name : (playerName ?? ''),
       number: mode === 'edit' ? playerToEdit?.number : (playerNumber ?? undefined),
@@ -66,20 +57,13 @@ export function PlayerModal({
     },
   });
 
-  console.log("Form Errors:", errors);
-
-  // Fetch team data for dropdowns
   const { data: teamsData, isLoading: isLoadingTeams } = useQuery({
     queryFn: fetchTeams,
     queryKey: ["editPlayerTeams"]
-  })
+  });
 
-  const teamCollection = useMemo(() =>
-      createListCollection({
-        items: teamsData ?? [],
-        itemToString: (item) => item.team_name,
-        itemToValue: (item) => item.team_id,
-      }),
+  const teamCollection = useMemo(
+    () => ({ items: teamsData ?? [] }),
     [teamsData]
   );
 
@@ -94,106 +78,90 @@ export function PlayerModal({
     },
   });
 
-  // Build payload conditionally
   const onSubmit = (formData: PlayerFormData) => {
-    const payload = {
+    upsertPlayerMutation({
       player_name: formData.player_name,
       number: formData.number || undefined,
       is_active: formData.is_active,
       notes: formData.notes || null,
       player_id: mode === 'edit' ? playerToEdit?.player_id : undefined,
       team_id: formData.team_id[0],
-    };
-    upsertPlayerMutation(payload);
+    });
   };
 
-  const isEditMode = mode === 'edit';
-
   return (
-    <Dialog.Root
-      open={isOpen}
-      onOpenChange={(details) => {
-        if (!details.open) {
-          onClose();
-        }
-      }}
-    >
-      <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
-            <form id="player-form" onSubmit={handleSubmit(onSubmit)}>
-              <Dialog.Header>
-                {isEditMode ? 'Edit Player' : 'Add New Player'}
-              </Dialog.Header>
-
-              <Dialog.Body>
-                <VStack gap={4}>
-                  <Field.Root>
-                    <Field.Label>Player Name</Field.Label>
-                    <Input {...register("player_name")} />
-                  </Field.Root>
-                  <Field.Root>
-                    <Field.Label>Number</Field.Label>
-                    <Input type="number" {...register("number")} />
-                  </Field.Root>
-                  <AsyncDropdown
-                    name="team_id"
-                    control={control}
-                    label="Team"
-                    placeholder="Select player's team"
-                    disabled={isEditMode}
-                    collection={teamCollection}
-                    isLoading={isLoadingTeams}
-                    itemToKey={(item) => item.team_id}
-                    renderItem={(item) => (
-                      <Stack gap={0}>
-                        <Text>{item.team_name}</Text>
-                      </Stack>
-                    )}
-                  />
-                  <Field.Root mb={4}>
-                    <Field.Label>Notes</Field.Label>
-                    <Textarea
-                      placeholder="Any notes on player"
-                      {...register("notes")}
-                      size="xl"
-                      variant="outline"
-                    />
-                  </Field.Root>
-                  <Controller
-                    control={control}
-                    name="is_active"
-                    render={({ field }) => (
-                      <Field.Root>
-                        <Checkbox.Root
-                          checked={field.value}
-                          onCheckedChange={({ checked }) => field.onChange(checked)}
-                        >
-                          <Checkbox.HiddenInput />
-                          <Checkbox.Control />
-                          <Checkbox.Label>Active?</Checkbox.Label>
-                        </Checkbox.Root>
-                      </Field.Root>
-                    )}
-                  />
-                </VStack>
-              </Dialog.Body>
-
-              <Dialog.Footer>
-                <Button variant="ghost" onClick={onClose}>Cancel</Button>
-                <Button
-                  type="submit"
-                  form="player-form"
-                  loading={isSubmitting}
-                >
-                  {isEditMode ? 'Save Changes' : 'Create Player'}
-                </Button>
-              </Dialog.Footer>
-            </form>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Portal>
-    </Dialog.Root>
+    <CustomModal isOpen={isOpen} onClose={onClose} title={mode === 'edit' ? 'Edit Player' : 'Add New Player'} width="500px">
+      <form id="player-form" onSubmit={handleSubmit(onSubmit)}>
+        <div className="flex flex-col gap-4">
+          <div>
+            <label className="block text-sm font-medium text-neutral-300 mb-1">Player Name</label>
+            <input
+              {...register("player_name")}
+              className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none focus:border-neutral-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-300 mb-1">Number</label>
+            <input
+              type="number"
+              {...register("number")}
+              className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none focus:border-neutral-500"
+            />
+          </div>
+          <AsyncDropdown
+            name="team_id"
+            control={control}
+            label="Team"
+            placeholder="Select player's team"
+            disabled={mode === 'edit'}
+            collection={teamCollection}
+            isLoading={isLoadingTeams}
+            itemToKey={(item) => item.team_id}
+            renderItem={(item) => item.team_name}
+          />
+          <div>
+            <label className="block text-sm font-medium text-neutral-300 mb-1">Notes</label>
+            <textarea
+              {...register("notes")}
+              placeholder="Any notes on player"
+              rows={3}
+              className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none focus:border-neutral-500 resize-none"
+            />
+          </div>
+          <Controller
+            control={control}
+            name="is_active"
+            render={({ field }) => (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={field.value}
+                  onChange={(e) => field.onChange(e.target.checked)}
+                  className="rounded border-neutral-700"
+                />
+                <span className="text-sm">Active?</span>
+              </label>
+            )}
+          />
+          <div className="flex justify-between">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded hover:bg-neutral-800 text-sm transition-colors text-neutral-400"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="player-form"
+              disabled={isSubmitting}
+              className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors disabled:opacity-50"
+            >
+              {mode === 'edit' ? 'Save Changes' : 'Create Player'}
+            </button>
+          </div>
+        </div>
+      </form>
+    </CustomModal>
   );
 }
