@@ -74,6 +74,10 @@ const selectStyles = {
     ...base,
     backgroundColor: "#404040",
   }),
+  menuPortal: (base: object) => ({
+    ...base,
+    zIndex: 10000,
+  }),
 };
 
 export function AsyncDropdown<TItem, TFormValues extends FieldValues>({

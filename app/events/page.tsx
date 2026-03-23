@@ -51,7 +51,7 @@ function EventsPageContent() {
             <CardBody>
               {item.type === "Game" && (
                 <p className="text-sm mb-3">
-                  {item.team_1_scores + item.team_1_scores === 0
+                  {item.team_1_scores + item.team_2_scores === 0
                     ? `${item.team_1} vs. ${item.team_2}`
                     : `${item.team_1} ${item.team_1_scores} : ${item.team_2_scores} ${item.team_2}`
                   }

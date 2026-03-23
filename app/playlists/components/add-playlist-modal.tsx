@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { addPlaylist } from "@/app/playlists/supabase";
 import {z} from "zod";
 import {Controller, useForm} from "react-hook-form";
@@ -25,6 +25,7 @@ export function AddPlaylistModal({ isOpen, onClose }: AddPlaylistModalProps) {
     register,
     handleSubmit,
     setError,
+    reset,
     formState: {errors, isSubmitting, isValid}} = useForm<AddPlaylist>({ resolver: zodResolver(schema),
     mode: 'onChange',
     defaultValues: {
@@ -34,6 +35,10 @@ export function AddPlaylistModal({ isOpen, onClose }: AddPlaylistModalProps) {
     },
   });
   const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (isOpen) reset({ title: "", description: "", is_public: true });
+  }, [isOpen, reset]);
 
   const { mutateAsync: addPlaylistMutation } = useMutation({
     mutationFn: addPlaylist,
@@ -96,7 +101,7 @@ export function AddPlaylistModal({ isOpen, onClose }: AddPlaylistModalProps) {
           <button
             type="submit"
             disabled={!isValid || isSubmitting}
-            className="px-4 py-2 rounded bg-yellow-600 hover:bg-yellow-500 text-white text-sm transition-colors disabled:opacity-50"
+            className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors disabled:opacity-50"
           >
             {isSubmitting ? "Adding..." : "Add Playlist"}
           </button>

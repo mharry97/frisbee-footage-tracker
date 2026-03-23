@@ -17,6 +17,7 @@ export default function TeamModal() {
   const {
     register,
     handleSubmit,
+    reset,
     setError,
     formState: {errors, isSubmitting}} = useForm<TeamData>({ resolver: zodResolver(schema) })
   const queryClient = useQueryClient()
@@ -42,7 +43,7 @@ export default function TeamModal() {
 
   return (
     <>
-      <FloatingActionButton onClick={() => setOpen(true)} iconType="add"/>
+      <FloatingActionButton onClick={() => { reset({ team_name: "" }); setOpen(true); }} iconType="add"/>
       <CustomModal isOpen={open} onClose={() => setOpen(false)} title="New Team">
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="mb-4">
@@ -59,7 +60,7 @@ export default function TeamModal() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 rounded bg-yellow-600 hover:bg-yellow-500 text-white text-sm transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors disabled:opacity-50"
             >
               Add Team
             </button>

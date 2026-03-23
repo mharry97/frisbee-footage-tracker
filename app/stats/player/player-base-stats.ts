@@ -80,6 +80,13 @@ export function calculatePlayerStats(
     }
   }
 
+  // Ensure all players with points played are included, even with zero stats
+  for (const playerId of pointsPlayedTally.keys()) {
+    if (playerNameMap.has(playerId)) {
+      ensurePlayer(playerId);
+    }
+  }
+
   // Convert back
   const finalStats: PlayerStatLine[] = [];
   for (const [playerId, playerStat] of statsTally.entries()) {

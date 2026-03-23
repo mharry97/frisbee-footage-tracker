@@ -256,7 +256,7 @@ function EventPageContent() {
   }
 
   return (
-    <div className="py-8">
+    <div className="pb-8">
       <StandardHeader text={event?.event_name ?? ""} />
       {isLoading ? (
         <LoadingSpinner text="Loading..." />

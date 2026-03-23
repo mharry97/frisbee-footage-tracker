@@ -1,13 +1,14 @@
 import { z } from 'zod'
-import { Controller, SubmitHandler, useForm } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import React, { useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { addEvent, editEvent, EventDetail } from "@/app/events/supabase";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAsync } from "react-use";
-import { fetchTeams } from "@/app/teams/supabase.ts";
+import { fetchTeams, Team } from "@/app/teams/supabase.ts";
 import FloatingActionButton from "@/components/ui/floating-plus.tsx";
 import { CustomModal } from "@/components/modal";
+import { AsyncDropdown } from "@/components/async-dropdown";
 
 interface PortalProps {
   mode: "add" | "edit";
@@ -19,8 +20,8 @@ const game_types = z.enum(["Game", "Training"])
 
 const schema = z.object({
   event_name: z.string(),
-  event_date: z.string(),
-  type: game_types.array(),
+  event_date: z.string().min(1, { message: "Please select a date." }),
+  type: game_types.array().min(1, { message: "Please select a game type." }),
   teams: z.string().array().max(2, { message: "You can select a maximum of 2 teams." }),
   notes: z.string().optional(),
 });
@@ -44,16 +45,17 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
     control,
     reset,
     watch,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isValid },
   } = useForm<EventData>({
     resolver: zodResolver(schema),
+    mode: "onChange",
     defaultValues: currentData
       ? {
           event_name: currentData.event_name,
           event_date: currentData.event_date?.split("T")[0] || "",
           type: currentData.type ? [currentData.type] : [],
           teams: [currentData.team_1_id, currentData.team_2_id],
-          notes: currentData.notes,
+          notes: currentData.notes ?? "",
         }
       : { event_name: "", event_date: "", type: [], teams: [], notes: "" },
   })
@@ -68,7 +70,19 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["events"] }); setOpen(false); }
   })
 
-  const handleOpen = () => { reset(); setOpen(true); }
+  const handleOpen = () => {
+    reset(currentData
+      ? {
+          event_name: currentData.event_name,
+          event_date: currentData.event_date?.split("T")[0] || "",
+          type: currentData.type ? [currentData.type] : [],
+          teams: [currentData.team_1_id, currentData.team_2_id],
+          notes: currentData.notes ?? "",
+        }
+      : { event_name: "", event_date: "", type: [], teams: [], notes: "" }
+    );
+    setOpen(true);
+  }
   const gameType = watch("type");
   const isGameFieldsDisabled = gameType?.[0] !== "Game";
 
@@ -107,26 +121,16 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
       <CustomModal isOpen={open} onClose={() => setOpen(false)} title={mode === "add" ? "New Event" : "Edit Event"} width="500px">
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-4">
-            <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1">Game Type</label>
-              <Controller
-                name="type"
-                control={control}
-                render={({ field }) => (
-                  <select
-                    disabled={mode === "edit"}
-                    value={field.value?.[0] ?? ""}
-                    onChange={(e) => field.onChange(e.target.value ? [e.target.value] : [])}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none disabled:opacity-50"
-                  >
-                    <option value="">Select game type</option>
-                    <option value="Game">Game</option>
-                    <option value="Training">Training</option>
-                  </select>
-                )}
-              />
-              {errors.type && <p className="text-red-400 text-xs mt-1">{errors.type.message}</p>}
-            </div>
+            <AsyncDropdown
+              name="type"
+              control={control}
+              label="Game Type"
+              placeholder="Select game type"
+              collection={{ items: ["Game", "Training"] }}
+              itemToKey={(item) => item}
+              renderItem={(item) => item}
+              disabled={mode === "edit"}
+            />
             <div>
               <label className="block text-sm font-medium text-neutral-300 mb-1">Event Name</label>
               <input
@@ -144,33 +148,17 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
                 className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none"
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-neutral-300 mb-1">Teams</label>
-              <Controller
-                control={control}
-                name="teams"
-                render={({ field }) => (
-                  <select
-                    multiple
-                    disabled={mode === "edit" || isGameFieldsDisabled}
-                    value={field.value ?? []}
-                    onChange={(e) => {
-                      const selected = Array.from(e.target.selectedOptions, (opt) => opt.value);
-                      field.onChange(selected);
-                    }}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none disabled:opacity-50"
-                    size={Math.min(4, teamsCollection.items.length + 1)}
-                  >
-                    {teamsCollection.items.map((team) => (
-                      <option key={team.team_id} value={team.team_id}>
-                        {team.team_name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              />
-              {errors.teams && <p className="text-red-400 text-xs mt-1">{errors.teams.message}</p>}
-            </div>
+            <AsyncDropdown
+              name="teams"
+              control={control}
+              label="Teams"
+              placeholder="Select teams"
+              collection={teamsCollection}
+              itemToKey={(item: Team) => item.team_id}
+              renderItem={(item: Team) => item.team_name}
+              multiple={true}
+              disabled={mode === "edit" || isGameFieldsDisabled}
+            />
             <div>
               <label className="block text-sm font-medium text-neutral-300 mb-1">Notes</label>
               <textarea
@@ -183,7 +171,7 @@ const EventForm = ({ mode, currentData }: PortalProps) => {
             <div className="flex justify-between">
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !isValid}
                 className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors disabled:opacity-50"
               >
                 {mode === "add" ? "Add" : "Update"}

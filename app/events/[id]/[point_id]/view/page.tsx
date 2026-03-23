@@ -79,7 +79,7 @@ function PointViewContent() {
 
   if (possessions.length === 0) {
     return (
-      <div className="py-8">
+      <div className="pb-8">
         <StandardHeader text="Point Info" />
         <p className="mt-8">
           {isLoading ? "Loading point data" : "No data found for this point yet."}
@@ -132,7 +132,7 @@ function PointViewContent() {
   };
 
   return (
-    <div className="py-8">
+    <div className="pb-8">
       <StandardHeader text={point.event_name} />
       <p className="mt-4 text-lg text-neutral-400">{`Offence: ${point.offence_team_name}`}</p>
 

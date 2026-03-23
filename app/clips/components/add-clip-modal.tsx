@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
 import { fetchVisiblePlaylists } from "@/app/playlists/supabase";
 import { ClipDetail, upsertClip } from "@/app/clips/supabase";
 import { AsyncDropdown } from "@/components/async-dropdown.tsx";
@@ -68,6 +68,20 @@ export function AddClipModal({
     },
   });
   const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (isOpen) {
+      reset({
+        title: mode === 'edit' ? clipToEdit?.title : '',
+        source: mode === 'edit' ? [clipToEdit?.source_id] : (sourceId ? [sourceId] : []),
+        timestamp: mode === 'edit' ? clipToEdit?.timestamp : '',
+        description: mode === 'edit' ? clipToEdit?.description : '',
+        playlists: mode === 'edit' ? clipToEdit?.playlists ?? [] : (playlists ? playlists : []),
+        is_public: mode === 'edit' ? clipToEdit?.is_public : true,
+        players: mode === 'edit' ? clipToEdit?.players ?? [] : (players ? players : []),
+      });
+    }
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { data: playlistsData, isLoading: isLoadingPlaylists } = useQuery({
     queryFn: () => fetchVisiblePlaylists(playerId),

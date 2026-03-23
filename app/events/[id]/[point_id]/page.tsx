@@ -168,7 +168,7 @@ function PossessionPageContent() {
     `${item.player_name}${item.number ? ` (#${item.number})` : ""}`;
 
   return (
-    <div className="py-8">
+    <div className="pb-8">
       <StandardHeader text={point.event_name} />
       <p className="mt-4 text-lg text-neutral-400 mb-4">{`${point.offence_team_name} on O starting ${point.timestamp}`}</p>
       <OnPageVideoLink url={baseUrlToTimestampUrl(point.base_url, point.timestamp)}/>
@@ -353,7 +353,7 @@ function PossessionPageContent() {
             <button
               type="submit"
               disabled={!isValid || isSubmitting}
-              className="mt-8 mb-8 px-6 py-2 rounded bg-yellow-600 hover:bg-yellow-500 text-white font-medium transition-colors disabled:opacity-50"
+              className="mt-8 mb-8 px-6 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-white font-medium transition-colors disabled:opacity-50"
             >
               Add Possession
             </button>

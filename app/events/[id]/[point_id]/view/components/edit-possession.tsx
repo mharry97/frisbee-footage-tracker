@@ -126,12 +126,12 @@ export default function EditPossessionDialog({
     <CustomModal isOpen={isOpen} onClose={onClose} title="Edit Possession" width="600px">
       <form id="edit-possession-form" onSubmit={handleSubmit(onSubmit)}>
         <p className="text-lg mb-4">Players</p>
-        <AsyncDropdown name="offence_team_players" control={control} label="Offence Players"
+        <AsyncDropdown name="offence_team_players" control={control} label="Point Offence Players"
           placeholder="Select players on offence" collection={collections.offenceCollection}
           isLoading={isLoading} multiple={true} itemToKey={(item) => item.player_id}
           renderItem={(item) => item.player_name}
         />
-        <AsyncDropdown name="defence_team_players" control={control} label="Defence Players"
+        <AsyncDropdown name="defence_team_players" control={control} label="Point Defence Players"
           placeholder="Select players on defence" collection={collections.defenceCollection}
           isLoading={isLoading} multiple={true} itemToKey={(item) => item.player_id}
           renderItem={(item) => item.player_name}

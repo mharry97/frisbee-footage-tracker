@@ -62,7 +62,7 @@ export function Sidebar() {
       >
         <div className="px-3 py-6">
           <Link href="/" onClick={() => setMobileOpen(false)}>
-            <span style={{ fontSize: "1.5rem", fontWeight: 400, paddingLeft: "1rem" }} className="text-yellow-400 tracking-wide">Frisbee Tracker</span>
+            <span style={{ fontSize: "1.5rem", fontWeight: 300, paddingLeft: "1rem" }} className="text-neutral-100 tracking-wide">Footage Tracker</span>
           </Link>
         </div>
 

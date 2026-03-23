@@ -27,6 +27,7 @@ const SourceForm = ({ mode, currentSourceData }: PortalProps) => {
   const {
     register,
     handleSubmit,
+    reset,
     setError,
     formState: {errors, isSubmitting}} = useForm<SourceData>({
     resolver:zodResolver(schema),
@@ -78,9 +79,9 @@ const SourceForm = ({ mode, currentSourceData }: PortalProps) => {
   return (
     <>
       {mode === "add"
-        ? <FloatingActionButton onClick={() => setOpen(true)} iconType="add"/>
+        ? <FloatingActionButton onClick={() => { reset({ title: "", url: "", recorded_date: "" }); setOpen(true); }} iconType="add"/>
         : <button
-            onClick={() => setOpen(true)}
+            onClick={() => { reset({ ...currentSourceData, recorded_date: currentSourceData?.recorded_date?.split("T")[0] || "" }); setOpen(true); }}
             className="px-3 py-1.5 rounded bg-transparent hover:bg-neutral-700 text-sm transition-colors"
           >
             Edit
@@ -109,7 +110,7 @@ const SourceForm = ({ mode, currentSourceData }: PortalProps) => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-4 py-2 rounded bg-yellow-600 hover:bg-yellow-500 text-white text-sm transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors disabled:opacity-50"
             >
               {mode === "add" ? "Add" : "Update"}
             </button>

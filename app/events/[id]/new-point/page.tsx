@@ -121,7 +121,7 @@ function EventPageContent() {
   const labelClass = "block text-sm font-medium text-neutral-300 mb-1";
 
   return (
-    <div className="py-8">
+    <div className="pb-8">
       <StandardHeader text="Point Form" />
 
       <div className="mb-4">

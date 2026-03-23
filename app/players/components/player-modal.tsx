@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -56,6 +56,18 @@ export function PlayerModal({
       notes: mode === 'edit' ? (playerToEdit?.notes ?? '') : '',
     },
   });
+
+  useEffect(() => {
+    if (isOpen) {
+      reset({
+        player_name: mode === 'edit' ? playerToEdit?.player_name : (playerName ?? ''),
+        number: mode === 'edit' ? playerToEdit?.number : (playerNumber ?? undefined),
+        is_active: mode === 'edit' ? playerToEdit?.is_active : true,
+        team_id: mode === 'edit' ? [playerToEdit?.team_id] : (teamId ? [teamId] : []),
+        notes: mode === 'edit' ? (playerToEdit?.notes ?? '') : '',
+      });
+    }
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { data: teamsData, isLoading: isLoadingTeams } = useQuery({
     queryFn: fetchTeams,
