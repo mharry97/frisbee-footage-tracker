@@ -46,6 +46,25 @@ function PossessionPageContent() {
   } = useForm<AddPossession>({
     resolver: zodResolver(schema),
     mode: 'onChange',
+    defaultValues: {
+      throws: 0,
+      possession_outcome: [],
+      offence_team_players: [],
+      defence_team_players: [],
+      offence_init: [],
+      defence_init: [],
+      offence_main: [],
+      defence_main: [],
+      turn_throw_zone: [],
+      turn_receive_zone: [],
+      turnover_reason: [],
+      score_method: [],
+      score_player: [],
+      assist_player: [],
+      turn_thrower: [],
+      turn_intended_receiver: [],
+      d_player: [],
+    },
   });
   const { data, isLoading, error } = usePointFormData(point_id);
   if (error) throw error;

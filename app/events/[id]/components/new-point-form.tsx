@@ -50,7 +50,10 @@ const PointForm = ({ event_id }: PortalProps) => {
   const selectedOffenceTeamId = watch("offence_team")?.[0];
   const defenceTeam = useMemo(() => {
     if (!selectedOffenceTeamId || !teamsState.value) return undefined;
-    return teamsState.value.find((team) => team.team_id !== selectedOffenceTeamId);
+    return (
+      teamsState.value.find((team) => team.team_id !== selectedOffenceTeamId) ??
+      teamsState.value.find((team) => team.team_id === selectedOffenceTeamId)
+    );
   }, [selectedOffenceTeamId, teamsState.value]);
 
   const handleOpenPortal = () => { reset(); setOpen(true); }
