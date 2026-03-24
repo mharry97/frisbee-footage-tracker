@@ -1,19 +1,14 @@
 "use client"
 
-import {
-  Container,
-  Box,
-  Text,
-  SimpleGrid,
-  Card, HStack, Button,
-} from "@chakra-ui/react";
 import { fetchEvents } from "@/app/events/supabase";
-import {AuthWrapper} from "@/components/auth-wrapper";
-import {useAuth} from "@/lib/auth-context.tsx";
+import { AuthWrapper } from "@/components/auth-wrapper";
+import { useAuth } from "@/lib/auth-context.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
-import {useQuery} from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import React from "react";
 import EventForm from "@/app/events/components/event-form.tsx";
+import { CardGrid } from "@/components/card-grid";
+import { Card, CardHeader, CardBody } from "@/components/card";
 
 function EventsPageContent() {
   const { player } = useAuth()
@@ -23,69 +18,60 @@ function EventsPageContent() {
     queryKey: ["events"]
   })
 
-
   if (!player || isLoading) {
     return (
-      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading event data...</Text>
-      </Box>
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading event data...</p>
+      </div>
     );
   }
+
   if (!events) {
     return (
-      <Container maxW="4xl">
-        <StandardHeader text="Events" is_admin={player.is_admin} />
-        <Text color="white" fontSize="lg">No events yet!</Text>
-      </Container>
+      <div>
+        <StandardHeader text="Events" />
+        <p>No events yet!</p>
+      </div>
     )
   }
 
   return (
-    <Container maxW="4xl">
-      <StandardHeader text="Events" is_admin={player.is_admin} />
-      <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
+    <div>
+      <StandardHeader text="Events" />
+      <CardGrid>
         {events.map((item) => (
-            <Card.Root
-              key={item.event_id}
-              variant={item.team_1_scores + item.team_2_scores > 0 ? "outline" : "elevated"}
-              borderColor={item.team_1_scores + item.team_2_scores > 0 ? "gray.400" : "transparent"}
-              borderWidth={item.team_1_scores + item.team_2_scores > 0 ? "1px" : "0px"}
-            >
-              <Card.Header>
-                <Card.Title>{item.event_name}</Card.Title>
-                <Card.Description>{item.event_date}</Card.Description>
-              </Card.Header>
-              <Card.Body>
-                {item.type !== "Game" ? (<Text></Text>)
-                : item.team_1_scores + item.team_1_scores === 0 ? (
-                    <HStack>
-                      <Text>{item.team_1}</Text>
-                      <Text> Vs. </Text>
-                      <Text> {item.team_2}</Text>
-                    </HStack>
-                  ) : (
-                    <HStack>
-                      <Text>{item.team_1}</Text>
-                      <Text> {item.team_1_scores}</Text>
-                      <Text> : </Text>
-                      <Text>{item.team_2_scores}</Text>
-                      <Text> {item.team_2}</Text>
-                    </HStack>
-                  )}
-              </Card.Body>
-              <Card.Footer gap="2">
-                <Button asChild variant="solid">
-                  <a href={`/events/${item.event_id}`}>
-                    View
-                  </a>
-                </Button>
+          <Card
+            key={item.event_id}
+            className={item.team_1_scores + item.team_2_scores > 0 ? "border-neutral-500" : ""}
+          >
+            <CardHeader>
+              <h3 className="font-medium">{item.event_name}</h3>
+              <p className="text-neutral-400 text-sm">{item.event_date}</p>
+            </CardHeader>
+            <CardBody>
+              {item.type === "Game" && (
+                <p className="text-sm mb-3">
+                  {item.team_1_scores + item.team_2_scores === 0
+                    ? `${item.team_1} vs. ${item.team_2}`
+                    : `${item.team_1} ${item.team_1_scores} : ${item.team_2_scores} ${item.team_2}`
+                  }
+                </p>
+              )}
+              <div className="flex gap-2">
+                <a
+                  href={`/events/${item.event_id}`}
+                  className="px-3 py-1.5 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors"
+                >
+                  View
+                </a>
                 <EventForm mode="edit" currentData={item} />
-              </Card.Footer>
-            </Card.Root>
+              </div>
+            </CardBody>
+          </Card>
         ))}
-      </SimpleGrid>
+      </CardGrid>
       <EventForm mode="add" />
-    </Container>
+    </div>
   )
 }
 

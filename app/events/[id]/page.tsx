@@ -1,16 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import NextLink from "next/link";
-import {
-  Container,
-  Heading,
-  Flex,
-  SimpleGrid,
-  Separator,
-  Box,
-  Grid, Text, Card, Badge, Button, Dialog, Portal, CloseButton, HStack, VStack
-} from "@chakra-ui/react";
 import LoadingSpinner from "@/components/ui/loading-spinner";
 import CustomTabs from "@/components/tabbed-page";
 import { fetchEventPoints } from "@/app/points/supabase";
@@ -33,10 +24,24 @@ import {ClipGrid} from "@/app/clips/components/clip-grid.tsx";
 import {PlayerStatsTable} from "@/app/stats/player/components/player-stat-table.tsx";
 import {calculatePlayerStats} from "@/app/stats/player/player-base-stats.ts";
 import {fetchTeamMapping} from "@/app/players/supabase.ts";
+import { CustomModal } from "@/components/modal";
+import { CardGrid } from "@/components/card-grid";
+import { Card, CardHeader, CardBody } from "@/components/card";
+
+function SectionDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-4 mb-4 mt-4">
+      <hr className="flex-1 border-neutral-700" />
+      <span className="text-xl shrink-0">{label}</span>
+      <hr className="flex-1 border-neutral-700" />
+    </div>
+  );
+}
 
 function EventPageContent() {
   const { id } = useParams<{ id: string }>();
   const { player } = useAuth();
+  const [quickViewUrl, setQuickViewUrl] = useState<string | null>(null);
 
   const { data: points, isLoading: isLoadingPoints } = useQuery({
     queryKey: ['points', id],
@@ -44,319 +49,226 @@ function EventPageContent() {
     enabled: !!id,
   });
 
-  // Fetch the possessions for this event
   const { data: possessions, isLoading: isLoadingPossessions } = useQuery({
     queryKey: ['possessions', id],
     queryFn: () => fetchEventPossessions(id),
     enabled: !!id,
   });
 
-  // Fetch event data
   const { data: event, isLoading: isLoadingEvent } = useQuery({
     queryKey: ['event', id],
     queryFn: () => fetchEvent(id),
     enabled: !!id,
   });
 
-  // Fetch player team mapping
   const { data: playerTeamMapping, isLoading: isLoadingTeamPlayer } = useQuery({
     queryFn: fetchTeamMapping,
     queryKey: ["teamPlayer"]
-  })
+  });
 
   const isLoading = isLoadingPossessions || isLoadingPoints || isLoadingEvent || isLoadingTeamPlayer;
   const hasPoints = points?.length != 0;
 
-  // STATS
   const scoreData = useMemo(() => {
-    if (!points || points.length === 0) {
-      return [];
-    }
+    if (!points || points.length === 0) return [];
     const scoreTally: { [key: string]: number } = {};
     for (const point of points) {
       let scoringTeamName: string | null = null;
-
-      if (point.point_outcome === 'hold') {
-        scoringTeamName = point.offence_team_name;
-      } else if (point.point_outcome === 'break') {
-        scoringTeamName = point.defence_team_name;
-      }
+      if (point.point_outcome === 'hold') scoringTeamName = point.offence_team_name;
+      else if (point.point_outcome === 'break') scoringTeamName = point.defence_team_name;
       if (scoringTeamName) {
         scoreTally[scoringTeamName] = (scoreTally[scoringTeamName] || 0) + 1;
       }
     }
-    return Object.entries(scoreTally).map(([teamName, score]) => ({
-      name: teamName,
-      value: score,
-    }));
+    return Object.entries(scoreTally).map(([teamName, score]) => ({ name: teamName, value: score }));
   }, [points]);
 
-  // Game Flow
   const scoreChartData = useMemo(() => {
-    if (!points || !event) {
-      return [];
-    }
+    if (!points || !event) return [];
     return transformPointsForScoreChart(points, event);
   }, [points, event]);
 
-  // Stat grid
   const gameStats = useMemo(() => {
-    if (!points || !event || !possessions) {
-      return [] as CalculatedStat[];
-    }
+    if (!points || !event || !possessions) return [] as CalculatedStat[];
     return calculateGameStats(points, possessions, event);
-    }, [points, possessions, event]);
+  }, [points, possessions, event]);
 
-  // Player table
-  // Player stat lines
   const allPlayerStats = useMemo(() =>
-      calculatePlayerStats(possessions ?? [], playerTeamMapping ?? []),
+    calculatePlayerStats(possessions ?? [], playerTeamMapping ?? []),
     [possessions, playerTeamMapping]
   );
 
   const filteredPlayerStats = useMemo(() => {
-    if (!allPlayerStats) {
-      return [];
-    }
-    // Filter for players with >0 points
-    return allPlayerStats.filter(player => player.points_played > 0);
+    if (!allPlayerStats) return [];
+    return allPlayerStats.filter(p => p.points_played > 0);
   }, [allPlayerStats]);
 
   const PointsContent = () => {
     const sortedPoints = [...(points ?? [])].sort(
-      (a, b) =>
-        convertTimestampToSeconds(a.timestamp) -
-        convertTimestampToSeconds(b.timestamp)
+      (a, b) => convertTimestampToSeconds(a.timestamp) - convertTimestampToSeconds(b.timestamp)
     );
     if (!hasPoints) {
       return (
         <>
-          <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-            <Text color="white" fontSize="lg">No points for this event yet.</Text>
-          </Box>
+          <div className="flex items-center justify-center py-16">
+            <p className="text-lg">No points for this event yet.</p>
+          </div>
           <PointForm event_id={id} />
         </>
-      )
+      );
     }
     return (
       <>
-        <SimpleGrid columns={{ base: 1, md: 2 }} gap={8} mb={8}>
+        <CardGrid>
           {sortedPoints.map((item, index) => (
-            <Card.Root key={index} variant="elevated">
-              <Card.Header>
-                <Card.Title>
-                  <HStack justify="space-between">
-                    <Text>Offence: {item.offence_team_name}</Text>
-                    {item.point_outcome === "break" ? (
-                      <Badge colorPalette="red">Break</Badge>
-                    ) : item.point_outcome === "hold" ? (
-                      <Badge colorPalette="green">Hold</Badge>
-                    ) : (
-                      <></>
-                    )}
-                  </HStack>
-                </Card.Title>
-                <Card.Description>
-                  {item.timestamp}
-                </Card.Description>
-              </Card.Header>
-              {item.point_outcome === "unknown" ? (
-                <Card.Body>
-                  <Card.Description>
-                    Point has not been fully statted.
-                  </Card.Description>
-                </Card.Body>
-              ) : (
-                <Card.Body>
-                  <Text>
-                    Assist: {item.assist_player_name || "Unknown"}
-                  </Text>
-                  <Text>
-                    Score: {item.score_player_name || "Unknown"}
-                  </Text>
-                  <Card.Description mt={2}>
-                    {item.possession_number - 1}{item.possession_number === 2 ? " Turn" : " Turns"}
-                  </Card.Description>
-                </Card.Body>
-              )}
-              <Card.Footer gap="2">
-                <NextLink href={`/events/${item.event_id}/${item.point_id}/view`} passHref>
-                  <Button variant="solid" colorPalette="gray">
-                    Details
-                  </Button>
-                </NextLink>
-                <Dialog.Root size="xl">
-                  <Dialog.Trigger asChild>
-                    <Button variant="ghost" colorPalette="gray">Quick View</Button>
-                  </Dialog.Trigger>
-                  <Portal>
-                    <Dialog.Backdrop />
-                    <Dialog.Positioner>
-                      <Dialog.Content>
-                        <Dialog.Body>
-                          <OnPageVideoLink url={baseUrlToTimestampUrl(item.base_url, item.timestamp)} />
-                        </Dialog.Body>
-                        <Dialog.CloseTrigger asChild>
-                          <CloseButton size="sm" />
-                        </Dialog.CloseTrigger>
-                      </Dialog.Content>
-                    </Dialog.Positioner>
-                  </Portal>
-                </Dialog.Root>
-              </Card.Footer>
-            </Card.Root>
+            <Card key={index}>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <p className="font-medium">Offence: {item.offence_team_name}</p>
+                  {item.point_outcome === "break" ? (
+                    <span className="px-2 py-0.5 rounded text-xs bg-red-900 text-red-200">Break</span>
+                  ) : item.point_outcome === "hold" ? (
+                    <span className="px-2 py-0.5 rounded text-xs bg-green-900 text-green-200">Hold</span>
+                  ) : null}
+                </div>
+                <p className="text-sm text-neutral-400 mt-1">{item.timestamp}</p>
+              </CardHeader>
+              <CardBody>
+                {item.point_outcome === "unknown" ? (
+                  <p className="text-sm text-neutral-400">Point has not been fully statted.</p>
+                ) : (
+                  <div className="text-sm mb-3">
+                    <p>Assist: {item.assist_player_name || "Unknown"}</p>
+                    <p>Score: {item.score_player_name || "Unknown"}</p>
+                    <p className="text-neutral-400 mt-1">
+                      {item.possession_number - 1}{item.possession_number === 2 ? " Turn" : " Turns"}
+                    </p>
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <NextLink href={`/events/${item.event_id}/${item.point_id}/view`} passHref>
+                    <button className="px-3 py-1.5 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors">
+                      Details
+                    </button>
+                  </NextLink>
+                  <button
+                    className="px-3 py-1.5 rounded bg-transparent hover:bg-neutral-700 text-sm transition-colors"
+                    onClick={() => setQuickViewUrl(baseUrlToTimestampUrl(item.base_url, item.timestamp))}
+                  >
+                    Quick View
+                  </button>
+                </div>
+              </CardBody>
+            </Card>
           ))}
-        </SimpleGrid>
+        </CardGrid>
         <PointForm event_id={id} />
       </>
     );
   };
 
-
   const OverviewContent = () => {
     if (!hasPoints || !event) {
       return (
-        <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-          <Text color="white" fontSize="lg">No stats for this event yet.</Text>
-        </Box>
-      )
+        <div className="flex items-center justify-center py-16">
+          <p className="text-lg">No stats for this event yet.</p>
+        </div>
+      );
     }
     return (
       <>
-        <Flex direction="column" align="center" mb={8} mt={4}>
-          {event.notes && <Text mt={0} mb={4} color="fg.muted" fontSize="sm">*Note: {event.notes}</Text>}
-          <Text fontSize="xl">Score</Text>
-          <Grid
-            templateColumns="1fr auto 1fr"
-            alignItems="center"
-            gap={12}
-            px={4}
-            py={4}
-            width="100%"
-            maxW="lg"
-            mx="auto"
-          >
-            <Flex direction="column" align="flex-end" gap={4}>
+        <div className="flex flex-col items-center mb-8 mt-4">
+          {event.notes && (
+            <p className="mt-0 mb-4 text-neutral-400 text-sm">*Note: {event.notes}</p>
+          )}
+          <p className="text-xl mb-4">Score</p>
+          <div className="grid w-full max-w-lg px-4 py-4 gap-6" style={{ gridTemplateColumns: '1fr auto 1fr' }}>
+            <div className="flex flex-col items-end gap-4 min-w-0">
               {scoreData.map((team) => (
-                <Heading key={team.name} size="md" color="white">
-                  {team.name}
-                </Heading>
+                <h2 key={team.name} className="text-base font-semibold text-right truncate w-full">{team.name}</h2>
               ))}
-            </Flex>
-            <Box h="100%" w="1px" bg="#facc15"/>
-            <Flex direction="column" align="flex-start" gap={4}>
+            </div>
+            <div className="w-px bg-yellow-400" />
+            <div className="flex flex-col items-start gap-4 min-w-0">
               {scoreData.map((team) => (
-                <Heading key={team.name + "-score"} size="md" color="white">
-                  {team.value}
-                </Heading>
+                <h2 key={team.name + "-score"} className="text-base font-semibold">{team.value}</h2>
               ))}
-            </Flex>
-          </Grid>
-        </Flex>
-        <VStack>
-          <HStack mb={4} mt={4} width="100%">
-            <Separator flex="1" size="sm"></Separator>
-            <Text flexShrink="0" fontSize="xl">Game Flow</Text>
-            <Separator flex="1" size="sm"></Separator>
-          </HStack>
-          <Box height="300px" width="100%" mt={4} mb={4}>
-            <ScoreProgressionChart
-              data={scoreChartData}
-              teamOneName={event?.team_1 ?? 'Team 1'}
-              teamTwoName={event?.team_2 ?? 'Team 2'}
+            </div>
+          </div>
+        </div>
+
+        <SectionDivider label="Game Flow" />
+        <div className="h-72 w-full mt-4 mb-4">
+          <ScoreProgressionChart
+            data={scoreChartData}
+            teamOneName={event?.team_1 ?? 'Team 1'}
+            teamTwoName={event?.team_2 ?? 'Team 2'}
+          />
+        </div>
+
+        <SectionDivider label="Team Stats" />
+        <div className="flex flex-col gap-6 w-full">
+          <div className="grid w-full grid-cols-3">
+            <h2 className="text-left font-semibold truncate">{event?.team_1}</h2>
+            <div />
+            <h2 className="text-right font-semibold truncate">{event?.team_2}</h2>
+          </div>
+          {(gameStats ?? []).map((stat) => (
+            <StatRow
+              key={stat.label}
+              label={stat.label}
+              teamOneValue={stat.teamOneValue}
+              teamTwoValue={stat.teamTwoValue}
+              isPercentage={stat.isPercentage}
             />
-          </Box>
-          <HStack mb={4} mt={4} width="100%">
-            <Separator flex="1" size="sm"></Separator>
-            <Text flexShrink="0" fontSize="xl">Team Stats</Text>
-            <Separator flex="1" size="sm"></Separator>
-          </HStack>
-          <VStack gap={6} mx="auto" width = "100%">
-            <Grid templateColumns="1fr 1fr 1fr" gap={4} width="100%">
-              <Heading textAlign="left">{event?.team_1}</Heading>
-              <Box />
-              <Heading textAlign="right">{event?.team_2}</Heading>
-            </Grid>
-            {(gameStats ?? []).map((stat) => (
-              <StatRow
-                key={stat.label}
-                label={stat.label}
-                teamOneValue={stat.teamOneValue}
-                teamTwoValue={stat.teamTwoValue}
-                isPercentage={stat.isPercentage}
-              />
-            ))}
-          </VStack>
-          <HStack mb={4} mt={8} width="100%">
-            <Separator flex="1" size="sm"></Separator>
-            <Text flexShrink="0" fontSize="xl">Player Stats</Text>
-            <Separator flex="1" size="sm"></Separator>
-          </HStack>
-          <PlayerStatsTable data={filteredPlayerStats} />
-        </VStack>
+          ))}
+        </div>
+
+        <SectionDivider label="Player Stats" />
+        <PlayerStatsTable data={filteredPlayerStats} />
       </>
-    )
+    );
   };
 
   const ClipsContent = () => {
     const { data: clips, isLoading } = useQuery({
       queryKey: ["clips", { eventId: id, requestPlayerId: player?.auth_user_id }],
-      queryFn: () => fetchClipsCustom({
-        eventId: id,
-        requestPlayer: player!.auth_user_id
-      }),
+      queryFn: () => fetchClipsCustom({ eventId: id, requestPlayer: player!.auth_user_id }),
       enabled: !!id && !!player,
     });
-    if (isLoading) {
-      return <LoadingSpinner text="Loading clips..." />;
-    }
-    if (!player) {
-      return <Text>Who are you</Text>;
-    }
-    return <ClipGrid
-      clips={clips ?? []}
-      playerId={player.player_id}
-    />;
+    if (isLoading) return <LoadingSpinner text="Loading clips..." />;
+    if (!player) return <p>Who are you</p>;
+    return <ClipGrid clips={clips ?? []} playerId={player.player_id} />;
   };
 
-  // Set up the tabs available
   const tabs = [
-      {
-        value: "overview",
-        label: "Overview",
-        content: <OverviewContent />,
-      },
-      {
-        value: "points",
-        label: "Points",
-        content: <PointsContent />,
-      },
-      {
-        value: "clips",
-        label: "Clips",
-        content: <ClipsContent />,
-      },
-    ];
+    { value: "overview", label: "Overview", content: <OverviewContent /> },
+    { value: "points", label: "Points", content: <PointsContent /> },
+    { value: "clips", label: "Clips", content: <ClipsContent /> },
+  ];
 
   if (!player || isLoading) {
     return (
-      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading event data...</Text>
-      </Box>
-    )
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading event data...</p>
+      </div>
+    );
   }
 
   return (
-    <Container maxW="4xl">
-      <StandardHeader text={event?.event_name ?? ""} is_admin={player.is_admin} />
+    <div className="pb-8">
+      <StandardHeader text={event?.event_name ?? ""} />
       {isLoading ? (
         <LoadingSpinner text="Loading..." />
       ) : (
         <CustomTabs defaultValue="overview" tabs={tabs} />
       )}
-      <Box width="100%" height="50px">
-      </Box>
-    </Container>
+      <div className="h-12" />
+
+      <CustomModal isOpen={!!quickViewUrl} onClose={() => setQuickViewUrl(null)} title="Quick View">
+        {quickViewUrl && <OnPageVideoLink url={quickViewUrl} />}
+      </CustomModal>
+    </div>
   );
 }
 

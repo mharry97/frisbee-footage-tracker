@@ -1,18 +1,15 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Container } from "@chakra-ui/react";
 import Header from "@/components/header";
 import { Source } from "@/app/sources/supabase"
 import { fetchSourceById } from "@/app/sources/supabase";
-import {AuthWrapper} from "@/components/auth-wrapper";
+import { AuthWrapper } from "@/components/auth-wrapper";
 
 export default function EventPage({ params }: { params: Promise<{ source_id: string }> }) {
-  // Unwrap the promised params
   const { source_id } = React.use(params);
   const [sourceData, setSourceData] = useState<Source | null>(null);
 
-  // Fetch Source
   useEffect(() => {
     if (!source_id) return;
     async function loadSource() {
@@ -26,13 +23,13 @@ export default function EventPage({ params }: { params: Promise<{ source_id: str
 
   return (
     <AuthWrapper>
-      <Container maxW="4xl">
+      <div>
         <Header
           title={sourceData ? sourceData.title : ""}
           buttonText="Sources"
           redirectUrl="/sources"
         />
-      </Container>
+      </div>
     </AuthWrapper>
   );
 }

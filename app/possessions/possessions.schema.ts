@@ -14,20 +14,14 @@ export const schema = z.object({
   throws: z.number(),
   turn_throw_zone: z.string().array().optional(),
   turn_receive_zone: z.string().array().optional(),
-  turnover_reason: z.enum(turnoverReasons, {
-    required_error: "Please select a turnover reason.",
-  }).array().optional(),
-  score_method: z.enum(scoreMethods, {
-    required_error: "Please select a score method.",
-  }).array().optional(),
+  turnover_reason: z.enum(turnoverReasons).array().optional(),
+  score_method: z.enum(scoreMethods).array().optional(),
   score_player: z.string().array().optional(),
   assist_player: z.string().array().optional(),
   turn_thrower: z.string().array().optional(),
   turn_intended_receiver: z.string().array().optional(),
   d_player: z.string().array().optional(),
-  possession_outcome: z.enum(outcomeOptions, {
-    required_error: "Please select a possession outcome.",
-  }).array(),
+  possession_outcome: z.enum(outcomeOptions).array(),
   offence_team_players: z.string().array().optional(),
   defence_team_players: z.string().array().optional(),
 });

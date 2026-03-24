@@ -59,6 +59,8 @@ const modalStyle: React.CSSProperties = {
   borderRadius: "8px",
   boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
   position: "relative",
+  maxHeight: "90vh",
+  overflowY: "auto",
 };
 
 const closeButtonStyle: React.CSSProperties = {

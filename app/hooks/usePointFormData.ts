@@ -2,15 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { fetchPoint } from "@/app/points/supabase";
-import {fetchPointPossessions, PossessionDetailed} from "@/app/possessions/supabase";
-import {getPlayersForTeam, PlayerDetailed} from "@/app/players/supabase";
-import {fetchStrategiesByType, Strategy} from "@/app/strategies/supabase";
-import {createListCollection} from "@chakra-ui/react";
-import {useMemo} from "react";
+import { fetchPointPossessions, PossessionDetailed } from "@/app/possessions/supabase";
+import { getPlayersForTeam, PlayerDetailed } from "@/app/players/supabase";
+import { fetchStrategiesByType, Strategy } from "@/app/strategies/supabase";
+import { useMemo } from "react";
 
-const outcomeOptions = ["Turnover", "Score"] as const
-const turnoverReasons = ["Drop", "Throw Away", "Block", "Stallout"] as const
-const scoreMethods = ["Flow", "Deep Shot", "Endzone"] as const
+const outcomeOptions = ["Turnover", "Score"] as const;
+const turnoverReasons = ["Drop", "Throw Away", "Block", "Stallout"] as const;
+const scoreMethods = ["Flow", "Deep Shot", "Endzone"] as const;
 
 async function fetchPointPageData(point_id: string) {
   const pointData = await fetchPoint(point_id);
@@ -53,7 +52,7 @@ export type PointPageData = Awaited<ReturnType<typeof fetchPointPageData>>;
 
 export function usePointFormData(point_id: string) {
   return useQuery({
-    queryKey: ['pointPageData', point_id],
+    queryKey: ["pointPageData", point_id],
     queryFn: () => fetchPointPageData(point_id),
     enabled: !!point_id,
   });
@@ -62,77 +61,43 @@ export function usePointFormData(point_id: string) {
 export function usePointFormCollections(data: PointPageData | undefined) {
   const { dropdownLists } = data || {
     dropdownLists: {
-      offencePlayers: [],
-      defencePlayers: [],
-      dInitStrats: [],
-      oInitStrats: [],
-      dMainStrats: [],
-      oMainStrats: [],
+      offencePlayers: [] as PlayerDetailed[],
+      defencePlayers: [] as PlayerDetailed[],
+      dInitStrats: [] as Strategy[],
+      oInitStrats: [] as Strategy[],
+      dMainStrats: [] as Strategy[],
+      oMainStrats: [] as Strategy[],
     },
   };
 
-  const offenceCollection = useMemo(() => {
-    return createListCollection<PlayerDetailed>({
-      items: dropdownLists?.offencePlayers ?? [],
-      itemToString: (player) => player.player_name,
-      itemToValue: (player) => player.player_id,
-    });
-  }, [dropdownLists]);
+  const offenceCollection = useMemo(
+    () => ({ items: dropdownLists?.offencePlayers ?? [] }),
+    [dropdownLists]
+  );
 
-  const defenceCollection = useMemo(() => {
-    return createListCollection<PlayerDetailed>({
-      items: dropdownLists?.defencePlayers ?? [],
-      itemToString: (player) => player.player_name,
-      itemToValue: (player) => player.player_id,
-    });
-  }, [dropdownLists]);
+  const defenceCollection = useMemo(
+    () => ({ items: dropdownLists?.defencePlayers ?? [] }),
+    [dropdownLists]
+  );
 
-  const stratCollections = useMemo(() => {
-    const createStrategyCollection = (strats: Strategy[]) => {
-      return createListCollection({
-        items: strats,
-        itemToString: (strat) => strat.strategy,
-        itemToValue: (strat) => strat.strategy_id,
-      });
-    };
+  const stratCollections = useMemo(
+    () => ({
+      dInitCollection: { items: dropdownLists?.dInitStrats ?? [] },
+      oInitCollection: { items: dropdownLists?.oInitStrats ?? [] },
+      dMainCollection: { items: dropdownLists?.dMainStrats ?? [] },
+      oMainCollection: { items: dropdownLists?.oMainStrats ?? [] },
+    }),
+    [dropdownLists]
+  );
 
-    return {
-      dInitCollection: createStrategyCollection(dropdownLists?.dInitStrats ?? []),
-      oInitCollection: createStrategyCollection(dropdownLists?.oInitStrats ?? []),
-      dMainCollection: createStrategyCollection(dropdownLists?.dMainStrats ?? []),
-      oMainCollection: createStrategyCollection(dropdownLists?.oMainStrats ?? []),
-    };
-  }, [dropdownLists]);
-
-  const typeCollection = createListCollection({
-    items: [...outcomeOptions],
-    itemToString: (item) => item,
-    itemToValue: (item) => item,
-  })
-
-  const reasonCollection = createListCollection({
-    items: [...turnoverReasons],
-    itemToString: (item) => item,
-    itemToValue: (item) => item,
-  })
-
-  const methodCollection = createListCollection({
-    items: [...scoreMethods],
-    itemToString: (item) => item,
-    itemToValue: (item) => item,
-  })
+  const typeCollection = { items: [...outcomeOptions] as string[] };
+  const reasonCollection = { items: [...turnoverReasons] as string[] };
+  const methodCollection = { items: [...scoreMethods] as string[] };
 
   const zoneCollection = useMemo(() => {
     const zones = Array.from({ length: 12 }, (_, i) => i + 1);
-
-    return createListCollection({
-      items: zones,
-      itemToValue: (zoneNumber) => String(zoneNumber),
-      itemToString: (zoneNumber) => `Zone ${zoneNumber}`,
-    });
+    return { items: zones };
   }, []);
-
-
 
   return {
     offenceCollection,
@@ -143,5 +108,4 @@ export function usePointFormCollections(data: PointPageData | undefined) {
     typeCollection,
     stratCollections,
   };
-
 }

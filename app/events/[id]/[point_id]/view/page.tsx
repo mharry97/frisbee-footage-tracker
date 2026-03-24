@@ -1,17 +1,6 @@
 "use client";
 
-import React, {useEffect, useState} from "react";
-import {
-  Container,
-  Text,
-  Button,
-  HStack,
-  IconButton,
-  useDisclosure,
-  Portal,
-  Dialog,
-  CloseButton, Box
-} from "@chakra-ui/react";
+import React, { useEffect, useState } from "react";
 import { fetchPointPossessions } from "@/app/possessions/supabase";
 import OnPageVideoLink from "@/components/on-page-video-link";
 import PointOverview from "@/app/events/[id]/[point_id]/view/components/point-overview";
@@ -19,15 +8,16 @@ import PossessionSection from "@/app/events/[id]/[point_id]/view/components/poss
 import { FaLongArrowAltLeft, FaLongArrowAltRight } from "react-icons/fa";
 import { deletePossession } from "@/app/possessions/supabase";
 import EditPossessionDialog from "@/app/events/[id]/[point_id]/view/components/edit-possession";
-import {useParams, useRouter} from "next/navigation";
-import {useAuth} from "@/lib/auth-context.tsx";
+import { useParams, useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context.tsx";
 import StandardHeader from "@/components/standard-header.tsx";
-import {AuthWrapper} from "@/components/auth-wrapper.tsx";
-import {baseUrlToTimestampUrl} from "@/lib/utils.ts";
-import {useMutation, useQuery, useQueryClient} from "@tanstack/react-query";
-import {fetchPoint} from "@/app/points/supabase.ts";
-import {AddClipModal} from "@/app/clips/components/add-clip-modal.tsx";
+import { AuthWrapper } from "@/components/auth-wrapper.tsx";
+import { baseUrlToTimestampUrl } from "@/lib/utils.ts";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchPoint } from "@/app/points/supabase.ts";
+import { AddClipModal } from "@/app/clips/components/add-clip-modal.tsx";
 import FloatingActionButton from "@/components/ui/floating-plus.tsx";
+import { CustomModal } from "@/components/modal";
 
 function PointViewContent() {
   const { id, point_id } = useParams<{ id: string; point_id: string }>()
@@ -35,30 +25,21 @@ function PointViewContent() {
   const router = useRouter();
   const { player } = useAuth()
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { open, onOpen, onClose } = useDisclosure();
-
-  const editDisclosure = useDisclosure();
-  const deleteDisclosure = useDisclosure();
+  const [clipOpen, setClipOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
 
   const { data: possessionPageData, isLoading } = useQuery({
     queryKey: ["possessions"],
     queryFn: async () => {
       const pointData = await fetchPoint(point_id)
-      if (!pointData) {
-        throw new Error("Point not found.");
-      }
+      if (!pointData) throw new Error("Point not found.");
       const possessionsData = await fetchPointPossessions(point_id)
-      return {
-        point: pointData,
-        possessions: possessionsData
-      }
+      return { point: pointData, possessions: possessionsData }
     }
   })
 
-  const { point, possessions } = possessionPageData || {
-    point: null,
-    possessions: [],
-  };
+  const { point, possessions } = possessionPageData || { point: null, possessions: [] };
 
   interface DeletePossessionVars {
     possessionNumber: number;
@@ -68,24 +49,12 @@ function PointViewContent() {
   const { mutate: deletePossessionMutation, isPending: isDeleting } = useMutation({
     mutationFn: (variables: DeletePossessionVars) =>
       deletePossession(variables.pointId, variables.possessionNumber),
-
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["possessions"] });
-      deleteDisclosure.onClose();
+      setDeleteOpen(false);
     },
-    onError: (error) => {
-      console.error("Failed to delete possession:", error);
-    }
+    onError: (error) => console.error("Failed to delete possession:", error)
   });
-
-  const handleDeleteConfirm = () => {
-    if (!point) return;
-
-    deletePossessionMutation({
-      possessionNumber: currentIndex + 1,
-      pointId: point.point_id,
-    });
-  };
 
   useEffect(() => {
     if (possessions && currentIndex >= possessions.length) {
@@ -93,53 +62,48 @@ function PointViewContent() {
     }
   }, [possessions, currentIndex]);
 
-
   if (!player || isLoading) {
     return (
-      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">Loading point data...</Text>
-      </Box>
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">Loading point data...</p>
+      </div>
     )
   }
-  if (!point ) {
+  if (!point) {
     return (
-      <Box minH="100vh" p={4} display="flex" alignItems="center" justifyContent="center">
-        <Text color="white" fontSize="lg">No point data found</Text>
-      </Box>
+      <div className="flex items-center justify-center min-h-screen">
+        <p className="text-lg">No point data found</p>
+      </div>
     )
   }
 
   if (possessions.length === 0) {
     return (
-          <Container maxW="4xl" py={8}>
-            <StandardHeader text="Point Info" is_admin={player.is_admin} />
-            <Text mt={8} color="white">
-              {isLoading ? "Loading point data" : "No data found for this point yet."}
-            </Text>
-            {!isLoading && (
-              <Button
-                colorPalette="green"
-                mt={6}
-                onClick={() => window.location.href = `/events/${id}/${point_id}`}
-              >
-                Add Possession
-              </Button>
-            )}
-          </Container>
+      <div className="pb-8">
+        <StandardHeader text="Point Info" />
+        <p className="mt-8">
+          {isLoading ? "Loading point data" : "No data found for this point yet."}
+        </p>
+        {!isLoading && (
+          <button
+            className="mt-6 px-4 py-2 rounded bg-green-700 hover:bg-green-600 text-white text-sm transition-colors"
+            onClick={() => router.push(`/events/${id}/${point_id}`)}
+          >
+            Add Possession
+          </button>
+        )}
+      </div>
     );
   }
 
   const last = possessions[possessions.length - 1];
   const possession = possessions[currentIndex];
-  const currentPossession = currentIndex+1;
+  const currentPossession = currentIndex + 1;
   const possessionCount = possessions.length;
   const scorer = last.score_player_name || "Unknown";
   const possessionOutcome = possession.is_score ? "Score" : "Turnover";
   const lastOutcome = last.is_score ? "Score" : "Turnover";
-  const outcome =
-    last.is_score && last.offence_team === last.point_offence_team
-      ? "Hold"
-      : "Break";
+  const outcome = last.is_score && last.offence_team === last.point_offence_team ? "Hold" : "Break";
 
   const overview = {
     offence_team: possession.offence_team_name || "Unknown",
@@ -167,50 +131,10 @@ function PointViewContent() {
     outcome: possession.is_score ? "Score" : "Turnover",
   };
 
-  const handlePrev = () => {
-    setCurrentIndex((prev) => Math.max(prev - 1, 0));
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => Math.min(prev + 1, possessions.length - 1));
-  };
-
-  const DeleteConfirm = (
-    <Portal>
-      <Dialog.Backdrop />
-      <Dialog.Positioner>
-        <Dialog.Content>
-          <Dialog.Header>
-            <Dialog.Title>Confirm Deletion</Dialog.Title>
-          </Dialog.Header>
-
-          <Dialog.Body>
-            Are you sure you want to delete this possession? This cannot be undone.
-          </Dialog.Body>
-
-          <Dialog.Footer display="flex" justifyContent="space-between">
-            <Button onClick={deleteDisclosure.onClose}>Cancel</Button>
-            <Button colorPalette="red"
-                    onClick={handleDeleteConfirm}
-                    loading={isDeleting}>
-              Confirm Delete
-            </Button>
-          </Dialog.Footer>
-
-          <Dialog.CloseTrigger asChild>
-            <CloseButton position="absolute" top="2" right="2" onClick={deleteDisclosure.onClose} />
-          </Dialog.CloseTrigger>
-        </Dialog.Content>
-      </Dialog.Positioner>
-    </Portal>
-  )
-
   return (
-    <Container maxW="4xl" py={8}>
-      <StandardHeader text={point.event_name} is_admin={player.is_admin} />
-      <Text mt={4} fontSize="lg" color="gray.400">
-        {`Offence: ${point.offence_team_name}`}
-      </Text>
+    <div className="pb-8">
+      <StandardHeader text={point.event_name} />
+      <p className="mt-4 text-lg text-neutral-400">{`Offence: ${point.offence_team_name}`}</p>
 
       <PointOverview
         last_possession_type={lastOutcome}
@@ -221,90 +145,90 @@ function PointViewContent() {
 
       <OnPageVideoLink url={baseUrlToTimestampUrl(point.base_url, point.timestamp)} />
 
-      {/* Navigation controls */}
-      <HStack justify="space-between" mt={5}>
-        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handlePrev} disabled={currentIndex === 0}>
-          <FaLongArrowAltLeft />
-        </IconButton>
-        <Text textAlign="center">
+      <div className="flex justify-between items-center mt-5">
+        <button
+          className="p-2 text-yellow-400 hover:bg-neutral-800 rounded transition-colors disabled:opacity-30"
+          onClick={() => setCurrentIndex((prev) => Math.max(prev - 1, 0))}
+          disabled={currentIndex === 0}
+        >
+          <FaLongArrowAltLeft size={24} />
+        </button>
+        <span className="text-center">
           Possession {currentIndex + 1} of {possessions.length}
-        </Text>
-        <IconButton variant = "ghost" colorPalette="yellow" size="lg" onClick={handleNext} disabled={currentIndex === possessions.length - 1}>
-          <FaLongArrowAltRight />
-        </IconButton>
-      </HStack>
-      <PossessionSection
-        overview={overview}
-        plays={plays}
-        turnover={turnover}
+        </span>
+        <button
+          className="p-2 text-yellow-400 hover:bg-neutral-800 rounded transition-colors disabled:opacity-30"
+          onClick={() => setCurrentIndex((prev) => Math.min(prev + 1, possessions.length - 1))}
+          disabled={currentIndex === possessions.length - 1}
+        >
+          <FaLongArrowAltRight size={24} />
+        </button>
+      </div>
+
+      <PossessionSection overview={overview} plays={plays} turnover={turnover} />
+
+      <div className="flex justify-between gap-2">
+        <button
+          onClick={() => setEditOpen(true)}
+          className="px-3 py-1.5 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors"
+        >
+          Edit
+        </button>
+        {possessionOutcome !== "Turnover" && currentPossession === possessionCount && null}
+        {possessionOutcome === "Turnover" && currentPossession === possessionCount && (
+          <button
+            className="px-3 py-1.5 rounded bg-green-700 hover:bg-green-600 text-sm transition-colors"
+            onClick={() => router.push(`/events/${id}/${point_id}`)}
+          >
+            Add Next Possession
+          </button>
+        )}
+        {currentPossession === possessionCount && (
+          <button
+            onClick={() => setDeleteOpen(true)}
+            className="px-3 py-1.5 rounded bg-red-800 hover:bg-red-700 text-sm transition-colors"
+          >
+            Delete
+          </button>
+        )}
+      </div>
+
+      <EditPossessionDialog
+        isOpen={editOpen}
+        onClose={() => setEditOpen(false)}
+        possessionNumber={currentIndex + 1}
+        pointId={point.point_id}
       />
-      {possessionOutcome == "Turnover" && currentPossession == possessionCount ? (
-        <HStack justify="space-between">
-          <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
-            <Dialog.Trigger asChild>
-              <Button onClick={editDisclosure.onOpen}>Edit</Button>
-            </Dialog.Trigger>
-            <EditPossessionDialog
-              onClose={editDisclosure.onClose}
-              possessionNumber = {currentIndex + 1}
-              pointId = {point.point_id}
-            />
-          </Dialog.Root>
-          <Button colorPalette = "green" onClick={() => router.push(`/events/${id}/${point_id}`)}>Add Next Possession</Button>
-          <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
-            <Dialog.Trigger asChild>
-              <Button colorPalette="red" onClick={deleteDisclosure.onOpen}>
-                Delete
-              </Button>
-            </Dialog.Trigger>
-            {DeleteConfirm}
-          </Dialog.Root>
-        </HStack>
-      ) : possessionOutcome != "Turnover" && currentPossession == possessionCount ? (
-        <HStack justify="space-between">
-          <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
-            <Dialog.Trigger asChild>
-              <Button onClick={editDisclosure.onOpen}>Edit</Button>
-            </Dialog.Trigger>
-            <EditPossessionDialog
-              onClose={editDisclosure.onClose}
-              possessionNumber = {currentIndex + 1}
-              pointId = {point.point_id}
-            />
-          </Dialog.Root>
-          <Dialog.Root open={deleteDisclosure.open} onOpenChange={(open) => !open && deleteDisclosure.onClose()}>
-            <Dialog.Trigger asChild>
-              <Button colorPalette="red" onClick={deleteDisclosure.onOpen}>
-                Delete
-              </Button>
-            </Dialog.Trigger>
-            {DeleteConfirm}
-          </Dialog.Root>
-        </HStack>
-      ) : (
-        <HStack justify="space-between">
-          <Dialog.Root open={editDisclosure.open} onOpenChange={(open) => !open && editDisclosure.onClose()}>
-            <Dialog.Trigger asChild>
-              <Button onClick={editDisclosure.onOpen}>Edit</Button>
-            </Dialog.Trigger>
-            <EditPossessionDialog
-              onClose={editDisclosure.onClose}
-              possessionNumber = {currentIndex + 1}
-              pointId = {point.point_id}
-            />
-          </Dialog.Root>
-        </HStack>
-      )}
-      <FloatingActionButton onClick={onOpen} iconType="clip" />
+
+      <CustomModal isOpen={deleteOpen} onClose={() => setDeleteOpen(false)} title="Confirm Deletion">
+        <p className="mb-4">Are you sure you want to delete this possession? This cannot be undone.</p>
+        <div className="flex justify-between">
+          <button
+            onClick={() => setDeleteOpen(false)}
+            className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => deletePossessionMutation({ possessionNumber: currentIndex + 1, pointId: point.point_id })}
+            disabled={isDeleting}
+            className="px-4 py-2 rounded bg-red-800 hover:bg-red-700 text-sm transition-colors disabled:opacity-50"
+          >
+            {isDeleting ? "Deleting..." : "Confirm Delete"}
+          </button>
+        </div>
+      </CustomModal>
+
+      <FloatingActionButton onClick={() => setClipOpen(true)} iconType="clip" />
       <AddClipModal
-        isOpen={open}
-        onClose={onClose}
+        isOpen={clipOpen}
+        onClose={() => setClipOpen(false)}
         eventId={id}
-        sourceId = {point.source_id}
+        sourceId={point.source_id}
         playerId={player.player_id}
         mode="add"
       />
-    </Container>
+    </div>
   );
 }
 

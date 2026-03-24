@@ -1,10 +1,3 @@
-import {
-  Center, HStack,
-  Image,
-  SimpleGrid,
-  Text,
-  VStack,
-} from "@chakra-ui/react";
 import React from "react";
 
 export type PossessionOutcomeProps = {
@@ -20,61 +13,53 @@ export type PossessionOutcomeProps = {
   outcome: string;
 };
 
-export default function PossessionOutcomeDetails({
-                                          throw_zone,
-                                          receive_zone,
-                                          thrower,
-                                          receiver,
-                                          turnover_reason,
-                                          d_player,
-                                          scorer,
-                                          assister,
-                                          method,
-                                          outcome,
-                                        }: PossessionOutcomeProps) {
-  return (
-    outcome === "Turnover" ? (
-      <VStack gap={6} align="center" mb={4} mt={4}>
-        <Center>
-          <Image src="/pitch-zoned.png" alt="Pitch Zoned" mb={4} />
-        </Center>
-
-        <SimpleGrid columns={2} gapX={20} gapY={7}>
-          <StatBox label="Thrown From" value={String(throw_zone)} />
-          <StatBox label="Thrown To" value={String(receive_zone)} />
-          <StatBox label="Thrower" value={thrower} />
-          <StatBox label="Receiver" value={receiver} />
-          <StatBox label="Turnover Reason" value={turnover_reason} />
-          <StatBox label="D Player" value={d_player} />
-        </SimpleGrid>
-      </VStack>
-    ) : (
-      <HStack gap={6} w="80%" mx="auto" justify="space-between">
-        <VStack>
-          <Text fontWeight="bold">Score Player</Text>
-          <Text color="yellow.400" fontWeight="bold">{scorer}</Text>
-        </VStack>
-        <VStack>
-          <Text fontWeight="bold">Assist Player</Text>
-          <Text color="yellow.400" fontWeight="bold">{assister}</Text>
-        </VStack>
-        <VStack>
-          <Text fontWeight="bold">Method</Text>
-          <Text color="yellow.400" fontWeight="bold">{method}</Text>
-        </VStack>
-      </HStack>
-      )
-  );
-}
-
 function StatBox({ label, value }: { label: string; value: string }) {
   return (
-    <VStack align="center" textAlign="center">
-      <Text fontWeight="bold">{label}</Text>
-      <Text color="yellow.400" fontWeight="bold">
-        {value}
-      </Text>
-    </VStack>
+    <div className="flex flex-col items-center text-center gap-1">
+      <span className="font-bold">{label}</span>
+      <span className="text-yellow-400 font-bold">{value}</span>
+    </div>
   );
 }
 
+export default function PossessionOutcomeDetails({
+  throw_zone,
+  receive_zone,
+  thrower,
+  receiver,
+  turnover_reason,
+  d_player,
+  scorer,
+  assister,
+  method,
+  outcome,
+}: PossessionOutcomeProps) {
+  return outcome === "Turnover" ? (
+    <div className="flex flex-col items-center gap-6 mb-4 mt-4">
+      <img src="/pitch-zoned.png" alt="Pitch Zoned" className="mb-4" />
+      <div className="grid grid-cols-2 gap-x-20 gap-y-7">
+        <StatBox label="Thrown From" value={String(throw_zone)} />
+        <StatBox label="Thrown To" value={String(receive_zone)} />
+        <StatBox label="Thrower" value={thrower} />
+        <StatBox label="Receiver" value={receiver} />
+        <StatBox label="Turnover Reason" value={turnover_reason} />
+        <StatBox label="D Player" value={d_player} />
+      </div>
+    </div>
+  ) : (
+    <div className="flex justify-between w-4/5 mx-auto gap-6">
+      <div className="flex flex-col items-center gap-1">
+        <span className="font-bold">Score Player</span>
+        <span className="text-yellow-400 font-bold">{scorer}</span>
+      </div>
+      <div className="flex flex-col items-center gap-1">
+        <span className="font-bold">Assist Player</span>
+        <span className="text-yellow-400 font-bold">{assister}</span>
+      </div>
+      <div className="flex flex-col items-center gap-1">
+        <span className="font-bold">Method</span>
+        <span className="text-yellow-400 font-bold">{method}</span>
+      </div>
+    </div>
+  );
+}

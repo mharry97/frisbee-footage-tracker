@@ -1,24 +1,16 @@
 "use client"
 
-import {Heading} from "@chakra-ui/react";
-import React from "react";
-import BackButton from "@/components/back-button.tsx";
-import CollapsibleMainMenu from "@/components/collapsible-main-menu.tsx";
+import BackButton from "@/components/back-button"
 
 interface StandardHeaderProps {
-  text: string;
-  is_admin: boolean;
-  is_home?: boolean;
+  text: string
 }
 
-export default function StandardHeader({text, is_admin, is_home}: StandardHeaderProps) {
+export default function StandardHeader({ text }: StandardHeaderProps) {
   return (
-    <>
+    <div className="pt-2 mb-6">
       <BackButton />
-      <Heading as="h1" fontWeight="light" size='4xl' mb={4} mt={4} >
-        {text}
-      </Heading>
-      <CollapsibleMainMenu is_admin={is_admin} is_home={is_home} />
-    </>
+      <h1 style={{ fontSize: "2.5rem", fontWeight: 300 }} className="mt-2">{text}</h1>
+    </div>
   )
 }

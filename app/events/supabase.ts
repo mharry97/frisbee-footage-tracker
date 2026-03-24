@@ -86,7 +86,7 @@ export async function addEvent(data: AddEvent): Promise<void> {
     })
 
   if (error) {
-    console.error('Error inserting event:', error)
+    console.error('Error inserting event:', error.message, error.code, error.details)
     throw error
   }
 }

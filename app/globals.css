@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+/* Override Chakra's CSS reset on anchor tags for sidebar nav links.
+   Remove once Chakra is fully removed. */
+nav a:hover {
+  background-color: rgb(38 38 38);
+  color: rgb(243 244 246);
+}

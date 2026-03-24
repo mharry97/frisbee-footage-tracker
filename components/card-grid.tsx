@@ -1,17 +1,14 @@
 import React from "react";
-import { Grid, GridProps } from "@chakra-ui/react";
 
-interface BaseGridProps extends GridProps {
+interface CardGridProps {
   children: React.ReactNode;
+  className?: string;
 }
 
-export const BaseGrid: React.FC<BaseGridProps> = ({ children, ...props }) => {
+export function CardGrid({ children, className = "" }: CardGridProps) {
   return (
-    <Grid
-      templateColumns={{ base: "repeat(1, minmax(250px, 1fr))", md: "repeat(3, minmax(250px, 1fr))" }} gap={4}
-      {...props}
-    >
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 ${className}`}>
       {children}
-    </Grid>
+    </div>
   );
-};
+}

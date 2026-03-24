@@ -1,24 +1,8 @@
-import {
-  HiLockClosed,
-  HiShieldCheck,
-  HiUser
-} from "react-icons/hi";
-import {
-  Container,
-  Input,
-  Field,
-  Button,
-  VStack,
-  CheckboxCard,
-  SimpleGrid,
-  Icon,
-  Float
-} from "@chakra-ui/react";
+import { HiLockClosed, HiShieldCheck, HiUser } from "react-icons/hi";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import React from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-
 
 interface EditUserDetailsPortalProps {
   onSuccess: () => void;
@@ -33,7 +17,6 @@ interface EditUserDetailsPortalProps {
   auth_user_id: string;
 }
 
-// Schema
 const schema = z.object({
   player_name: z.string(),
   email: z.string().includes("@app.local", { message: "Email must include @app.local" }),
@@ -45,32 +28,17 @@ const schema = z.object({
 type UserFormData = z.infer<typeof schema>;
 
 const roleItems = [
-  {
-    key: "is_active",
-    icon: <HiLockClosed />,
-    label: "Active",
-    description: "Active account",
-  },
-  {
-    key: "is_editor",
-    icon: <HiUser />,
-    label: "Editor",
-    description: "Can manage events",
-  },
-  {
-    key: "is_admin",
-    icon: <HiShieldCheck />,
-    label: "Admin",
-    description: "Full access",
-  },
+  { key: "is_active" as const, icon: <HiLockClosed />, label: "Active", description: "Active account" },
+  { key: "is_editor" as const, icon: <HiUser />, label: "Editor", description: "Can manage events" },
+  { key: "is_admin" as const, icon: <HiShieldCheck />, label: "Admin", description: "Full access" },
 ];
 
 export default function EditUserDetailsPortal({
-                                                onSuccess,
-                                                defaultValues,
-                                                playerId,
-                                                auth_user_id,
-                                              }: EditUserDetailsPortalProps) {
+  onSuccess,
+  defaultValues,
+  playerId,
+  auth_user_id,
+}: EditUserDetailsPortalProps) {
   const {
     register,
     handleSubmit,
@@ -83,13 +51,11 @@ export default function EditUserDetailsPortal({
 
   const onSubmit: SubmitHandler<UserFormData> = async (data) => {
     try {
-      console.log("Submitting data:", data);
       await fetch("/api/update-user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, player_id:playerId, auth_user_id }),
-      })
-
+        body: JSON.stringify({ ...data, player_id: playerId, auth_user_id }),
+      });
       onSuccess?.();
     } catch (err) {
       console.error("Failed to update user:", err);
@@ -97,61 +63,55 @@ export default function EditUserDetailsPortal({
   };
 
   return (
-    <Container>
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <VStack gap={4}>
-          <Field.Root>
-            <Field.Label>Player Name</Field.Label>
-            <Input {...register("player_name")} />
-            {errors.player_name && (
-              <Field.ErrorText>{errors.player_name.message}</Field.ErrorText>
-            )}
-          </Field.Root>
-          <Field.Root>
-            <Field.Label>Email</Field.Label>
-            <Input {...register("email")} />
-            {errors.email && (
-              <Field.ErrorText>{errors.email.message}</Field.ErrorText>
-            )}
-          </Field.Root>
-          <SimpleGrid minChildWidth="200px" gap={2}>
-            {roleItems.map((item) => (
-              <Controller
-                key={item.key}
-                control={control}
-                name={item.key as keyof UserFormData}
-                render={({ field }) => (
-                  <CheckboxCard.Root
-                    align="center"
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <div className="flex flex-col gap-4">
+        <div>
+          <label className="block text-sm font-medium text-neutral-300 mb-1">Player Name</label>
+          <input
+            {...register("player_name")}
+            className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none focus:border-neutral-500"
+          />
+          {errors.player_name && <p className="text-red-400 text-xs mt-1">{errors.player_name.message}</p>}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-neutral-300 mb-1">Email</label>
+          <input
+            {...register("email")}
+            className="w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none focus:border-neutral-500"
+          />
+          {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email.message}</p>}
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {roleItems.map((item) => (
+            <Controller
+              key={item.key}
+              control={control}
+              name={item.key}
+              render={({ field }) => (
+                <label className={`flex flex-col items-center gap-2 p-4 rounded-lg border cursor-pointer transition-colors ${field.value ? "border-yellow-400 bg-yellow-400/10" : "border-neutral-700 hover:border-neutral-500"}`}>
+                  <input
+                    type="checkbox"
                     checked={!!field.value}
-                    onCheckedChange={({ checked }) => field.onChange(checked)}
-                  >
-                    <CheckboxCard.HiddenInput />
-                    <CheckboxCard.Control>
-                      <CheckboxCard.Content>
-                        <Icon fontSize="2xl" mb="2">
-                          {item.icon}
-                        </Icon>
-                        <CheckboxCard.Label>{item.label}</CheckboxCard.Label>
-                        <CheckboxCard.Description>
-                          {item.description}
-                        </CheckboxCard.Description>
-                      </CheckboxCard.Content>
-                      <Float placement="top-end" offset="6">
-                        <CheckboxCard.Indicator />
-                      </Float>
-                    </CheckboxCard.Control>
-                  </CheckboxCard.Root>
-                )}
-              />
-            ))}
-          </SimpleGrid>
-
-          <Button type="submit" disabled={isSubmitting}>
-            Submit
-          </Button>
-        </VStack>
-      </form>
-    </Container>
+                    onChange={(e) => field.onChange(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <span className="text-xl">{item.icon}</span>
+                  <span className="text-sm font-medium">{item.label}</span>
+                  <span className="text-xs text-neutral-400 text-center">{item.description}</span>
+                  {field.value && <span className="text-xs text-yellow-400">✓</span>}
+                </label>
+              )}
+            />
+          ))}
+        </div>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors disabled:opacity-50"
+        >
+          Submit
+        </button>
+      </div>
+    </form>
   );
 }

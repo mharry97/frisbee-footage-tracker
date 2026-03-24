@@ -1,18 +1,10 @@
-import React from "react";
-import {
-  Dialog,
-  Button,
-  Portal,
-  Field,
-  Input,
-  Textarea,
-  Checkbox
-} from "@chakra-ui/react";
+import React, { useEffect } from "react";
 import { addPlaylist } from "@/app/playlists/supabase";
 import {z} from "zod";
 import {Controller, useForm} from "react-hook-form";
 import {zodResolver} from "@hookform/resolvers/zod";
 import {useMutation, useQueryClient} from "@tanstack/react-query";
+import { CustomModal } from "@/components/modal";
 
 const schema = z.object({
   title: z.string(),
@@ -33,6 +25,7 @@ export function AddPlaylistModal({ isOpen, onClose }: AddPlaylistModalProps) {
     register,
     handleSubmit,
     setError,
+    reset,
     formState: {errors, isSubmitting, isValid}} = useForm<AddPlaylist>({ resolver: zodResolver(schema),
     mode: 'onChange',
     defaultValues: {
@@ -43,19 +36,21 @@ export function AddPlaylistModal({ isOpen, onClose }: AddPlaylistModalProps) {
   });
   const queryClient = useQueryClient()
 
+  useEffect(() => {
+    if (isOpen) reset({ title: "", description: "", is_public: true });
+  }, [isOpen, reset]);
+
   const { mutateAsync: addPlaylistMutation } = useMutation({
     mutationFn: addPlaylist,
   });
 
   const onSubmit = async (formData: AddPlaylist) => {
     try {
-      const playlistPayload = {
+      await addPlaylistMutation({
         title: formData.title,
         description: formData.description,
         is_public: formData.is_public,
-      };
-
-      await addPlaylistMutation(playlistPayload);
+      });
       await queryClient.invalidateQueries({ queryKey: ["playlists"] });
       onClose();
     } catch (err) {
@@ -63,76 +58,62 @@ export function AddPlaylistModal({ isOpen, onClose }: AddPlaylistModalProps) {
     }
   };
 
+  const inputClass = "w-full bg-neutral-800 border border-neutral-700 rounded px-3 py-2 text-neutral-100 text-sm focus:outline-none focus:border-neutral-500";
+  const labelClass = "block text-sm font-medium text-neutral-300 mb-1";
+
   return (
-    <Dialog.Root
-      open={isOpen}
-      onOpenChange={(details) => {
-        if (!details.open) {
-          onClose();
-        }
-      }}
-    >
-      <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <Dialog.Header>
-                <Dialog.Title>Add Playlist</Dialog.Title>
-              </Dialog.Header>
-              <Dialog.Body>
-                <Field.Root mb={4}>
-                  <Field.Label>Title</Field.Label>
-                  <Input {...register("title", { required: "Title is required" })} />
-                  {errors.title && (
-                    <Field.ErrorText>{errors.title.message}</Field.ErrorText>
-                  )}
-                </Field.Root>
-                <Field.Root mb={4}>
-                  <Field.Label>Description</Field.Label>
-                  <Textarea
-                    placeholder="Brief description"
-                    {...register("description", { required: "Description is required" })}
-                    size="xl"
-                    variant="outline"
-                  />
-                  {errors.description && (
-                    <Field.ErrorText>{errors.description.message}</Field.ErrorText>
-                  )}
-                </Field.Root>
-                <Controller
-                  control={control}
-                  name="is_public"
-                  render={({ field }) => (
-                    <Field.Root>
-                      <Checkbox.Root
-                        checked={field.value}
-                        onCheckedChange={({ checked }) => field.onChange(checked)}
-                      >
-                        <Checkbox.HiddenInput />
-                        <Checkbox.Control />
-                        <Checkbox.Label>Public Playlist?</Checkbox.Label>
-                      </Checkbox.Root>
-                    </Field.Root>
-                  )}
-                />
-              </Dialog.Body>
-              <Dialog.Footer display="flex" justifyContent="space-between">
-                <Button
-                  type="submit"
-                  loading={isSubmitting}
-                  disabled={!isValid || isSubmitting}
-                >
-                  Add Playlist
-                </Button>
-                <Button variant="ghost" onClick={onClose} mt={4}>
-                  Cancel
-                </Button>
-              </Dialog.Footer>
-            </form>
-          </Dialog.Content>
-        </Dialog.Positioner>
-      </Portal>
-    </Dialog.Root>
+    <CustomModal isOpen={isOpen} onClose={onClose} title="Add Playlist">
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className="mb-4">
+          <label className={labelClass}>Title</label>
+          <input className={inputClass} {...register("title", { required: "Title is required" })} />
+          {errors.title && <p className="text-red-400 text-xs mt-1">{errors.title.message}</p>}
+        </div>
+
+        <div className="mb-4">
+          <label className={labelClass}>Description</label>
+          <textarea
+            className={inputClass + " resize-none h-24"}
+            placeholder="Brief description"
+            {...register("description", { required: "Description is required" })}
+          />
+          {errors.description && <p className="text-red-400 text-xs mt-1">{errors.description.message}</p>}
+        </div>
+
+        <Controller
+          control={control}
+          name="is_public"
+          render={({ field }) => (
+            <div className="mb-4 flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="is_public"
+                checked={field.value}
+                onChange={(e) => field.onChange(e.target.checked)}
+                className="w-4 h-4 accent-yellow-400"
+              />
+              <label htmlFor="is_public" className="text-sm text-neutral-300">Public Playlist?</label>
+            </div>
+          )}
+        />
+
+        <div className="flex justify-between mt-4">
+          <button
+            type="submit"
+            disabled={!isValid || isSubmitting}
+            className="px-4 py-2 rounded bg-neutral-700 hover:bg-neutral-600 text-sm transition-colors disabled:opacity-50"
+          >
+            {isSubmitting ? "Adding..." : "Add Playlist"}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 rounded bg-transparent hover:bg-neutral-700 text-sm transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </CustomModal>
   );
 }

@@ -18,9 +18,11 @@ npm run build
 # Start production server
 npm start
 
-# Linting (note: eslint errors don't block builds - see next.config.ts)
+# Linting (configured in eslint.config.mjs, includes react-you-might-not-need-an-effect warnings)
 npm run lint
 ```
+
+There are no tests currently despite jest/testing-library being present in devDependencies.
 
 ## Required Environment Variables
 
@@ -30,7 +32,7 @@ The app requires two Supabase environment variables:
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase anonymous/public key
 - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key (for admin operations)
 
-These are used in `lib/supabase.ts` and `lib/supabase-admin.ts`.
+These are used in `lib/supabase.ts` and `lib/supabase-admin.ts`. Note: `@supabase/supabase-js` is listed in `devDependencies` (not `dependencies`) but is used throughout the app.
 
 ## Architecture
 
