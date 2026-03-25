@@ -89,7 +89,7 @@ function EventsPageContent() {
         </div>
       )}
 
-      <CustomModal isOpen={!!quickViewUrl} onClose={() => setQuickViewUrl(null)} title="Quick View" width="700px">
+      <CustomModal isOpen={!!quickViewUrl} onClose={() => setQuickViewUrl(null)} title="Quick View" fullWidth>
         {quickViewUrl && <OnPageVideoLink url={quickViewUrl} />}
       </CustomModal>
     </div>
