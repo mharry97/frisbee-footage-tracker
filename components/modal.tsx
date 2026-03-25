@@ -6,6 +6,7 @@ interface CustomModalProps {
   title?: string;
   children: React.ReactNode;
   width?: string;
+  fullWidth?: boolean;
 }
 
 // Base modal component
@@ -15,6 +16,7 @@ export function CustomModal({
   title,
   children,
   width = "400px",
+  fullWidth = false,
 }: CustomModalProps) {
   if (!isOpen) return null;
 
@@ -25,9 +27,17 @@ export function CustomModal({
     }
   }
 
+  const overlayFinal: React.CSSProperties = fullWidth
+    ? { ...overlayStyle, alignItems: "flex-start", padding: 0 }
+    : overlayStyle;
+
+  const modalFinal: React.CSSProperties = fullWidth
+    ? { ...modalStyle, width: "100%", borderRadius: 0, maxHeight: "none" }
+    : { ...modalStyle, width };
+
   return (
-    <div style={overlayStyle} onClick={handleOverlayClick}>
-      <div style={{ ...modalStyle, width }}>
+    <div style={overlayFinal} onClick={handleOverlayClick}>
+      <div style={modalFinal}>
         {title && <h2 style={{ marginBottom: "1rem" }}>{title}</h2>}
         <button style={closeButtonStyle} onClick={onClose}>
           &times;

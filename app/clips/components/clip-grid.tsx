@@ -48,7 +48,7 @@ function ClipCard({ clip, playerId }: ClipCardProps) {
         </CardBody>
       </Card>
 
-      <CustomModal isOpen={viewOpen} onClose={() => setViewOpen(false)} title={clip.title} width="700px">
+      <CustomModal isOpen={viewOpen} onClose={() => setViewOpen(false)} title={clip.title} fullWidth>
         <OnPageVideoLink url={baseUrlToTimestampUrl(clip.url, clip.timestamp)} />
       </CustomModal>
 
